@@ -1,0 +1,23 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  margin-left:60px;
+  flex: 1;
+  min-width:100px;
+  display: flex;
+  flex-direction: column;
+  background-color: #0a1223;
+  transition: margin-left 0.25s ease;
+}
+
+.content.collapsed {
+  margin-left: 60px;
+}
+
+.page {
+  flex: 1;
+  padding: 20px;
+}

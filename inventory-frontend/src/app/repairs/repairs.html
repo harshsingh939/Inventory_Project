@@ -1,0 +1,119 @@
+<div class="page-header">
+  <h2>🛠️ Repairs</h2>
+  <p>Manage asset repair requests</p>
+</div>
+
+<!-- Add Repair Form -->
+<div class="card">
+  <h4 class="form-title">New Repair Request</h4>
+  <div class="form-row">
+    <div class="form-field">
+      <label>Select Asset</label>
+      <select [(ngModel)]="repair.asset_id" class="input select-input">
+        <option value="">-- Select Asset --</option>
+        <option *ngFor="let a of assets" [value]="a.id">
+          {{ a.asset_type }} — {{ a.brand }} {{ a.model }}
+          ({{ a.status }})
+        </option>
+      </select>
+    </div>
+    <div class="form-field flex-2">
+      <label>Issue Description</label>
+      <input
+        [(ngModel)]="repair.issue"
+        class="input"
+        placeholder="Describe the issue..."
+      />
+    </div>
+    <div class="form-field btn-field">
+      <label>&nbsp;</label>
+      <button class="btn btn-primary add-btn"
+        (click)="addRepair()" [disabled]="isAdding">
+        {{ isAdding ? 'Adding...' : '+ Add Repair' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="msg-error"   *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+</div>
+
+<!-- Search Filter -->
+<div class="card search-card">
+  <div class="search-row">
+    <div class="search-field">
+      <span>🔍</span>
+      <input class="search-input" placeholder="Search by issue..."
+        [(ngModel)]="searchIssue" (ngModelChange)="applyFilter()" />
+    </div>
+    <div class="search-field">
+      <span>📊</span>
+      <input class="search-input" placeholder="Search by status..."
+        [(ngModel)]="searchStatus" (ngModelChange)="applyFilter()" />
+    </div>
+    <button class="btn-clear" (click)="clearFilter()">✕ Clear</button>
+  </div>
+  <p class="result-count">
+    Showing <strong>{{ filteredRepairs.length }}</strong> of
+    <strong>{{ repairs.length }}</strong> repairs
+  </p>
+</div>
+
+<!-- Repairs Table -->
+<div class="card">
+  <div class="loading" *ngIf="isLoading">⏳ Loading repairs...</div>
+
+  <table *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Asset</th>
+        <th>Issue</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of filteredRepairs; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>
+          <div class="asset-cell">
+            <span class="asset-icon">💻</span>
+            {{ getAssetName(r.asset_id) }}
+          </div>
+        </td>
+        <td>{{ r.issue }}</td>
+        <td>
+          <span class="status-badge"
+            [class.pending]="r.status === 'Pending'"
+            [class.fixed]="r.status === 'Fixed'"
+            [class.progress]="r.status === 'In Progress'">
+            {{ r.status }}
+          </span>
+        </td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-action progress-btn"
+              *ngIf="r.status === 'Pending'"
+              (click)="updateStatus(r.id, 'In Progress')">
+              🔄 In Progress
+            </button>
+            <button class="btn-action fix-btn"
+              *ngIf="r.status !== 'Fixed'"
+              (click)="updateStatus(r.id, 'Fixed')">
+              ✅ Mark Fixed
+            </button>
+            <span class="done-text" *ngIf="r.status === 'Fixed'">
+              ✅ Completed
+            </span>
+          </div>
+        </td>
+      </tr>
+      <tr *ngIf="filteredRepairs.length === 0">
+        <td colspan="5" class="empty-row">
+          {{ searchIssue || searchStatus ? 'No repairs match search' : 'No repairs found' }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

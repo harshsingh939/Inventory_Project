@@ -1,0 +1,54 @@
+<div class="details-wrapper">
+  <div class="details-card">
+
+    <div class="details-header">
+      <div class="asset-icon-big">💻</div>
+      <div>
+        <h2>{{ asset.type }} — {{ asset.brand }}</h2>
+        <p>{{ asset.model }}</p>
+      </div>
+    </div>
+
+    <span class="status-badge"
+      [class.green]="asset.status === 'Available'"
+      [class.yellow]="asset.status === 'Assigned'"
+      [class.red]="asset.status === 'Under Repair'">
+      {{ asset.status }}
+    </span>
+
+    <div class="details-grid">
+      <div class="detail-item">
+        <span class="detail-label">🔢 Asset ID</span>
+        <span class="detail-value">#{{ asset.id }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">🏷️ Serial No.</span>
+        <span class="detail-value">{{ asset.serial }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">⚙️ CPU</span>
+        <span class="detail-value">{{ asset.cpu }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">🧠 RAM</span>
+        <span class="detail-value">{{ asset.ram }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">💾 Storage</span>
+        <span class="detail-value">{{ asset.storage }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">📦 Brand</span>
+        <span class="detail-value">{{ asset.brand }}</span>
+      </div>
+    </div>
+
+    <div class="powered-by">
+      <span>Powered by</span>
+      <strong>InvenTrack</strong>
+    </div>
+
+    <a routerLink="/" class="back-btn">← Back to InvenTrack</a>
+
+  </div>
+</div>

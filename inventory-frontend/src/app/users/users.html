@@ -1,0 +1,86 @@
+<div class="page-header">
+  <h2>👤 Users</h2>
+  <p>Manage your employees</p>
+</div>
+
+<!-- Add User Form -->
+<div class="card">
+  <div class="form-row">
+    <div class="form-field">
+      <label>Name</label>
+      <input [(ngModel)]="user.name" class="input" placeholder="Enter name" />
+    </div>
+    <div class="form-field">
+      <label>Employee ID</label>
+      <input [(ngModel)]="user.employee_id" class="input" placeholder="e.g. EMP001" />
+    </div>
+    <div class="form-field">
+      <label>Department</label>
+      <input [(ngModel)]="user.department" class="input" placeholder="e.g. IT" />
+    </div>
+    <button class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
+      {{ isAdding ? 'Adding...' : '+ Add User' }}
+    </button>
+  </div>
+  <div class="msg-error"   *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+</div>
+
+<!-- ✅ Search Filter -->
+<div class="card search-card">
+  <div class="search-row">
+    <div class="search-field">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by name..."
+        [(ngModel)]="searchName"
+        (ngModelChange)="applyFilter()"
+      />
+    </div>
+    <div class="search-field">
+      <span class="search-icon">🏢</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by department..."
+        [(ngModel)]="searchDept"
+        (ngModelChange)="applyFilter()"
+      />
+    </div>
+    <button class="btn-clear" (click)="clearFilter()">✕ Clear</button>
+  </div>
+  <p class="result-count">
+    Showing <strong>{{ filteredUsers.length }}</strong> of <strong>{{ users.length }}</strong> users
+  </p>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+  <div class="loading" *ngIf="isLoading">⏳ Loading users...</div>
+
+  <table *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Employee ID</th>
+        <th>Department</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of filteredUsers; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ u.name }}</td>
+        <td>{{ u.employee_id }}</td>
+        <td>{{ u.department }}</td>
+      </tr>
+      <tr *ngIf="filteredUsers.length === 0">
+        <td colspan="4" class="empty-row">
+          {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

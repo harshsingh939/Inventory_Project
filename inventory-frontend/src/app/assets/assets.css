@@ -1,0 +1,346 @@
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h2 {
+  color: #f1f5f9;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.form-title {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field label {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.form-field .input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #0a1223;
+  color: white;
+  font-size: 0.875rem;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.form-field .input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56,189,248,0.2);
+}
+
+.btn-field { justify-content: flex-end; }
+
+.add-btn {
+  height: 40px;
+  padding: 0 20px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.msg-error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
+.msg-success {
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #22c55e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
+.search-card { padding: 16px 20px !important; }
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0a1223;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 14px;
+  flex: 1;
+  min-width: 180px;
+  transition: 0.2s;
+}
+
+.search-field:focus-within {
+  border-color: #38bdf8;
+}
+
+.search-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+.search-input::placeholder { color: #475569; }
+
+.btn-clear {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.btn-clear:hover { background: rgba(239,68,68,0.2); }
+
+.result-count {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+
+.result-count strong { color: #38bdf8; }
+
+.loading {
+  color: #64748b;
+  text-align: center;
+  padding: 30px;
+}
+
+.empty-row {
+  text-align: center;
+  color: #64748b;
+  padding: 30px;
+}
+
+.badge-id {
+  background: rgba(56,189,248,0.1);
+  color: #38bdf8;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.green  { background: rgba(34,197,94,0.15);  color: #22c55e; }
+.status-badge.yellow { background: rgba(250,204,21,0.15); color: #facc15; }
+.status-badge.red    { background: rgba(239,68,68,0.15);  color: #ef4444; }
+
+@media (max-width: 1024px) {
+  .form-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+/* QR Button */
+.qr-btn {
+  background: rgba(168,85,247,0.1);
+  border: 1px solid rgba(168,85,247,0.3);
+  color: #a855f7;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.qr-btn:hover {
+  background: rgba(168,85,247,0.2);
+  transform: scale(1.05);
+}
+
+/* QR Modal Overlay */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.qr-modal {
+  background: #0f172a;
+  border: 1px solid rgba(168,85,247,0.3);
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5),
+              0 0 40px rgba(168,85,247,0.1);
+  animation: popIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+
+.qr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.qr-modal-header h3 {
+  color: #f1f5f9;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.close-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.qr-asset-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.qr-asset-name {
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.qr-asset-model {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.qr-code-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #0a1223;
+  border-radius: 12px;
+  border: 1px solid #1e293b;
+}
+
+.qr-details {
+  background: #0a1223;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.qr-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(30,41,59,0.5);
+}
+
+.qr-detail-row:last-child { border-bottom: none; }
+
+.qr-detail-label {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.qr-detail-value {
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.download-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  border: none;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.download-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}

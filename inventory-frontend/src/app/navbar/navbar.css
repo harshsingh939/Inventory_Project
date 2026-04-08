@@ -1,0 +1,17 @@
+.navbar {
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  padding: 15px;
+}
+
+.links a {
+  margin: 10px;
+  color: white;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.links a:hover {
+  color: #22c55e;
+  transform: scale(1.2);
+}

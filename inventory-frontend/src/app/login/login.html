@@ -1,0 +1,64 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <a routerLink="/" class="back-btn">← Back to Home</a>
+
+    <div class="auth-brand">
+      <div class="brand-icon">IT</div>
+      <div>
+        <div class="brand-name">InvenTrack</div>
+        <div class="brand-sub">INVENTORY SYSTEM</div>
+      </div>
+    </div>
+
+    <h2>Welcome Back</h2>
+    <p class="auth-subtitle">Sign in to your account</p>
+
+    <div class="form-field">
+      <label>Email or Phone Number</label>
+      <input
+        class="input"
+        type="text"
+        placeholder="Enter email or phone"
+        [(ngModel)]="identifier"
+        name="identifier"
+      />
+    </div>
+
+    <div class="form-field">
+      <label>Password</label>
+      <div class="input-eye">
+        <input
+          class="input"
+          [type]="showPassword ? 'text' : 'password'"
+          placeholder="Enter password"
+          [(ngModel)]="password"
+          name="password"
+        />
+        <span class="eye-btn" (click)="showPassword = !showPassword">
+          {{ showPassword ? '🙈' : '👁️' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ✅ Error UI pe dikhega -->
+    <div class="form-error" *ngIf="loginError">⚠️ {{ loginError }}</div>
+
+    <button class="full-btn" type="button" (click)="onLogin()">
+      {{ isLoading ? 'Signing in...' : 'Sign In' }}
+    </button>
+
+    <p class="switch-text">
+      Don't have an account?
+      <a routerLink="/signup">Sign Up</a>
+    </p>
+  </div>
+</div>
+
+<div class="popup-overlay" *ngIf="showSuccess">
+  <div class="popup-box">
+    <div class="popup-icon">✅</div>
+    <h3>Logged In Successfully!</h3>
+    <p>Welcome back to InvenTrack</p>
+    <div class="popup-progress"></div>
+  </div>
+</div>

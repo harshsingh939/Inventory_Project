@@ -1,0 +1,38 @@
+<div class="sidebar" [class.collapsed]="!sidebarService.isOpen()">
+  <div class="brand">
+    <div class="brand-icon">IT</div>
+    <div class="brand-text">
+      <div class="brand-name">InvenTrack</div>
+      <div class="brand-sub">INVENTORY SYSTEM</div>
+    </div>
+  </div>
+
+  <p class="nav-label">NAVIGATION</p>
+
+  <!-- ✅ Sab ko -->
+  <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+    <span class="nav-icon">🏠</span><span class="nav-text">Home</span>
+  </a>
+
+  <!-- ✅ Admin only -->
+  <ng-container *ngIf="isAdmin">
+    <a routerLink="/dashboard" routerLinkActive="active">
+      <span class="nav-icon">⊞</span><span class="nav-text">Dashboard</span>
+    </a>
+    <a routerLink="/assets" routerLinkActive="active">
+      <span class="nav-icon">📦</span><span class="nav-text">Assets</span>
+    </a>
+    <a routerLink="/sessions" routerLinkActive="active">
+      <span class="nav-icon">🕐</span><span class="nav-text">Sessions</span>
+    </a>
+  </ng-container>
+
+  <!-- ✅ Sab logged in users ko -->
+  <a routerLink="/users" routerLinkActive="active">
+    <span class="nav-icon">👥</span><span class="nav-text">Users</span>
+  </a>
+  <a routerLink="/repairs" routerLinkActive="active">
+    <span class="nav-icon">🔧</span><span class="nav-text">Repair</span>
+  </a>
+
+</div>

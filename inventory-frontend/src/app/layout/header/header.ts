@@ -1,6 +1,5 @@
 import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { SidebarService } from '../sidebar/sidebar.service';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
@@ -13,12 +12,15 @@ import { AuthService } from '../../auth.service';
   styleUrl: './header.css'
 })
 export class Header {
-  showDropdown = false;
+  isDropdown = false;
+  isDropdownOpen = false;
   showLogoutPopup = false;
+  showDropdown = false;
+  isNavDropdownOpen=false;
+  
   isBrowser: boolean;
 
   constructor(
-    private sidebarService: SidebarService,
     public auth: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) platformId: Object
@@ -33,14 +35,26 @@ export class Header {
     if (!target.closest('.header-right')) {
       this.showDropdown = false;
     }
+      // ✅  my ADD
+  if (!target.closest('.nav-dropdown-wrapper')) {
+    this.isNavDropdownOpen = false;
   }
-
-  toggleSidebar() {
-    this.sidebarService.toggle();
   }
+// my add
+  toggleNavDropdown(){
+    this.isNavDropdownOpen = !this.isNavDropdownOpen;
+  }
+  closeNavDropdown() {
+  this.isNavDropdownOpen = false;
+}
+// my add end
+  
 
   toggleDropdown() {
     this.showDropdown = !this.showDropdown;
+  }
+  closeDropdown(){
+    this.isDropdownOpen=false;
   }
 
   logout() {

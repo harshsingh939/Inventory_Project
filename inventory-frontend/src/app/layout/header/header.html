@@ -1,22 +1,41 @@
 <div class="header">
-  <button class="toggle-btn" (click)="toggleSidebar()">☰</button>
 
-  <div class="search-box">
-    <span class="search-icon">🔍</span>
-    <input type="text" placeholder="Search inventory..." />
+  <!-- Brand (left) -->
+  <div class="header-brand">
+    <div class="brand-logo">IT</div>
+    <div class="brand-text">
+      <span class="brand-name">InvenTrack</span>
+      <span class="brand-sub">INVENTORY SYSTEM</span>
+    </div>
   </div>
 
-  <div class="header-center" *ngIf="!isLoggedIn">
+  <!-- Spacer — pushes everything after to the right -->
+  <div class="header-spacer"></div>
+
+  <!-- Login / Signup (logged out only) -->
+  <div class="header-auth" *ngIf="!isLoggedIn">
     <a routerLink="/login" routerLinkActive="active-link" class="auth-btn">Login</a>
     <a routerLink="/signup" routerLinkActive="active-link" class="auth-btn signup">Sign Up</a>
   </div>
 
+  <!-- Navigation Dropdown (next to brand) -->
+  <div class="nav-dropdown-wrapper">
+    <button class="nav-dropdown-btn" (click)="toggleNavDropdown()">
+      Navigation ▾
+    </button>
+    <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
+      <li><a routerLink="/home" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🏠</span> Home</a></li>
+      <li><a routerLink="/users" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>👥 </span>Users</a></li>
+      <li><a routerLink="/repair" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🔧 </span>Repair</a></li>
+    </ul>
+  </div>
+
+
+
+  <!-- Bell + Avatar (right) -->
   <div class="header-right">
     <button class="icon-btn">🔔</button>
-
-    <div class="avatar" (click)="toggleDropdown()">
-      {{ initial }}
-    </div>
+    <div class="avatar" (click)="toggleDropdown()">{{ initial }}</div>
 
     <div class="dropdown" *ngIf="showDropdown">
       <ng-container *ngIf="isLoggedIn; else notLoggedIn">
@@ -27,30 +46,15 @@
             <div class="dropdown-email">{{ profile?.email }}</div>
           </div>
         </div>
-
         <div class="dropdown-divider"></div>
-
-        <div class="dropdown-item">
-          <span>👤</span><span>{{ profile?.username }}</span>
-        </div>
-        <div class="dropdown-item">
-          <span>📧</span><span>{{ profile?.email }}</span>
-        </div>
-        <div class="dropdown-item">
-          <span>📱</span><span>{{ profile?.mobile }}</span>
-        </div>
-
+        <div class="dropdown-item"><span>👤</span><span>{{ profile?.username }}</span></div>
+        <div class="dropdown-item"><span>📧</span><span>{{ profile?.email }}</span></div>
+        <div class="dropdown-item"><span>📱</span><span>{{ profile?.mobile }}</span></div>
         <div class="dropdown-divider"></div>
-
-        <button class="logout-btn" (click)="logout()">
-          🚪 Logout
-        </button>
+        <button class="logout-btn" (click)="logout()">🚪 Logout</button>
       </ng-container>
-
       <ng-template #notLoggedIn>
-        <div class="dropdown-item">
-          <span>⚠️</span><span>Not logged in</span>
-        </div>
+        <div class="dropdown-item"><span>⚠️</span><span>Not logged in</span></div>
         <a routerLink="/login" class="logout-btn"
            style="text-align:center; text-decoration:none; display:block;">
           🔐 Login
@@ -58,12 +62,10 @@
       </ng-template>
     </div>
   </div>
+
 </div>
 
-<!-- backdrop -->
-<!-- <div class="dropdown-backdrop" *ngIf="showDropdown" (click)="showDropdown = false"></div> -->
-
-<!-- ✅ Logout Popup -->
+<!-- Logout Popup -->
 <div class="popup-overlay" *ngIf="showLogoutPopup">
   <div class="popup-box">
     <div class="popup-icon">👋</div>

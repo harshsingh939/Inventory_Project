@@ -1,9 +1,9 @@
 <div class="layout">
-  <app-sidebar></app-sidebar>
-  <div class="content" [class.expanded]="isSidebarOpen">
+
     <app-header></app-header>
+    <div class="content">
     <div class="page">
       <router-outlet></router-outlet>
     </div>
   </div>
-</div>
+  </div>

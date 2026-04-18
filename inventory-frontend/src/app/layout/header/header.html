@@ -23,11 +23,35 @@
     <button class="nav-dropdown-btn" (click)="toggleNavDropdown()">
       Navigation ▾
     </button>
-    <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
+    <!-- <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
       <li><a routerLink="/home" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🏠</span> Home</a></li>
       <li><a routerLink="/users" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>👥 </span>Users</a></li>
       <li><a routerLink="/repairs" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🔧 </span>Repairs</a></li>
-    </ul>
+    </ul> -->
+    <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
+
+  <!-- ✅ COMMON -->
+  <li>
+    <a routerLink="/home" (click)="closeNavDropdown()">
+      <span>🏠</span> Home
+    </a>
+  </li>
+
+  <!-- 👑 ADMIN -->
+  <ng-container *ngIf="auth.getRole() === 'admin'">
+    <li><a routerLink="/users" (click)="closeNavDropdown()"><span>👥</span> Users</a></li>
+    <li><a routerLink="/assets" (click)="closeNavDropdown()"><span>📦</span> Assets</a></li>
+    <li><a routerLink="/sessions" (click)="closeNavDropdown()"><span>🕒</span> Sessions</a></li>
+    <li><a routerLink="/repairs" (click)="closeNavDropdown()"><span>🔧</span> Repairs</a></li>
+  </ng-container>
+
+  <!-- 👤 NORMAL USER -->
+  <ng-container *ngIf="auth.getRole() !== 'admin'">
+    <li><a routerLink="/users" (click)="closeNavDropdown()"><span>👥</span> Users</a></li>
+    <li><a routerLink="/repairs" (click)="closeNavDropdown()"><span>🔧</span> Repairs</a></li>
+  </ng-container>
+
+</ul>
   </div>
 
 

@@ -37,12 +37,13 @@ export class Login {
     this.isLoading = true;
 
     this.auth.login(this.identifier.trim(), this.password.trim()).subscribe({
-      next: () => {
+      next: (res) => {
         this.isLoading = false;
         this.showSuccess = true;      // ✅ show popup immediately
         setTimeout(() => {
           this.showSuccess = false;
-          this.router.navigate(['/']);
+          // this.router.navigate(['/']);
+            window.location.href = '/';
         }, 2000);                     // ✅ 2 seconds then redirect
       },
      error: (err) => {

@@ -1,11 +1,26 @@
 <nav class="navbar">
   <h2>Inventory System</h2>
+<!-- my add -->
+ <!-- Hamburger -->
+  <div class="menu-toggle" (click)="toggleMenu()">
+    ☰
+  </div>
 
-  <div class="links">
+
+  <div class="links"[class.active]="isMenuOpen">
+      <ng-container *ngIf="auth.getRole() === 'admin'">
     <a routerLink="/">Dashboard</a>
     <a routerLink="/users">Users</a>
     <a routerLink="/assets">Assets</a>
     <a routerLink="/sessions">Sessions</a>
     <a routerLink="/repairs">Repairs</a>
-  </div>
+</ng-container>
+  <!-- 👤 NORMAL USER -->
+  <ng-container *ngIf="auth.getRole() !== 'admin'">
+    <a routerLink="/users">Users</a>
+    <a routerLink="/repairs">Repairs</a>
+  </ng-container>
+
+</div>
+
 </nav>

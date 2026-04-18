@@ -17,16 +17,22 @@ export class Header {
   showLogoutPopup = false;
   showDropdown = false;
   isNavDropdownOpen=false;
+ 
   
   isBrowser: boolean;
-
+notifications: any[] = [];   // ✅ OUTSIDE
   constructor(
     public auth: AuthService,
     private router: Router,
+   
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
+ // my add
+
+
+
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -34,7 +40,12 @@ export class Header {
     const target = event.target as HTMLElement;
     if (!target.closest('.header-right')) {
       this.showDropdown = false;
-    }
+    }    
+  //  my add
+
+  if (!target.closest('.notification-dropdown') && !target.closest('.icon-btn')) {
+
+}
       // ✅  my ADD
   if (!target.closest('.nav-dropdown-wrapper')) {
     this.isNavDropdownOpen = false;

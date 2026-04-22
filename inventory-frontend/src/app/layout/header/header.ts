@@ -1,6 +1,5 @@
 import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { SidebarService } from '../sidebar/sidebar.service';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
@@ -13,18 +12,27 @@ import { AuthService } from '../../auth.service';
   styleUrl: './header.css'
 })
 export class Header {
-  showDropdown = false;
+  isDropdown = false;
+  isDropdownOpen = false;
   showLogoutPopup = false;
+  showDropdown = false;
+  isNavDropdownOpen=false;
+ 
+  
   isBrowser: boolean;
-
+notifications: any[] = [];   // ✅ OUTSIDE
   constructor(
-    private sidebarService: SidebarService,
     public auth: AuthService,
     private router: Router,
+   
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
+ // my add
+
+
+
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -32,15 +40,32 @@ export class Header {
     const target = event.target as HTMLElement;
     if (!target.closest('.header-right')) {
       this.showDropdown = false;
-    }
-  }
+    }    
+  //  my add
 
-  toggleSidebar() {
-    this.sidebarService.toggle();
+  if (!target.closest('.notification-dropdown') && !target.closest('.icon-btn')) {
+
+}
+      // ✅  my ADD
+  if (!target.closest('.nav-dropdown-wrapper')) {
+    this.isNavDropdownOpen = false;
   }
+  }
+// my add
+  toggleNavDropdown(){
+    this.isNavDropdownOpen = !this.isNavDropdownOpen;
+  }
+  closeNavDropdown() {
+  this.isNavDropdownOpen = false;
+}
+// my add end
+  
 
   toggleDropdown() {
     this.showDropdown = !this.showDropdown;
+  }
+  closeDropdown(){
+    this.isDropdownOpen=false;
   }
 
   logout() {

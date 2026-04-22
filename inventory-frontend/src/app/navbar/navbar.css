@@ -1,11 +1,24 @@
 .navbar {
   background: rgba(0,0,0,0.6);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   padding: 15px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  position: relative;
+  z-index: 999;
+}
+
+/* links desktop */
+.links {
+  display: flex;
+  gap: 15px;
 }
 
 .links a {
-  margin: 10px;
   color: white;
   text-decoration: none;
   transition: 0.3s;
@@ -14,4 +27,40 @@
 .links a:hover {
   color: #22c55e;
   transform: scale(1.2);
+}
+
+/* hamburger */
+.menu-toggle {
+  display: none;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+}
+
+/* 🔥 MOBILE FIX */
+@media (max-width: 768px) {
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .links {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.9);
+
+    flex-direction: column;
+    display: none;
+    padding: 15px;
+  }
+
+  .links.active {
+    display: flex;
+  }
+
+  .links a {
+    padding: 10px 0;
+  }
 }

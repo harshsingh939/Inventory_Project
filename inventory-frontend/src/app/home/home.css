@@ -1,12 +1,15 @@
 .hero {
   position: relative;
-  min-height: 320px;
+  min-height: auto;
   background-image: url('https://images.unsplash.com/photo-1553413077-190dd305871c?w=1600&q=80');
   background-size: cover;
   background-position: center;
+  padding: 30px 0;
   display: flex;
+  width: 100%;
+  margin: 0;
   align-items: center;
-  margin: -20px -20px 0 -20px;
+  /* margin: -20px -20px 0 -20px; */
 }
 
 .hero-overlay {
@@ -19,7 +22,8 @@
   position: relative;
   z-index: 1;
   padding: 60px 48px;
-  max-width: 600px;
+  max-width: 100%;
+  width: 100%;
 }
 
 .hero-tag {
@@ -537,10 +541,10 @@
 .cta-section,
 .home-footer,
 .features-section {
-  margin-left: -20px;
-  margin-right: -20px;
-  padding-left: 60px;
-  padding-right: 60px;
+  margin-left: 0px;
+  margin-right: 0px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 /* ── Section headers left-align fix ── */
@@ -755,4 +759,115 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   color: #4b5563;
   font-size: 0.82rem;
+}
+/* my add */
+/* ================= MOBILE RESPONSIVE FIX ================= */
+@media (max-width: 768px) {
+
+  /* FIX: negative margins remove */
+  .how-it-works-section,
+  .stats-banner-section,
+  .modules-section,
+  .why-us-section,
+  .problem-solution-section,
+  .built-by-section,
+  .cta-section,
+  .home-footer,
+  .features-section {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: auto;
+    padding: 30px 0;
+  }
+
+  .hero-content {
+    padding: 20px 15px;
+    max-width: 100%;
+  }
+
+  .hero-content h1 {
+    font-size: 26px;
+  }
+
+  .hero-sub {
+    font-size: 14px;
+  }
+
+  /* BUTTONS */
+  .hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hero-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* FEATURES */
+  .features {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* STEPS */
+  .steps {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .step-card {
+    max-width: 100%;
+  }
+
+  .step-connector {
+    display: none;
+  }
+
+  /* MODULES */
+  .modules-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* WHY US */
+  .why-us-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* PROBLEM SOLUTION */
+  .ps-grid {
+    flex-direction: column;
+  }
+
+  .ps-divider {
+    display: none;
+  }
+
+  /* TIMELINE */
+  .timeline {
+    margin-left: 10px;
+    padding-left: 10px;
+  }
+
+  /* CTA */
+  .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* FOOTER */
+  .footer-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .footer-links {
+    gap: 20px;
+  }
 }

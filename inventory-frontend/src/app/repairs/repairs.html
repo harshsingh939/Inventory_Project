@@ -4,7 +4,7 @@
 </div>
 
 <!-- Add Repair Form -->
-<div class="card">
+<div class="card table-card">
   <h4 class="form-title">New Repair Request</h4>
   <div class="form-row">
     <div class="form-field">
@@ -62,8 +62,10 @@
 <!-- Repairs Table -->
 <div class="card">
   <div class="loading" *ngIf="isLoading">⏳ Loading repairs...</div>
+      <!-- my add -->
+          <div class="table-container">
 
-  <table *ngIf="!isLoading">
+      <table *ngIf="!isLoading">
     <thead>
       <tr>
         <th>#</th>
@@ -116,4 +118,5 @@
       </tr>
     </tbody>
   </table>
+</div>
 </div>

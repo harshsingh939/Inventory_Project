@@ -173,6 +173,7 @@
 /* Table */
 table {
   width: 100%;
+   min-width: 700px; 
   border-collapse: collapse;
 }
 
@@ -194,6 +195,14 @@ td {
 
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(30,41,59,0.4); }
+
+/* my add */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;   /* adjust to your preference */
+}
+
 
 .asset-cell {
   display: flex;

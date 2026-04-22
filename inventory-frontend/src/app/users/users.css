@@ -164,3 +164,10 @@
 .result-count strong {
   color: #38bdf8;
 }   
+
+/* my add */
+.table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;   /* adjust to your preference */
+}

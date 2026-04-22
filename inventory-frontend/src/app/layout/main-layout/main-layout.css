@@ -4,13 +4,14 @@
 }
 
 .content {
-  margin-left:60px;
+  margin-left:0px;
   flex: 1;
   min-width:100px;
   display: flex;
   flex-direction: column;
   background-color: #0a1223;
   transition: margin-left 0.25s ease;
+  margin-top: 60px;
 }
 
 .content.collapsed {
@@ -19,5 +20,5 @@
 
 .page {
   flex: 1;
-  padding: 20px;
+  padding: 20px ;
 }

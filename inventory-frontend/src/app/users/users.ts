@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { apiUrl } from '../api-url';
 
 @Component({
   selector: 'app-users',
@@ -11,7 +12,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './users.css'
 })
 export class Users implements OnInit {
-  private apiUrl = 'http://localhost:3000/api/users';
+  private readonly usersUrl = apiUrl('users');
 
   user = { name: '', employee_id: '', department: '' };
   users: any[] = [];
@@ -34,7 +35,7 @@ export class Users implements OnInit {
 
   getUsers() {
     this.isLoading = true;
-    this.http.get<any[]>(this.apiUrl).subscribe({
+    this.http.get<any[]>(this.usersUrl).subscribe({
       next: (data) => {
         this.users = data;
         this.filteredUsers = data;   // ✅ initially same
@@ -93,7 +94,7 @@ export class Users implements OnInit {
     this.successMsg = '';
     this.isAdding = true;
 
-    this.http.post<any>(this.apiUrl + '/add', this.user).subscribe({
+    this.http.post<any>(this.usersUrl + '/add', this.user).subscribe({
       next: (res) => {
         const newUser = {
           name: this.user.name,

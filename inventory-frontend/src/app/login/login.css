@@ -233,15 +233,37 @@ h2 {
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #64748b;
-  text-decoration: none;
-  font-size: 0.85rem;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 8px 16px;
   margin-bottom: 20px;
-  transition: color 0.2s;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #e2e8f0;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35) inset;
   cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .back-btn:hover {
-  color: #38bdf8;
+  color: #f8fafc;
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+  transform: translateY(-1px);
+}
+
+.back-btn-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  opacity: 0.95;
 }

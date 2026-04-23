@@ -20,6 +20,9 @@
 
     <div class="form-field">
       <label>Select Available Asset</label>
+      <p class="field-note">Computers, peripherals &amp; storage, power &amp; electrical, and cables (when status is Available). Cameras, network gear, AV/print, and furniture stay in Assets / Repairs only.</p>
+      <p class="field-note hint-warn" *ngIf="assetLoadHint">{{ assetLoadHint }}</p>
+      <p class="msg-error" *ngIf="assetLoadError" style="margin: 0 0 8px;">⚠️ {{ assetLoadError }}</p>
       <select [(ngModel)]="selectedAssetId" class="input select-input">
         <option value="">-- Select Asset --</option>
         <option *ngFor="let a of availableAssets" [value]="a.id">

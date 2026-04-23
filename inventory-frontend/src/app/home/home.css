@@ -1,29 +1,185 @@
+/* Full-bleed hero under fixed header; cancel horizontal .page gutters */
+:host {
+  display: block;
+  margin-left: -20px;
+  margin-right: -20px;
+  width: calc(100% + 40px);
+  max-width: none;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
 .hero {
   position: relative;
-  min-height: auto;
+  min-height: calc(100vh - 60px);
+  min-height: calc(100svh - 60px);
   background-image: url('https://images.unsplash.com/photo-1553413077-190dd305871c?w=1600&q=80');
   background-size: cover;
   background-position: center;
-  padding: 30px 0;
+  padding: clamp(20px, 4vh, 40px) 0;
   display: flex;
   width: 100%;
   margin: 0;
   align-items: center;
-  /* margin: -20px -20px 0 -20px; */
+  box-sizing: border-box;
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(10,18,35,0.92) 40%, rgba(10,18,35,0.4) 100%);
+  background: linear-gradient(
+    to right,
+    rgba(10, 18, 35, 0.94) 0%,
+    rgba(10, 18, 35, 0.88) 38%,
+    rgba(10, 18, 35, 0.55) 58%,
+    rgba(10, 18, 35, 0.35) 100%
+  );
+}
+
+.hero-layout {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.95fr);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 clamp(16px, 3vw, 32px);
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  padding: 60px 48px;
+  padding: clamp(28px, 5vw, 56px) 0;
   max-width: 100%;
   width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-typewriter {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.hero-typewriter-card {
+  width: 100%;
+  max-width: 380px;
+  padding: clamp(22px, 3vw, 32px) clamp(20px, 3vw, 28px);
+  border-radius: 18px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.hero-tw-kicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  margin-bottom: 14px;
+  opacity: 0.95;
+  text-shadow:
+    0 0 12px rgba(2, 6, 23, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.hero-tw-text {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.1vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: #e2e8f0;
+  min-height: 3.2em;
+  text-align: left;
+  text-shadow:
+    0 0 18px rgba(2, 6, 23, 0.95),
+    0 2px 8px rgba(0, 0, 0, 0.85),
+    0 0 1px rgba(0, 0, 0, 1);
+}
+
+.hero-tw-line {
+  word-break: break-word;
+}
+
+.hero-tw-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: #38bdf8;
+  font-weight: 400;
+  text-shadow: 0 0 14px rgba(2, 6, 23, 0.95), 0 1px 4px rgba(0, 0, 0, 0.9);
+  animation: hero-cursor-blink 0.95s step-end infinite;
+}
+
+@keyframes hero-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding-bottom: 8px;
+  }
+
+  .hero-typewriter {
+    min-height: 0;
+    order: 2;
+  }
+
+  .hero-content {
+    order: 1;
+    padding-bottom: 12px;
+  }
+
+  .hero-typewriter-card {
+    max-width: none;
+  }
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 8px;
+}
+
+.hero-stats .stat-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(148, 163, 184, 0.35);
+  flex-shrink: 0;
+}
+
+@media (max-width: 520px) {
+  .hero-stats .stat-divider {
+    display: none;
+  }
 }
 
 .hero-tag {
@@ -780,10 +936,11 @@
     padding-right: 15px !important;
   }
 
-  /* HERO */
+  /* HERO — keep first fold under fixed header */
   .hero {
-    min-height: auto;
-    padding: 30px 0;
+    min-height: calc(100vh - 60px);
+    min-height: calc(100svh - 60px);
+    padding: clamp(16px, 3vh, 28px) 0;
   }
 
   .hero-content {

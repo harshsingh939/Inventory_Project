@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, Inject } from '@angular/core';
+import { apiUrl } from './api-url';
 
 export interface UserProfile {
   id: number;
@@ -14,7 +15,7 @@ export interface UserProfile {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/auth';
+  private readonly authBase = apiUrl('auth');
   private isBrowser: boolean;
 
   constructor(
@@ -25,7 +26,7 @@ export class AuthService {
   }
 
   login(identifier: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { identifier, password }).pipe(
+    return this.http.post(`${this.authBase}/login`, { identifier, password }).pipe(
       tap((res: any) => {
         if (this.isBrowser) {
           sessionStorage.setItem('token', res.token);
@@ -41,7 +42,7 @@ export class AuthService {
     mobile: string;
     password: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/signup`, data);
+    return this.http.post(`${this.authBase}/signup`, data);
   }
 
   logout() {

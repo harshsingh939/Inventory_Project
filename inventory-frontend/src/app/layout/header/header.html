@@ -1,64 +1,87 @@
 <div class="header">
 
-  <!-- Brand (left) -->
-  <div class="header-brand">
+  <button
+    type="button"
+    class="nav-menu-trigger"
+    [class.open]="sidebarOpen"
+    (click)="toggleSidebar(); $event.stopPropagation()"
+    [attr.aria-expanded]="sidebarOpen ? 'true' : 'false'"
+    aria-controls="app-nav-sidebar"
+    aria-label="Open navigation menu">
+    <span class="burger-bar" aria-hidden="true"></span>
+    <span class="burger-bar" aria-hidden="true"></span>
+    <span class="burger-bar" aria-hidden="true"></span>
+  </button>
+
+  <!-- Brand -->
+  <a routerLink="/" class="header-brand" (click)="closeSidebar()">
     <div class="brand-logo">IT</div>
     <div class="brand-text">
       <span class="brand-name">InvenTrack</span>
       <span class="brand-sub">INVENTORY SYSTEM</span>
     </div>
-  </div>
+  </a>
 
-  <!-- Spacer — pushes everything after to the right -->
   <div class="header-spacer"></div>
 
-  <!-- Login / Signup (logged out only) -->
+  <!-- Login/Signup — not logged in -->
   <div class="header-auth" *ngIf="!isLoggedIn">
-    <a routerLink="/login" routerLinkActive="active-link" class="auth-btn">Login</a>
+    <a routerLink="/login"  routerLinkActive="active-link" class="auth-btn">Login</a>
     <a routerLink="/signup" routerLinkActive="active-link" class="auth-btn signup">Sign Up</a>
   </div>
 
-  <!-- Navigation Dropdown (next to brand) -->
-  <div class="nav-dropdown-wrapper">
-    <button class="nav-dropdown-btn" (click)="toggleNavDropdown()">
-      Navigation ▾
-    </button>
-    <!-- <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
-      <li><a routerLink="/home" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🏠</span> Home</a></li>
-      <li><a routerLink="/users" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>👥 </span>Users</a></li>
-      <li><a routerLink="/repairs" routerLinkActive="active-nav" (click)="closeNavDropdown()"><span>🔧 </span>Repairs</a></li>
-    </ul> -->
-    <ul class="nav-dropdown-menu" *ngIf="isNavDropdownOpen">
-
-  <!-- ✅ COMMON -->
-  <li>
-    <a routerLink="/home" (click)="closeNavDropdown()">
-      <span>🏠</span> Home
-    </a>
-  </li>
-
-  <!-- 👑 ADMIN -->
-  <ng-container *ngIf="auth.getRole() === 'admin'">
-    <li><a routerLink="/users" (click)="closeNavDropdown()"><span>👥</span> Users</a></li>
-    <li><a routerLink="/assets" (click)="closeNavDropdown()"><span>📦</span> Assets</a></li>
-    <li><a routerLink="/sessions" (click)="closeNavDropdown()"><span>🕒</span> Sessions</a></li>
-    <li><a routerLink="/repairs" (click)="closeNavDropdown()"><span>🔧</span> Repairs</a></li>
-  </ng-container>
-
-  <!-- 👤 NORMAL USER -->
-  <ng-container *ngIf="auth.getRole() !== 'admin'">
-    <li><a routerLink="/users" (click)="closeNavDropdown()"><span>👥</span> Users</a></li>
-    <li><a routerLink="/repairs" (click)="closeNavDropdown()"><span>🔧</span> Repairs</a></li>
-  </ng-container>
-
-</ul>
-</div>
-
-  <!-- Bell + Avatar (right) -->
+  <!-- Right side -->
   <div class="header-right">
-    <button class="icon-btn">🔔</button>
+
+    <!-- Notifications — admins only (recent repairs from any user) -->
+    <div class="notif-wrapper" *ngIf="isLoggedIn && isAdmin">
+      <button type="button" class="icon-btn notif-btn" (click)="toggleNotifications()" aria-label="Notifications">
+        🔔
+        <span class="notif-badge" *ngIf="notifService.unreadCount() > 0">
+          {{ notifService.unreadCount() > 99 ? '99+' : notifService.unreadCount() }}
+        </span>
+      </button>
+
+      <div class="notif-dropdown" *ngIf="showNotifications">
+        <div class="notif-header">
+          <div class="notif-header-content">
+            <span class="notif-header-icon">🔔</span>
+            <span class="notif-header-text">Recent Repairs</span>
+          </div>
+          <span class="notif-count">{{ notifService.notifications().length }}</span>
+        </div>
+
+        <div class="notif-list">
+          <div *ngFor="let n of notifService.notifications()"
+            class="notif-item">
+            <div class="notif-icon">🔧</div>
+            <div class="notif-body">
+              <div class="notif-title">Repair activity</div>
+              <div class="notif-desc">{{ n.asset_type }} — {{ n.brand }}</div>
+              <div class="notif-issue">{{ n.issue }}</div>
+              <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
+            </div>
+          </div>
+
+          <div class="notif-empty" *ngIf="notifService.notifications().length === 0">
+            <div class="notif-empty-icon">🔧</div>
+            <p class="notif-empty-title">No repair records yet</p>
+            <p class="notif-empty-subtitle">New repairs will appear here</p>
+          </div>
+        </div>
+
+        <div class="notif-footer">
+          <a routerLink="/repairs" (click)="closeNotificationsForNav()">
+            View all repairs →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avatar -->
     <div class="avatar" (click)="toggleDropdown()">{{ initial }}</div>
 
+    <!-- Profile Dropdown -->
     <div class="dropdown" *ngIf="showDropdown">
       <ng-container *ngIf="isLoggedIn; else notLoggedIn">
         <div class="dropdown-header">
@@ -78,14 +101,70 @@
       <ng-template #notLoggedIn>
         <div class="dropdown-item"><span>⚠️</span><span>Not logged in</span></div>
         <a routerLink="/login" class="logout-btn"
-           style="text-align:center; text-decoration:none; display:block;">
+          style="text-align:center; text-decoration:none; display:block;">
           🔐 Login
         </a>
       </ng-template>
     </div>
-  </div>
 
+  </div>
 </div>
+
+<!-- Sidebar backdrop (below fixed header) -->
+<div
+  class="sidebar-backdrop"
+  [class.sidebar-backdrop--visible]="sidebarOpen"
+  (click)="closeSidebar()"
+  aria-hidden="true"></div>
+
+<!-- Slide-in navigation -->
+<aside
+  id="app-nav-sidebar"
+  class="nav-sidebar"
+  [class.nav-sidebar--open]="sidebarOpen"
+  aria-label="Main navigation">
+  <div class="nav-sidebar-header">
+    <span class="nav-sidebar-title">Navigation</span>
+    <button type="button" class="nav-sidebar-close" (click)="closeSidebar()" aria-label="Close menu">✕</button>
+  </div>
+  <nav class="nav-sidebar-inner">
+    <ng-container *ngIf="isLoggedIn; else guestNavMessage">
+      <a routerLink="/" routerLinkActive="nav-sidebar-link--active" [routerLinkActiveOptions]="{exact:true}"
+        class="nav-sidebar-link" (click)="closeSidebar()">
+        <span class="nav-sidebar-icon">🏠</span><span class="nav-sidebar-label">Home</span>
+      </a>
+      <a routerLink="/users" routerLinkActive="nav-sidebar-link--active"
+        class="nav-sidebar-link" (click)="closeSidebar()">
+        <span class="nav-sidebar-icon">👥</span><span class="nav-sidebar-label">Users</span>
+      </a>
+      <a routerLink="/repairs" routerLinkActive="nav-sidebar-link--active"
+        class="nav-sidebar-link" (click)="closeSidebar()">
+        <span class="nav-sidebar-icon">🔧</span><span class="nav-sidebar-label">Repairs</span>
+      </a>
+      <ng-container *ngIf="isAdmin">
+        <a routerLink="/dashboard" routerLinkActive="nav-sidebar-link--active"
+          class="nav-sidebar-link" (click)="closeSidebar()">
+          <span class="nav-sidebar-icon">📊</span><span class="nav-sidebar-label">Dashboard</span>
+        </a>
+        <a routerLink="/assets" routerLinkActive="nav-sidebar-link--active"
+          class="nav-sidebar-link" (click)="closeSidebar()">
+          <span class="nav-sidebar-icon">📦</span><span class="nav-sidebar-label">Assets</span>
+        </a>
+        <a routerLink="/sessions" routerLinkActive="nav-sidebar-link--active"
+          class="nav-sidebar-link" (click)="closeSidebar()">
+          <span class="nav-sidebar-icon">🔗</span><span class="nav-sidebar-label">Sessions</span>
+        </a>
+      </ng-container>
+    </ng-container>
+    <ng-template #guestNavMessage>
+      <div class="nav-sidebar-guest">
+        <div class="nav-sidebar-guest-icon" aria-hidden="true">👤</div>
+        <p class="nav-sidebar-guest-title">No user logged in</p>
+        <p class="nav-sidebar-guest-hint">Sign in or create an account using the buttons in the top bar to open navigation.</p>
+      </div>
+    </ng-template>
+  </nav>
+</aside>
 
 <!-- Logout Popup -->
 <div class="popup-overlay" *ngIf="showLogoutPopup">

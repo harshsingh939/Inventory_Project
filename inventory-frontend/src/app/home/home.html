@@ -1,47 +1,58 @@
 <div class="hero">
   <div class="hero-overlay"></div>
-  <div class="hero-particles">
-    <span></span><span></span><span></span>
-    <span></span><span></span><span></span>
+  <div class="hero-particles" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
   </div>
-  <div class="hero-content">
-    <div class="hero-badge">
-      <span class="badge-dot"></span>
-      INVENTORY MANAGEMENT SYSTEM
-    </div>
-    <h1>Welcome to <span class="accent">InvenTrack</span></h1>
-    <p class="hero-sub">Track, manage and optimize your entire inventory ecosystem with real-time insights and powerful automation.</p>
-    <div class="hero-actions">
-      <a routerLink="/dashboard" class="hero-btn primary">
-        Go to Dashboard <span class="btn-arrow">→</span>
-      </a>
-      <a routerLink="/assets" class="hero-btn secondary">
-        View Assets
-      </a>
-    </div><br>
-    <div class="hero-stats">
-    
-      <div class="stat">
-        <span class="stat-num">99%</span>
-        <span class="stat-label">Uptime</span>
-      </div><br>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num">10k+</span>
-        <span class="stat-label">Assets Tracked</span>
-      </div><br>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num">24/7</span>
-        <span class="stat-label">Monitoring</span>
+  <div class="hero-layout">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        INVENTORY MANAGEMENT SYSTEM
+      </div>
+      <h1>Welcome to <span class="accent">InvenTrack</span></h1>
+      <p class="hero-sub">Track, manage and optimize your entire inventory ecosystem with real-time insights and powerful automation.</p>
+      <div class="hero-actions">
+        <a routerLink="/dashboard" class="hero-btn primary">
+          Go to Dashboard <span class="btn-arrow">→</span>
+        </a>
+        <a routerLink="/assets" class="hero-btn secondary">
+          View Assets
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">99%</span>
+          <span class="stat-label">Uptime</span>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat">
+          <span class="stat-num">10k+</span>
+          <span class="stat-label">Assets Tracked</span>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">Monitoring</span>
+        </div>
       </div>
     </div>
+
+    <aside class="hero-typewriter" aria-live="polite" aria-atomic="true">
+      <div class="hero-typewriter-card">
+        <span class="hero-tw-kicker">In the system</span>
+        <p class="hero-tw-text">
+          <span class="hero-tw-line">{{ typedText() }}</span><span class="hero-tw-cursor" aria-hidden="true">▍</span>
+        </p>
+      </div>
+    </aside>
   </div>
 </div>
 
 <div class="features-section">
   <div class="section-header">
-    <h2 style="color: rgb(34, 156, 186);">Everything you need to manage inventory</h2>
+    <h2 class="home-animate-heading">Everything you need to manage inventory</h2>
     <p>Powerful tools built for modern warehouse management</p>
   </div>
   <div class="features">

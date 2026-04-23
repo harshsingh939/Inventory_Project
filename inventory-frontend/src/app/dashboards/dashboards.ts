@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { apiUrl } from '../api-url';
 import { BaseChartDirective } from 'ng2-charts';
 import {
   Chart,
@@ -38,7 +39,7 @@ Chart.register(
   styleUrl: './dashboards.css'
 })
 export class Dashboards implements OnInit {
-  private apiUrl = 'http://localhost:3000/api';
+  private readonly apiBase = apiUrl('');
 
   totalUsers     = 0;
   totalAssets    = 0;
@@ -127,10 +128,10 @@ export class Dashboards implements OnInit {
     this.cdr.detectChanges();
 
     Promise.all([
-      this.http.get<any[]>(`${this.apiUrl}/users`).toPromise(),
-      this.http.get<any[]>(`${this.apiUrl}/assets`).toPromise(),
-      this.http.get<any[]>(`${this.apiUrl}/sessions/active`).toPromise(),
-      this.http.get<any[]>(`${this.apiUrl}/repairs`).toPromise(),
+      this.http.get<any[]>(`${this.apiBase}/users`).toPromise(),
+      this.http.get<any[]>(`${this.apiBase}/assets`).toPromise(),
+      this.http.get<any[]>(`${this.apiBase}/sessions/active`).toPromise(),
+      this.http.get<any[]>(`${this.apiBase}/repairs`).toPromise(),
     ]).then(([users, assets, sessions, repairs]) => {
 
       this.totalUsers     = users?.length || 0;

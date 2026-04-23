@@ -1,0 +1,73 @@
+.asset-crumb {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.asset-crumb a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.asset-crumb a:hover {
+  text-decoration: underline;
+}
+
+.crumb-sep {
+  margin: 0 8px;
+  color: #475569;
+}
+
+.crumb-current {
+  color: #94a3b8;
+}
+
+.category-hint {
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.category-hint a {
+  color: #38bdf8;
+}
+
+.hint-compact {
+  border-left: 3px solid #38bdf8;
+}
+
+.add-compact .compact-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.add-compact .select-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inv-panel {
+  margin-bottom: 16px;
+}
+
+.inv-panel-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.inv-panel .select-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inv-panel .field-hint {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+}

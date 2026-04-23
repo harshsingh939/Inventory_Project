@@ -4,14 +4,86 @@
 }
 
 .content {
-  margin-left:0px;
+  margin-left: 0px;
   flex: 1;
-  min-width:100px;
+  min-width: 100px;
   display: flex;
   flex-direction: column;
   background-color: #0a1223;
   transition: margin-left 0.25s ease;
   margin-top: 60px;
+}
+
+/* ── Page toolbar: Home + current section (matches app cards / buttons) ── */
+.page-context-bar {
+  flex-shrink: 0;
+  padding: 12px 20px 14px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 18, 35, 0.92) 100%);
+  border-bottom: 1px solid rgba(51, 65, 85, 0.55);
+}
+
+.page-context-inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: #e2e8f0;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.08);
+  box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35) inset;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.page-home-btn:hover {
+  color: #f8fafc;
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+  transform: translateY(-1px);
+}
+
+.page-home-btn:active {
+  transform: translateY(0);
+}
+
+.page-home-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  opacity: 0.95;
+}
+
+.page-context-sep {
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.page-context-current {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.03em;
+  text-transform: none;
 }
 
 .content.collapsed {
@@ -20,5 +92,22 @@
 
 .page {
   flex: 1;
-  padding: 20px ;
+  padding: 0 20px 20px;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .page-context-bar {
+    padding: 10px 14px 12px;
+  }
+
+  .page-home-btn {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .page-context-current {
+    width: 100%;
+    padding-left: 2px;
+  }
 }

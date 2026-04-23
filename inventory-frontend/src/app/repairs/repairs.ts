@@ -2,6 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { NotificationService } from '../notification.service';
+import { apiUrl } from '../api-url';
 
 @Component({
   selector: 'app-repairs',
@@ -11,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrl: './repairs.css'
 })
 export class Repairs implements OnInit {
-  private apiUrl = 'http://localhost:3000/api';
+  private readonly apiBase = apiUrl('');
 
   repair = {
     asset_id: '',
@@ -28,7 +30,11 @@ export class Repairs implements OnInit {
   errorMsg = '';
   successMsg = '';
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
+    private notifications: NotificationService
+  ) {}
 
   ngOnInit() {
     this.getRepairs();
@@ -36,7 +42,7 @@ export class Repairs implements OnInit {
   }
 
   getAssets() {
-    this.http.get<any[]>(`${this.apiUrl}/assets`).subscribe({
+    this.http.get<any[]>(`${this.apiBase}/assets`).subscribe({
       next: (data) => {
         this.assets = data;
         this.cdr.detectChanges();
@@ -51,7 +57,7 @@ export class Repairs implements OnInit {
 
   getRepairs() {
     this.isLoading = true;
-    this.http.get<any[]>(`${this.apiUrl}/repairs`).subscribe({
+    this.http.get<any[]>(`${this.apiBase}/repairs`).subscribe({
       next: (data) => {
         this.repairs = data;
         this.filteredRepairs = data;
@@ -96,7 +102,7 @@ export class Repairs implements OnInit {
     this.successMsg = '';
     this.isAdding = true;
 
-    this.http.post<any>(`${this.apiUrl}/repairs/add`, this.repair).subscribe({
+    this.http.post<any>(`${this.apiBase}/repairs/add`, this.repair).subscribe({
       next: (res) => {
         const newRepair = {
           id: res.id,
@@ -110,6 +116,7 @@ export class Repairs implements OnInit {
         this.isAdding = false;
         this.successMsg = '✅ Repair request added!';
         this.repair = { asset_id: '', issue: '' };
+        this.notifications.fetchNotifications();
         this.cdr.detectChanges();
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
       },
@@ -122,7 +129,7 @@ export class Repairs implements OnInit {
   }
 
   updateStatus(repairId: number, status: string) {
-    this.http.put<any>(`${this.apiUrl}/repairs/update/${repairId}`, { status }).subscribe({
+    this.http.put<any>(`${this.apiBase}/repairs/update/${repairId}`, { status }).subscribe({
       next: () => {
         const repair = this.repairs.find(r => r.id === repairId);
         if (repair) repair.status = status;

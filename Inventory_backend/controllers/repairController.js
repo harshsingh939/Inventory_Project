@@ -7,14 +7,30 @@ exports.addRepair = (req, res) => {
     return res.status(400).json({ message: 'Asset and issue are required' });
   }
 
+  // Try with created_at first, fallback without if column doesn't exist
   db.query(
-    "INSERT INTO repairs (asset_id, issue, status) VALUES (?, ?, 'Pending')",
+    "INSERT INTO repairs (asset_id, issue, status, created_at) VALUES (?, ?, 'Pending', NOW())",
     [asset_id, issue],
     (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-
-      db.query("UPDATE assets SET status='Under Repair' WHERE id=?", [asset_id]);
-      res.json({ message: 'Repair Added ✅', id: result.insertId });
+      if (err) {
+        // If created_at column doesn't exist, try without it
+        if (err.code === 'ER_BAD_FIELD_ERROR' && err.message.includes('created_at')) {
+          db.query(
+            "INSERT INTO repairs (asset_id, issue, status) VALUES (?, ?, 'Pending')",
+            [asset_id, issue],
+            (err2, result2) => {
+              if (err2) return res.status(500).json({ message: err2.message });
+              db.query("UPDATE assets SET status='Under Repair' WHERE id=?", [asset_id]);
+              res.json({ message: 'Repair Added ✅', id: result2.insertId });
+            }
+          );
+        } else {
+          return res.status(500).json({ message: err.message });
+        }
+      } else {
+        db.query("UPDATE assets SET status='Under Repair' WHERE id=?", [asset_id]);
+        res.json({ message: 'Repair Added ✅', id: result.insertId });
+      }
     }
   );
 };

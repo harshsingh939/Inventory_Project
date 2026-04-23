@@ -1,9 +1,18 @@
 <div class="layout">
-
-    <app-header></app-header>
-    <div class="content">
+  <app-header></app-header>
+  <div class="content">
+    <nav class="page-context-bar" *ngIf="showBackHome()" aria-label="Page context">
+      <div class="page-context-inner">
+        <a routerLink="/" class="page-home-btn">
+          <span class="page-home-icon" aria-hidden="true">⌂</span>
+          <span>Home</span>
+        </a>
+        <span class="page-context-sep" *ngIf="pageContextLabel()" aria-hidden="true">/</span>
+        <span class="page-context-current" *ngIf="pageContextLabel()">{{ pageContextLabel() }}</span>
+      </div>
+    </nav>
     <div class="page">
       <router-outlet></router-outlet>
     </div>
   </div>
-  </div>
+</div>

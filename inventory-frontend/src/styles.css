@@ -10,6 +10,7 @@ body {
   background: #020617;
   color: #e2e8f0;
   margin: 0;               /* ✅ explicit zero */
+  overflow-x: hidden;
  /* my add */
   font-size: 14px;
   /* my add end */

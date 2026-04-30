@@ -1,0 +1,52 @@
+<nav class="inv-ws-crumb" *ngIf="!isLoading">
+  <a routerLink="/assets">Assets</a>
+  <span class="crumb-sep">/</span>
+  <span class="crumb-current" *ngIf="inventory">{{ inventory.name }}</span>
+  <span class="crumb-current" *ngIf="notFound">Not found</span>
+</nav>
+
+<div class="loading card" *ngIf="isLoading">⏳ Loading inventory…</div>
+
+<div class="card not-found-card" *ngIf="!isLoading && notFound">
+  <h3>Inventory not found</h3>
+  <p>This list may have been removed, or the link is invalid.</p>
+  <a routerLink="/assets" class="btn btn-primary">Back to Assets</a>
+</div>
+
+<div *ngIf="!isLoading && inventory && !notFound">
+  <ng-container *ngIf="invParsed() as wsMeta">
+    <div class="page-header inv-ws-header">
+      <h2><span class="inv-ws-ico" aria-hidden="true">{{ invIcon() }}</span> {{ inventory.name }}</h2>
+      <p>
+        Choose a category below. Each opens the same <strong>add row + table + columns</strong> as the main Assets pages, with this inventory already selected for filtering and new items.
+      </p>
+    </div>
+
+    <div class="inv-ws-meta card" *ngIf="wsMeta.location || wsMeta.owner || wsMeta.description">
+      <div class="inv-ws-chips" *ngIf="wsMeta.location || wsMeta.owner">
+        <span class="inv-chip" *ngIf="wsMeta.location">📍 {{ wsMeta.location }}</span>
+        <span class="inv-chip" *ngIf="wsMeta.owner">👤 {{ wsMeta.owner }}</span>
+      </div>
+      <p class="inv-ws-notes" *ngIf="wsMeta.description">{{ wsMeta.description }}</p>
+    </div>
+  </ng-container>
+
+  <p class="inv-ws-hint">
+    <a routerLink="/assets">← All inventories</a>
+    <span class="dot-sep">·</span>
+    Added {{ inventory.created_at | date:'mediumDate' }}
+  </p>
+
+  <div class="hub-grid">
+    <a
+      *ngFor="let slug of slugs"
+      class="hub-card card"
+      [routerLink]="['/assets', slug]"
+      [queryParams]="queryForCategory()">
+      <div class="hub-card-icon">{{ meta(slug)?.icon }}</div>
+      <h3 class="hub-card-title">{{ meta(slug)?.title }}</h3>
+      <p class="hub-card-blurb">{{ meta(slug)?.blurb }}</p>
+      <span class="hub-card-cta">Open →</span>
+    </a>
+  </div>
+</div>

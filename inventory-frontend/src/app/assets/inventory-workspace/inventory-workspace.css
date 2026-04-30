@@ -1,0 +1,162 @@
+/* Breadcrumb (match assets-category feel) */
+.inv-ws-crumb {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.inv-ws-crumb a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.inv-ws-crumb a:hover {
+  text-decoration: underline;
+}
+
+.crumb-sep {
+  margin: 0 8px;
+  color: #475569;
+}
+
+.crumb-current {
+  color: #94a3b8;
+}
+
+.page-header.inv-ws-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inv-ws-ico {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.inv-ws-meta {
+  margin-bottom: 12px;
+  padding: 16px 18px;
+}
+
+.inv-ws-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.inv-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #94a3b8;
+}
+
+.inv-ws-notes {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.55;
+}
+
+.inv-ws-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.inv-ws-hint a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.inv-ws-hint a:hover {
+  text-decoration: underline;
+}
+
+.dot-sep {
+  margin: 0 8px;
+  color: #475569;
+}
+
+.loading.card {
+  text-align: center;
+  padding: 28px;
+  color: #94a3b8;
+}
+
+.not-found-card h3 {
+  color: #f1f5f9;
+  margin: 0 0 8px;
+}
+
+.not-found-card p {
+  color: #94a3b8;
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+}
+
+.not-found-card .btn {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+}
+
+/* Same hub card grid as Assets hub */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.hub-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  min-height: 200px;
+  margin: 0;
+}
+
+.hub-card:hover .hub-card-cta {
+  color: #38bdf8;
+}
+
+.hub-card-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.hub-card-title {
+  color: #f1f5f9;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.hub-card-blurb {
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+.hub-card-cta {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+  }
+}

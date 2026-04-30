@@ -9,14 +9,22 @@
   overflow-x: clip;
 }
 
+@media (max-width: 768px) {
+  :host {
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+  }
+}
+
 .hero {
   position: relative;
-  min-height: calc(100vh - 60px);
-  min-height: calc(100svh - 60px);
+  min-height: calc(100vh - 52px);
+  min-height: calc(100svh - 52px);
   background-image: url('https://images.unsplash.com/photo-1553413077-190dd305871c?w=1600&q=80');
   background-size: cover;
   background-position: center;
-  padding: clamp(20px, 4vh, 40px) 0;
+  padding: clamp(28px, 6vh, 64px) 0;
   display: flex;
   width: 100%;
   margin: 0;
@@ -27,12 +35,13 @@
 .hero-overlay {
   position: absolute;
   inset: 0;
+  /* Wider readable band so headline + copy can span more of the viewport */
   background: linear-gradient(
     to right,
-    rgba(10, 18, 35, 0.94) 0%,
-    rgba(10, 18, 35, 0.88) 38%,
-    rgba(10, 18, 35, 0.55) 58%,
-    rgba(10, 18, 35, 0.35) 100%
+    rgba(10, 18, 35, 0.96) 0%,
+    rgba(10, 18, 35, 0.9) 42%,
+    rgba(10, 18, 35, 0.72) 62%,
+    rgba(10, 18, 35, 0.38) 100%
   );
 }
 
@@ -40,20 +49,20 @@
   position: relative;
   z-index: 3;
   width: 100%;
-  max-width: 1200px;
+  max-width: min(1540px, 96vw);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.95fr);
-  gap: clamp(24px, 4vw, 48px);
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.78fr);
+  gap: clamp(32px, 5vw, 72px);
   align-items: center;
   box-sizing: border-box;
-  padding: 0 clamp(16px, 3vw, 32px);
+  padding: 0 clamp(20px, 4vw, 48px);
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  padding: clamp(28px, 5vw, 56px) 0;
+  padding: clamp(36px, 6vw, 80px) 0;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -70,8 +79,8 @@
 
 .hero-typewriter-card {
   width: 100%;
-  max-width: 380px;
-  padding: clamp(22px, 3vw, 32px) clamp(20px, 3vw, 28px);
+  max-width: min(440px, 100%);
+  padding: clamp(26px, 3.5vw, 40px) clamp(22px, 3vw, 36px);
   border-radius: 18px;
   background: transparent;
   border: none;
@@ -82,12 +91,12 @@
 
 .hero-tw-kicker {
   display: block;
-  font-size: 0.68rem;
+  font-size: clamp(0.72rem, 0.65rem + 0.3vw, 0.85rem);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #38bdf8;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   opacity: 0.95;
   text-shadow:
     0 0 12px rgba(2, 6, 23, 0.9),
@@ -96,7 +105,7 @@
 
 .hero-tw-text {
   margin: 0;
-  font-size: clamp(1.05rem, 2.1vw, 1.25rem);
+  font-size: clamp(1.12rem, 2.2vw, 1.45rem);
   font-weight: 600;
   line-height: 1.45;
   color: #e2e8f0;
@@ -157,7 +166,7 @@
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: clamp(14px, 2vw, 20px);
   align-items: center;
 }
 
@@ -165,13 +174,36 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 20px;
-  margin-top: 8px;
+  gap: clamp(16px, 2.5vw, 28px) clamp(20px, 3vw, 40px);
+  margin-top: clamp(20px, 3vh, 36px);
+}
+
+.hero-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hero-stats .stat-num {
+  font-size: clamp(1.35rem, 2vw + 0.5rem, 2rem);
+  font-weight: 800;
+  color: #f1f5f9;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hero-stats .stat-label {
+  font-size: clamp(0.78rem, 0.9vw, 0.95rem);
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .hero-stats .stat-divider {
   width: 1px;
-  height: 28px;
+  height: clamp(36px, 5vw, 48px);
   background: rgba(148, 163, 184, 0.35);
   flex-shrink: 0;
 }
@@ -192,11 +224,12 @@
 }
 
 .hero-content h1 {
-  font-size: 2.4rem;
+  font-size: clamp(2.65rem, 1.25rem + 4.2vw, 4.75rem);
   font-weight: 700;
   color: #fff;
-  margin: 0 0 16px;
-  line-height: 1.2;
+  margin: 0 0 clamp(18px, 2.5vh, 28px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
 }
 
 .accent {
@@ -204,27 +237,27 @@
 }
 
 .hero-sub {
-  color: #94a3b8;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  margin-bottom: 28px;
-  max-width: 440px;
+  color: #cbd5e1;
+  font-size: clamp(1.05rem, 0.95rem + 0.9vw, 1.35rem);
+  line-height: 1.65;
+  margin-bottom: clamp(28px, 4vh, 40px);
+  max-width: min(42rem, 100%);
 }
 
 .hero-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: transparent;
-  border: 1.5px solid #38bdf8;
+  border: 2px solid #38bdf8;
   color: #38bdf8;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: clamp(14px, 1.8vh, 18px) clamp(22px, 3vw, 36px);
+  border-radius: 10px;
+  font-size: clamp(0.95rem, 0.9rem + 0.35vw, 1.1rem);
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 
 .hero-btn:hover {
@@ -938,8 +971,8 @@
 
   /* HERO — keep first fold under fixed header */
   .hero {
-    min-height: calc(100vh - 60px);
-    min-height: calc(100svh - 60px);
+    min-height: calc(100vh - 56px);
+    min-height: calc(100svh - 56px);
     padding: clamp(16px, 3vh, 28px) 0;
   }
 
@@ -949,11 +982,11 @@
   }
 
   .hero-content h1 {
-    font-size: 26px;
+    font-size: clamp(1.85rem, 1.1rem + 4.5vw, 2.85rem);
   }
 
   .hero-sub {
-    font-size: 14px;
+    font-size: clamp(0.95rem, 0.88rem + 0.6vw, 1.12rem);
   }
 
   /* BUTTONS */

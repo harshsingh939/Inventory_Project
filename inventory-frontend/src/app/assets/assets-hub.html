@@ -10,30 +10,26 @@
     <button type="button" class="btn btn-primary btn-sm" (click)="openAddInventory()">+ Add inventory</button>
   </div>
   <p class="inv-help" *ngIf="!inventories.length">
-    No inventories yet. Add one (name + details + date is stored automatically). Then pick it below when opening a category.
+    No inventories yet. Use <strong>+ Add inventory</strong> to create a named list (name, location, owner, notes — date is saved automatically). Then pick it below when opening a category.
   </p>
-  <div class="inv-table-wrap" *ngIf="inventories.length">
-    <table class="inv-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Added</th>
-          <th>Details</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let inv of inventories">
-          <td><strong>{{ inv.name }}</strong></td>
-          <td>{{ inv.created_at | date:'mediumDate' }}</td>
-          <td class="inv-details">{{ inv.details || '—' }}</td>
-          <td class="inv-actions">
-            <button type="button" class="btn-link" (click)="openEditInventory(inv)">Update</button>
-            <button type="button" class="btn-link danger" (click)="deleteInventory(inv)">Remove</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="inv-cards-grid" *ngIf="inventories.length">
+    <ng-container *ngFor="let inv of inventories">
+      <article class="inv-card card" *ngIf="invParsed(inv) as meta">
+        <div class="inv-card-icon" aria-hidden="true">{{ invIcon(inv.id) }}</div>
+        <h3 class="inv-card-title">{{ inv.name }}</h3>
+        <p class="inv-card-date">Added {{ inv.created_at | date:'mediumDate' }}</p>
+        <div class="inv-card-chips" *ngIf="meta.location || meta.owner">
+          <span class="inv-chip" *ngIf="meta.location">📍 {{ meta.location }}</span>
+          <span class="inv-chip" *ngIf="meta.owner">👤 {{ meta.owner }}</span>
+        </div>
+        <p class="inv-card-blurb">{{ invCardBlurb(inv) }}</p>
+        <div class="inv-card-actions">
+          <a class="btn btn-primary btn-sm inv-open-link" [routerLink]="['/assets/inv', inv.id]">Open →</a>
+          <button type="button" class="btn btn-outline btn-sm" (click)="openEditInventory(inv)">Update</button>
+          <button type="button" class="btn btn-danger-ghost btn-sm" (click)="deleteInventory(inv)">Remove</button>
+        </div>
+      </article>
+    </ng-container>
   </div>
 </div>
 
@@ -66,19 +62,34 @@
       <h3>{{ editingInv ? 'Update inventory' : 'Add inventory' }}</h3>
       <button type="button" class="close-btn" (click)="closeInvModal()">✕</button>
     </div>
+    <p class="inv-modal-lead">These fields match what appears on your inventory cards below.</p>
     <div class="form-field">
-      <label>Name</label>
-      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. Main office stock" />
+      <label>List name <span class="req">*</span></label>
+      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. Mobile, Main office stock" />
+    </div>
+    <div class="inv-modal-row">
+      <div class="form-field">
+        <label>Location / site</label>
+        <input class="input" [(ngModel)]="invForm.location" placeholder="e.g. Building A, shelf 12" />
+      </div>
+      <div class="form-field">
+        <label>Owner / team</label>
+        <input class="input" [(ngModel)]="invForm.owner" placeholder="e.g. IT procurement" />
+      </div>
     </div>
     <div class="form-field">
-      <label>Details</label>
-      <textarea class="input textarea" rows="3" [(ngModel)]="invForm.details" placeholder="Location, owner, notes…"></textarea>
+      <label>Description &amp; notes</label>
+      <textarea
+        class="input textarea"
+        rows="4"
+        [(ngModel)]="invForm.description"
+        placeholder="What belongs in this list, handover notes, or anything people should know…"></textarea>
     </div>
     <div class="msg-error" *ngIf="invErr">{{ invErr }}</div>
     <div class="inv-modal-actions">
       <button type="button" class="btn" (click)="closeInvModal()">Cancel</button>
       <button type="button" class="btn btn-primary" (click)="saveInventory()" [disabled]="invSaving">
-        {{ invSaving ? 'Saving…' : (editingInv ? 'Save' : 'Add') }}
+        {{ invSaving ? 'Saving…' : (editingInv ? 'Save changes' : 'Create inventory') }}
       </button>
     </div>
   </div>

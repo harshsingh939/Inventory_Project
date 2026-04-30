@@ -50,6 +50,9 @@ export class MainLayout implements OnDestroy {
     };
     const titleCase = (s: string) =>
       s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    if (first === 'assets' && segments[1] === 'inv' && segments[2]) {
+      return 'Assets › Inventory';
+    }
     if (first === 'assets' && segments[1]) {
       return `Assets › ${titleCase(segments[1])}`;
     }

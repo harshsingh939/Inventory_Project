@@ -6,6 +6,7 @@ import { Dashboards } from './dashboards/dashboards';
 import { Users } from './users/users';
 import { AssetsHub } from './assets/assets-hub';
 import { AssetsCategory } from './assets/assets-category';
+import { AssetsInventoryWorkspace } from './assets/inventory-workspace/inventory-workspace';
 import { Sessions } from './sessions/sessions';
 import { Repairs } from './repairs/repairs';
 import { Home } from './home/home';
@@ -27,8 +28,9 @@ export const routes: Routes = [
     children: [
       { path: '',           component: Home },           // ✅ free
       { path: 'dashboard',  component: Dashboards,  canActivate: [AdminGuard] },
-      { path: 'assets',            component: AssetsHub,       canActivate: [AuthGuard] },
-      { path: 'assets/:category',  component: AssetsCategory, canActivate: [AuthGuard] },
+      { path: 'assets/inv/:invId', component: AssetsInventoryWorkspace, canActivate: [AuthGuard] },
+      { path: 'assets',             component: AssetsHub,        canActivate: [AuthGuard] },
+      { path: 'assets/:category',   component: AssetsCategory,    canActivate: [AuthGuard] },
       { path: 'users',      component: Users,      canActivate: [AuthGuard] },
       { path: 'sessions',   component: Sessions,   canActivate: [AdminGuard] },
       { path: 'repairs',    component: Repairs,    canActivate: [AuthGuard] },

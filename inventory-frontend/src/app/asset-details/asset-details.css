@@ -1,10 +1,13 @@
 .details-wrapper {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #020617;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
 }
 
 .details-card {
@@ -138,4 +141,29 @@
   font-size: 1.05rem;
   line-height: 1;
   opacity: 0.95;
+}
+
+@media (max-width: 480px) {
+  .details-wrapper {
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    align-items: flex-start;
+  }
+
+  .details-card {
+    padding: 20px 16px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-header {
+    flex-wrap: wrap;
+  }
+
+  .details-header h2 {
+    font-size: 1.05rem;
+    word-break: break-word;
+  }
 }

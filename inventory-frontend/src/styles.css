@@ -5,6 +5,11 @@
   box-sizing: border-box;  /* ✅ critical - was missing */
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', sans-serif;
   background: #020617;
@@ -19,6 +24,8 @@ body {
 /* Layout */
 .container {
   padding: 30px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 🔷 Headings */
@@ -172,13 +179,52 @@ tr:hover {
   gap: 8px;                /* ✅ replaces margin on inputs */
 }
 
+/* Horizontal scroll for wide tables inside cards */
+.table-responsive,
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
 /* 📱 Responsive */
 @media (max-width: 768px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .card {
+    padding: 16px;
+    margin: 12px 0;
+  }
+
+  th,
+  td {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+  }
+
   .dashboard-grid {
     flex-direction: column;
   }
   .input {
     width: 100%;
+    max-width: 100%;
     margin: 4px 0;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 10px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .search-box {
+    max-width: none;
   }
 }

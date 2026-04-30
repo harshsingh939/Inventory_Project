@@ -26,7 +26,11 @@
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr;
   gap: 12px;
-  align-items: end;
+  align-items: start;
+}
+
+.form-row .btn-field {
+  align-self: end;
 }
 
 .form-field {
@@ -264,4 +268,30 @@ tr:hover td { background: rgba(30,41,59,0.4); }
 
 @media (max-width: 768px) {
   .form-row { grid-template-columns: 1fr; }
+
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .btn-clear {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .action-btns {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .btn-action {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
 }

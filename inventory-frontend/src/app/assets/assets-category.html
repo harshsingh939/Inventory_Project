@@ -35,9 +35,11 @@
         <option [ngValue]="''">Select inventory…</option>
         <option *ngFor="let inv of inventories" [ngValue]="inv.id">{{ inv.name }}</option>
       </select>
-      <p class="field-hint">Required while you have at least one named inventory.</p>
     </div>
   </div>
+  <p class="field-hint inv-panel-hint" *ngIf="inventories.length">
+    Required while you have at least one named inventory.
+  </p>
 </div>
 
 <!-- Add form: PC -->
@@ -145,7 +147,8 @@
 <!-- Table -->
 <div class="card" *ngIf="cat">
   <div class="loading" *ngIf="isLoading">⏳ Loading…</div>
-  <table *ngIf="!isLoading">
+  <div class="table-container" *ngIf="!isLoading">
+  <table>
     <thead>
       <tr>
         <th>ID</th>
@@ -190,6 +193,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 </div>
 
 <!-- QR modal -->

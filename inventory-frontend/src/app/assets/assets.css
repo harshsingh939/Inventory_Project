@@ -1,3 +1,14 @@
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+}
+
+.table-container table {
+  min-width: 720px;
+}
+
 .page-header {
   margin-bottom: 20px;
 }
@@ -27,6 +38,11 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 12px;
+  align-items: start;
+}
+
+.form-row .btn-field {
+  align-self: end;
 }
 
 .form-field {
@@ -184,6 +200,31 @@
 
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }
+
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .btn-clear {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .table-container table {
+    min-width: 640px;
+  }
+
+  .qr-modal {
+    margin: 0 12px;
+    max-width: calc(100vw - 24px);
+    padding: 20px 16px;
+  }
 }
 /* QR Button */
 .qr-btn {

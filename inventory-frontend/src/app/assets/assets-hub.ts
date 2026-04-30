@@ -14,6 +14,52 @@ export interface InventoryRow {
   updated_at?: string | null;
 }
 
+/** Structured lines at top of `details`; remainder is free-form description (backwards-compatible). */
+export function parseInventoryDetails(raw: string | null | undefined): {
+  location: string;
+  owner: string;
+  description: string;
+} {
+  const empty = { location: '', owner: '', description: '' };
+  if (raw == null || !String(raw).trim()) return empty;
+  const lines = String(raw).split(/\r?\n/);
+  let location = '';
+  let owner = '';
+  let i = 0;
+  for (; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (t.startsWith('Location:')) {
+      location = t.slice('Location:'.length).trim();
+    } else if (t.startsWith('Owner:')) {
+      owner = t.slice('Owner:'.length).trim();
+    } else if (t === '') {
+      continue;
+    } else {
+      break;
+    }
+  }
+  const description = lines.slice(i).join('\n').replace(/^\n+/, '').trim();
+  return { location, owner, description };
+}
+
+export function composeInventoryDetails(
+  location: string,
+  owner: string,
+  description: string,
+): string | null {
+  const loc = location.trim();
+  const own = owner.trim();
+  const desc = description.trim();
+  const meta: string[] = [];
+  if (loc) meta.push(`Location: ${loc}`);
+  if (own) meta.push(`Owner: ${own}`);
+  const header = meta.join('\n');
+  if (header && desc) return `${header}\n\n${desc}`;
+  if (header) return header;
+  if (desc) return desc;
+  return null;
+}
+
 @Component({
   selector: 'app-assets-hub',
   standalone: true,
@@ -31,9 +77,30 @@ export class AssetsHub implements OnInit {
 
   showInvModal = false;
   editingInv: InventoryRow | null = null;
-  invForm = { name: '', details: '' };
+  invForm = { name: '', location: '', owner: '', description: '' };
   invErr = '';
   invSaving = false;
+
+  readonly invCardIcons = ['📦', '🏢', '📋', '🗃️', '🏷️', '📍'] as const;
+
+  invIcon(id: number): string {
+    const idx = Math.abs(id) % this.invCardIcons.length;
+    return this.invCardIcons[idx];
+  }
+
+  invParsed(row: InventoryRow) {
+    return parseInventoryDetails(row.details);
+  }
+
+  invCardBlurb(row: InventoryRow): string {
+    const p = parseInventoryDetails(row.details);
+    if (p.description) return p.description;
+    if (p.location || p.owner) {
+      const bits = [p.location && `Location: ${p.location}`, p.owner && `Owner: ${p.owner}`].filter(Boolean);
+      return bits.join(' · ');
+    }
+    return '—';
+  }
 
   constructor(
     private http: HttpClient,
@@ -52,14 +119,16 @@ export class AssetsHub implements OnInit {
     return this.focusInvId !== '' ? { inv: this.focusInvId as number } : {};
   }
 
-  loadInventories() {
+  loadInventories(after?: () => void) {
     this.http.get<InventoryRow[]>(this.apiUrl).subscribe({
       next: (rows) => {
         this.inventories = rows || [];
+        after?.();
         this.cdr.detectChanges();
       },
       error: () => {
         this.inventories = [];
+        after?.();
         this.cdr.detectChanges();
       },
     });
@@ -67,14 +136,20 @@ export class AssetsHub implements OnInit {
 
   openAddInventory() {
     this.editingInv = null;
-    this.invForm = { name: '', details: '' };
+    this.invForm = { name: '', location: '', owner: '', description: '' };
     this.invErr = '';
     this.showInvModal = true;
   }
 
   openEditInventory(row: InventoryRow) {
     this.editingInv = row;
-    this.invForm = { name: row.name, details: row.details || '' };
+    const p = parseInventoryDetails(row.details);
+    this.invForm = {
+      name: row.name,
+      location: p.location,
+      owner: p.owner,
+      description: p.description,
+    };
     this.invErr = '';
     this.showInvModal = true;
   }
@@ -94,14 +169,22 @@ export class AssetsHub implements OnInit {
     }
     this.invErr = '';
     this.invSaving = true;
-    const body = { name, details: this.invForm.details.trim() || null };
+    const details = composeInventoryDetails(
+      this.invForm.location,
+      this.invForm.owner,
+      this.invForm.description,
+    );
+    const body = { name, details };
 
     if (this.editingInv) {
-      this.http.put(`${this.apiUrl}/${this.editingInv.id}`, body).subscribe({
+      const editedId = this.editingInv.id;
+      this.http.put(`${this.apiUrl}/${editedId}`, body).subscribe({
         next: () => {
           this.invSaving = false;
           this.closeInvModal();
-          this.loadInventories();
+          this.loadInventories(() => {
+            this.focusInvId = editedId;
+          });
         },
         error: (e) => {
           this.invSaving = false;
@@ -110,11 +193,18 @@ export class AssetsHub implements OnInit {
         },
       });
     } else {
-      this.http.post<{ id: number }>(this.apiUrl, body).subscribe({
-        next: () => {
+      this.http.post<{ id?: number }>(this.apiUrl, body).subscribe({
+        next: (res) => {
+          const newId = res?.id;
           this.invSaving = false;
           this.closeInvModal();
-          this.loadInventories();
+          this.loadInventories(() => {
+            if (newId != null && Number.isFinite(newId)) {
+              this.focusInvId = newId;
+            } else if (this.inventories.length === 1) {
+              this.focusInvId = this.inventories[0].id;
+            }
+          });
         },
         error: (e) => {
           this.invSaving = false;

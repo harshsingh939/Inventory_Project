@@ -6,7 +6,13 @@
       <h2>Dashboard</h2>
       <p>Overview of your inventory system</p>
     </div>
-    <button class="refresh-btn" (click)="loadDashboard()">🔄 Refresh</button>
+    <div class="dash-header-actions">
+      <span class="live-pill" *ngIf="!isLoading" title="Sessions and repairs refresh every 5 seconds">
+        <span class="live-dot" aria-hidden="true"></span>
+        Live
+      </span>
+      <button class="refresh-btn" type="button" (click)="loadDashboard()">🔄 Refresh</button>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -19,7 +25,7 @@
 
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card blue">
+      <div class="stat-card blue stat-card--enter">
         <div class="stat-icon">👥</div>
         <div class="stat-info">
           <p class="stat-label">Total Users</p>
@@ -27,7 +33,7 @@
           <p class="stat-sub">Registered employees</p>
         </div>
       </div>
-      <div class="stat-card green">
+      <div class="stat-card green stat-card--enter">
         <div class="stat-icon">📦</div>
         <div class="stat-info">
           <p class="stat-label">Total Assets</p>
@@ -35,7 +41,7 @@
           <p class="stat-sub">In inventory</p>
         </div>
       </div>
-      <div class="stat-card yellow">
+      <div class="stat-card yellow stat-card--enter">
         <div class="stat-icon">🕐</div>
         <div class="stat-info">
           <p class="stat-label">Active Sessions</p>
@@ -43,7 +49,7 @@
           <p class="stat-sub">Currently active</p>
         </div>
       </div>
-      <div class="stat-card red">
+      <div class="stat-card red stat-card--enter">
         <div class="stat-icon">🔧</div>
         <div class="stat-info">
           <p class="stat-label">Pending Repairs</p>
@@ -57,7 +63,7 @@
     <div class="charts-row">
 
       <!-- Bar Chart -->
-      <div class="chart-card">
+      <div class="chart-card chart-card--enter">
         <div class="chart-header">
           <h4>👥 Employees by Department</h4>
           <span class="badge">{{ totalUsers }} total</span>
@@ -72,7 +78,7 @@
       </div>
 
       <!-- Doughnut Chart -->
-      <div class="chart-card">
+      <div class="chart-card chart-card--enter">
         <div class="chart-header">
           <h4>📦 Asset Status</h4>
           <span class="badge">{{ totalAssets }} total</span>
@@ -88,11 +94,29 @@
 
     </div>
 
+    <!-- Live line chart -->
+    <div class="live-chart-wrap chart-card--enter">
+      <div class="chart-card chart-card--live">
+        <div class="chart-header">
+          <h4>📈 Live activity</h4>
+          <span class="badge badge--pulse">Sessions &amp; repairs</span>
+        </div>
+        <p class="live-chart-hint">Recent samples — updates every 5s while this page is open.</p>
+        <div class="chart-body chart-body--live">
+          <canvas baseChart
+            [data]="lineChartData"
+            [options]="lineChartOptions"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Row -->
     <div class="recent-row">
 
       <!-- Recent Users -->
-      <div class="recent-card">
+      <div class="recent-card recent-card--enter">
         <div class="recent-header">
           <h4>👤 Recent Users</h4>
           <a routerLink="/users" class="view-all">View all →</a>
@@ -124,7 +148,7 @@
       </div>
 
       <!-- Recent Assets -->
-      <div class="recent-card">
+      <div class="recent-card recent-card--enter">
         <div class="recent-header">
           <h4>📦 Recent Assets</h4>
           <a routerLink="/assets" class="view-all">View all →</a>

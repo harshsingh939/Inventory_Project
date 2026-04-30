@@ -108,7 +108,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
         this.resetFormForCategory();
         this.loadInventoriesAndAssets();
       } else {
-        this.getAssets();
+        this.refreshInventoriesThenAssets();
       }
     });
   }
@@ -139,7 +139,76 @@ export class AssetsCategory implements OnInit, OnDestroy {
     });
     if (this.filterInvId !== '') {
       this.assignInvId = this.filterInvId;
+    } else {
+      this.ensureAssignInventoryDefault();
     }
+  }
+
+  /** Keep "Add new assets to" valid whenever inventories exist */
+  private ensureAssignInventoryDefault() {
+    if (this.inventories.length === 0) return;
+    const ids = new Set(this.inventories.map((i) => i.id));
+    if (this.filterInvId !== '' && ids.has(Number(this.filterInvId))) {
+      this.assignInvId = this.filterInvId;
+      return;
+    }
+    if (this.assignInvId === '' || !ids.has(Number(this.assignInvId))) {
+      this.assignInvId = this.inventories[0].id;
+    }
+  }
+
+  /**
+   * After inventories load: fix URL/state so new assets use a real inventory
+   * (single inventory → filter + URL; multiple → default "add to" newest list row).
+   * @returns true if navigation will re-trigger route; caller should skip getAssets once.
+   */
+  private syncInventorySelectionsAfterLoad(): boolean {
+    const ids = new Set(this.inventories.map((i) => i.id));
+
+    if (this.filterInvId !== '' && !ids.has(Number(this.filterInvId))) {
+      this.filterInvId = '';
+      this.assignInvId = '';
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+      return true;
+    }
+
+    if (this.assignInvId !== '' && !ids.has(Number(this.assignInvId))) {
+      this.assignInvId = '';
+    }
+
+    if (this.inventories.length === 0) {
+      return false;
+    }
+
+    if (this.filterInvId !== '' && ids.has(Number(this.filterInvId))) {
+      this.assignInvId = this.filterInvId;
+      return false;
+    }
+
+    if (this.inventories.length === 1) {
+      const only = this.inventories[0].id;
+      this.assignInvId = only;
+      this.filterInvId = only;
+      const invParam = this.route.snapshot.queryParamMap.get('inv');
+      if (invParam !== String(only)) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { inv: only },
+          replaceUrl: true,
+        });
+        return true;
+      }
+      return false;
+    }
+
+    if (this.assignInvId === '' || !ids.has(Number(this.assignInvId))) {
+      this.assignInvId = this.inventories[0].id;
+    }
+    return false;
   }
 
   private resetFormForCategory() {
@@ -173,11 +242,36 @@ export class AssetsCategory implements OnInit, OnDestroy {
     this.http.get<InventoryRow[]>(this.apiInv).subscribe({
       next: (rows) => {
         this.inventories = rows || [];
+        const skipGet = this.syncInventorySelectionsAfterLoad();
         this.cdr.detectChanges();
-        this.getAssets();
+        if (!skipGet) {
+          this.getAssets();
+        }
       },
       error: () => {
         this.inventories = [];
+        this.filterInvId = '';
+        this.assignInvId = '';
+        this.cdr.detectChanges();
+        this.getAssets();
+      },
+    });
+  }
+
+  /** Same category, query or nav changed — reload inventories so hub changes stay in sync */
+  private refreshInventoriesThenAssets() {
+    this.http.get<InventoryRow[]>(this.apiInv).subscribe({
+      next: (rows) => {
+        this.inventories = rows || [];
+        const skipGet = this.syncInventorySelectionsAfterLoad();
+        this.ensureAssignInventoryDefault();
+        this.cdr.detectChanges();
+        if (!skipGet) {
+          this.getAssets();
+        }
+      },
+      error: () => {
+        this.ensureAssignInventoryDefault();
         this.getAssets();
       },
     });
@@ -284,9 +378,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
         this.isAdding = false;
         this.successMsg = '✅ Asset added successfully!';
         this.resetFormForCategory();
-        if (this.filterInvId !== '') {
-          this.assignInvId = this.filterInvId;
-        }
+        this.ensureAssignInventoryDefault();
         this.cdr.detectChanges();
         setTimeout(() => {
           this.successMsg = '';

@@ -812,17 +812,30 @@
 @media (max-width: 768px) {
 
   .header {
-    padding: 0 12px;
-    height: auto;
-    flex-wrap: wrap;
+    padding: 0 max(10px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+    height: 56px;
+    min-height: 56px;
+    flex-wrap: nowrap;
+  }
+
+  .sidebar-backdrop {
+    top: 56px;
+  }
+
+  .nav-sidebar {
+    top: 56px;
   }
 
   .brand-name {
     font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .brand-sub {
-    font-size: 8px;
+    font-size: 7px;
+    letter-spacing: 0.12em;
   }
 
   .brand-logo {
@@ -832,41 +845,68 @@
   }
 
   .nav-menu-trigger {
-    order: 0;
-    margin-right: 8px;
+    margin-right: 4px;
+    flex-shrink: 0;
   }
 
   .header-brand {
-    order: 1;
     flex: 1;
     min-width: 0;
   }
 
-  /* AUTH */
+  .brand-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+
   .header-auth {
-    order: 2;
-    width: 100%;
-    justify-content: flex-end;
+    flex-shrink: 0;
     gap: 6px;
   }
 
   .auth-btn {
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 
-  /* RIGHT SIDE — same row as brand */
   .header-right {
-    order: 2;
-    margin-left: auto;
+    flex-shrink: 0;
+    gap: 8px;
   }
 
   .header-spacer {
     display: none;
   }
 
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dropdown {
+    right: 8px;
+    left: auto;
+    min-width: min(280px, calc(100vw - 20px));
+    max-width: calc(100vw - 16px);
+  }
+
   .notif-dropdown {
     right: 0;
     left: auto;
+    width: min(320px, calc(100vw - 16px));
+  }
+
+  .popup-box {
+    min-width: 0;
+    width: calc(100% - 32px);
+    max-width: 360px;
+    margin: 0 16px;
+    padding: 28px 24px;
   }
 }

@@ -40,9 +40,13 @@
 
 .add-compact .compact-form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 12px;
-  align-items: end;
+  align-items: start;
+}
+
+.add-compact .compact-form-row .btn-field {
+  align-self: end;
 }
 
 .add-compact .select-input {
@@ -56,9 +60,9 @@
 
 .inv-panel-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+  align-items: start;
 }
 
 .inv-panel .select-input {
@@ -70,4 +74,19 @@
   margin: 6px 0 0;
   font-size: 0.72rem;
   color: #64748b;
+}
+
+.inv-panel-hint {
+  margin: 10px 0 0;
+  max-width: 52rem;
+}
+
+@media (max-width: 768px) {
+  .add-compact .compact-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-panel-row {
+    grid-template-columns: 1fr;
+  }
 }

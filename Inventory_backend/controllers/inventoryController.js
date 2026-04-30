@@ -23,6 +23,22 @@ exports.listInventories = (req, res) => {
   });
 };
 
+exports.getInventory = (req, res) => {
+  const id = req.params.id;
+  db.query('SELECT * FROM inventories WHERE id = ?', [id], (err, rows) => {
+    if (err) {
+      if (isMissingTable(err)) {
+        return res.status(400).json({ message: 'Table `inventories` missing.' });
+      }
+      return res.status(500).json({ message: err.message });
+    }
+    if (!rows || !rows.length) {
+      return res.status(404).json({ message: 'Inventory not found' });
+    }
+    res.json(rows[0]);
+  });
+};
+
 exports.addInventory = (req, res) => {
   const { name, details } = req.body;
   if (!name || !String(name).trim()) {

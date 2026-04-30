@@ -96,9 +96,19 @@
   min-width: 0;
 }
 
+@media (max-width: 768px) {
+  .content {
+    margin-top: 56px;
+  }
+
+  .page {
+    padding: 0 12px 16px;
+  }
+}
+
 @media (max-width: 600px) {
   .page-context-bar {
-    padding: 10px 14px 12px;
+    padding: 10px 12px 12px;
   }
 
   .page-home-btn {

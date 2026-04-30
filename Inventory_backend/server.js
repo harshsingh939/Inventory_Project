@@ -27,6 +27,7 @@ app.use('/api/repairs',     repairRoutes);
 
 // Inventories — register here so GET /api/inventories always resolves (avoids 404 if router file not loaded)
 app.get('/api/inventories', (req, res) => inventoryController.listInventories(req, res));
+app.get('/api/inventories/:id', (req, res) => inventoryController.getInventory(req, res));
 app.post('/api/inventories', (req, res) => inventoryController.addInventory(req, res));
 app.put('/api/inventories/:id', (req, res) => inventoryController.updateInventory(req, res));
 app.delete('/api/inventories/:id', (req, res) => inventoryController.deleteInventory(req, res));

@@ -35,7 +35,7 @@
 
 <div class="card inv-focus" *ngIf="inventories.length">
   <label class="inv-focus-label">Open categories for inventory</label>
-  <select class="input select-input inv-select" [(ngModel)]="focusInvId">
+  <select class="input select-input inv-select" [(ngModel)]="focusInvId" title=" open categories for inventory">
     <option [ngValue]="''">All inventories (mixed)</option>
     <option *ngFor="let inv of inventories" [ngValue]="inv.id">{{ inv.name }}</option>
   </select>

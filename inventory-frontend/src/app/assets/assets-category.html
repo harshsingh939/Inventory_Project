@@ -21,17 +21,14 @@
   <div class="inv-panel-row">
     <div class="form-field">
       <label>Filter this list</label>
-      <select
-        class="input select-input"
-        [(ngModel)]="filterInvId"
-        (ngModelChange)="onFilterInvChange()">
+      <select class="input select-input" [(ngModel)]="filterInvId"(ngModelChange)="onFilterInvChange()" title="filter this list">
         <option [ngValue]="''">All inventories</option>
         <option *ngFor="let inv of inventories" [ngValue]="inv.id">{{ inv.name }}</option>
       </select>
     </div>
     <div class="form-field" *ngIf="inventories.length">
       <label>Add new assets to</label>
-      <select class="input select-input" [(ngModel)]="assignInvId">
+      <select class="input select-input" [(ngModel)]="assignInvId" title="add new asset">
         <option [ngValue]="''">Select inventory…</option>
         <option *ngFor="let inv of inventories" [ngValue]="inv.id">{{ inv.name }}</option>
       </select>
@@ -48,7 +45,7 @@
   <div class="form-row">
     <div class="form-field">
       <label>Asset type</label>
-      <select [(ngModel)]="asset.asset_type" class="input select-input">
+      <select [(ngModel)]="asset.asset_type" class="input select-input" title="asset type">
         <option *ngFor="let t of cat.types" [value]="t">{{ t }}</option>
       </select>
     </div>
@@ -95,7 +92,7 @@
   <div class="compact-form-row">
     <div class="form-field" *ngIf="slug !== 'other'">
       <label>Type</label>
-      <select [(ngModel)]="asset.asset_type" class="input select-input">
+      <select [(ngModel)]="asset.asset_type" class="input select-input" title="type">
         <option *ngFor="let t of cat.types" [value]="t">{{ t }}</option>
       </select>
     </div>

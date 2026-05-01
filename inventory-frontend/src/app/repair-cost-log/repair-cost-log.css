@@ -1,0 +1,144 @@
+.page-header h2 {
+  color: #f1f5f9;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.page-header p {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.link-back {
+  font-size: 0.875rem;
+  color: #38bdf8;
+  text-decoration: none;
+  padding: 8px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+}
+
+.link-back:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.btn-refresh {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading {
+  color: #64748b;
+  padding: 24px;
+  text-align: center;
+}
+
+.msg-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+th {
+  color: #64748b;
+  font-size: 0.75rem;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #1e293b;
+  font-weight: 500;
+}
+
+td {
+  padding: 12px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: rgba(30, 41, 59, 0.35);
+}
+
+.device-icon {
+  margin-right: 6px;
+}
+
+.issue-cell {
+  max-width: 240px;
+}
+
+.notes-cell {
+  max-width: 280px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.date-cell {
+  white-space: nowrap;
+}
+
+.date-line {
+  display: block;
+  color: #e2e8f0;
+}
+
+.time-line {
+  display: block;
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.empty {
+  text-align: center;
+  color: #64748b;
+  padding: 28px 16px;
+}

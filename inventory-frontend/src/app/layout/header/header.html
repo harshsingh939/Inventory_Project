@@ -141,6 +141,10 @@
         class="nav-sidebar-link" (click)="closeSidebar()">
         <span class="nav-sidebar-icon">🔧</span><span class="nav-sidebar-label">Repairs</span>
       </a>
+      <a routerLink="/repair-costs" routerLinkActive="nav-sidebar-link--active"
+        class="nav-sidebar-link" (click)="closeSidebar()">
+        <span class="nav-sidebar-icon">📋</span><span class="nav-sidebar-label">Repair costs</span>
+      </a>
       <ng-container *ngIf="isAdmin">
         <a routerLink="/dashboard" routerLinkActive="nav-sidebar-link--active"
           class="nav-sidebar-link" (click)="closeSidebar()">

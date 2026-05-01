@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { NotificationService } from '../notification.service';
 import { apiUrl } from '../api-url';
@@ -8,7 +9,7 @@ import { apiUrl } from '../api-url';
 @Component({
   selector: 'app-repairs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './repairs.html',
   styleUrl: './repairs.css'
 })
@@ -29,6 +30,13 @@ export class Repairs implements OnInit {
   isAdding = false;
   errorMsg = '';
   successMsg = '';
+
+  /** Modal when marking a repair Fixed: ask → optional cost/notes */
+  fixDialogRepair: any = null;
+  fixDialogStep: 'ask' | 'details' = 'ask';
+  fixRepairCost = '';
+  fixRepairNotes = '';
+  isSavingFix = false;
 
   constructor(
     private http: HttpClient,
@@ -143,5 +151,96 @@ export class Repairs implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  openMarkFixedDialog(repair: any) {
+    this.errorMsg = '';
+    this.fixDialogRepair = { ...repair };
+    this.fixDialogStep = 'ask';
+    this.fixRepairCost = '';
+    this.fixRepairNotes = '';
+    this.cdr.detectChanges();
+  }
+
+  goToFixDetailsStep() {
+    this.errorMsg = '';
+    this.fixDialogStep = 'details';
+    this.cdr.detectChanges();
+  }
+
+  goToFixAskStep() {
+    if (this.isSavingFix) return;
+    this.errorMsg = '';
+    this.fixDialogStep = 'ask';
+    this.cdr.detectChanges();
+  }
+
+  closeFixDialog() {
+    if (this.isSavingFix) return;
+    this.fixDialogRepair = null;
+    this.fixDialogStep = 'ask';
+    this.cdr.detectChanges();
+  }
+
+  markFixedSkipExtras() {
+    this.putFixedStatus(null, null);
+  }
+
+  submitFixWithDetails() {
+    // type="number" binds a number — never call .trim() on it
+    const raw = String(this.fixRepairCost ?? '').trim();
+    if (raw !== '') {
+      const n = parseFloat(raw);
+      if (Number.isNaN(n) || n < 0) {
+        this.errorMsg = 'Enter a valid repair cost, or leave the field empty.';
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+    const costVal = raw === '' ? null : parseFloat(raw);
+    const notesVal = String(this.fixRepairNotes ?? '').trim() || null;
+    this.putFixedStatus(costVal, notesVal);
+  }
+
+  private putFixedStatus(repairCost: number | null, repairNotes: string | null) {
+    if (!this.fixDialogRepair) return;
+    const repairId = Number(this.fixDialogRepair.id);
+    this.errorMsg = '';
+    this.isSavingFix = true;
+    this.cdr.detectChanges();
+
+    this.http
+      .put<any>(`${this.apiBase}/repairs/update/${repairId}`, {
+        status: 'Fixed',
+        repair_cost: repairCost,
+        repair_notes: repairNotes
+      })
+      .subscribe({
+        next: (res: any) => {
+          const repair = this.repairs.find((r) => r.id == repairId);
+          if (repair) {
+            repair.status = 'Fixed';
+            repair.repair_cost = res?.repair_cost ?? repairCost;
+            repair.repair_notes = res?.repair_notes ?? repairNotes;
+            if (res?.fixed_at != null) repair.fixed_at = res.fixed_at;
+          }
+          this.applyFilter();
+          this.isSavingFix = false;
+          this.fixDialogRepair = null;
+          this.fixDialogStep = 'ask';
+          this.successMsg = '✅ Repair marked as Fixed';
+          this.notifications.fetchNotifications();
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.successMsg = '';
+            this.cdr.detectChanges();
+          }, 3000);
+        },
+        error: (err) => {
+          this.isSavingFix = false;
+          this.errorMsg = err.error?.message || 'Failed to update status';
+          this.cdr.detectChanges();
+        }
+      });
   }
 }

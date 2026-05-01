@@ -1,6 +1,9 @@
-<div class="page-header">
-  <h2>🛠️ Repairs</h2>
-  <p>Manage asset repair requests</p>
+<div class="page-header page-header-row">
+  <div>
+    <h2>🛠️ Repairs</h2>
+    <p>Manage asset repair requests</p>
+  </div>
+  <a routerLink="/repair-costs" class="link-cost-log">📋 Repair cost history</a>
 </div>
 
 <!-- Add Repair Form -->
@@ -102,7 +105,7 @@
             </button>
             <button class="btn-action fix-btn"
               *ngIf="r.status !== 'Fixed'"
-              (click)="updateStatus(r.id, 'Fixed')">
+              (click)="openMarkFixedDialog(r)">
               ✅ Mark Fixed
             </button>
             <span class="done-text" *ngIf="r.status === 'Fixed'">
@@ -120,3 +123,62 @@
   </table>
 </div>
 </div>
+
+<!-- Mark Fixed: optional cost & notes (no global .card class — avoids hover shift stealing clicks) -->
+@if (fixDialogRepair) {
+<div class="fix-modal-overlay" (click)="closeFixDialog()">
+  <div class="fix-modal fix-modal-panel" (click)="$event.stopPropagation()">
+    <div class="fix-modal-head">
+      <h3>Mark repair fixed</h3>
+      <button type="button" class="fix-modal-close" (click)="closeFixDialog()" [disabled]="isSavingFix">✕</button>
+    </div>
+
+    @if (fixDialogStep === 'ask') {
+      <p class="fix-modal-lead">
+        Asset: <strong>{{ getAssetName(fixDialogRepair.asset_id) }}</strong>
+      </p>
+      <p class="fix-modal-question">
+        Would you like to add the cost of repair and completion details before marking this as fixed?
+      </p>
+      <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+      <div class="fix-modal-actions">
+        <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="markFixedSkipExtras()" [disabled]="isSavingFix">
+          {{ isSavingFix ? 'Saving…' : 'No, mark fixed' }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="goToFixDetailsStep()" [disabled]="isSavingFix">
+          Yes, add details
+        </button>
+      </div>
+    } @else {
+      <p class="fix-modal-lead">Enter repair cost in ₹ (optional) and any notes (parts, vendor, work done, etc.).</p>
+      <div class="form-field">
+        <label>Repair cost</label>
+        <div class="cost-input-row">
+          <span class="currency-prefix" aria-hidden="true">₹</span>
+          <input
+            class="input cost-input"
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="fixRepairCost"
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Details / notes</label>
+        <textarea class="input textarea" rows="4" [(ngModel)]="fixRepairNotes" placeholder="Optional notes..."></textarea>
+      </div>
+      <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+      <div class="fix-modal-actions">
+        <button type="button" class="btn btn-ghost" (click)="goToFixAskStep()" [disabled]="isSavingFix">Back</button>
+        <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
+        <button type="button" class="btn btn-primary" (click)="submitFixWithDetails()" [disabled]="isSavingFix">
+          {{ isSavingFix ? 'Saving…' : 'Mark as fixed' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>
+}

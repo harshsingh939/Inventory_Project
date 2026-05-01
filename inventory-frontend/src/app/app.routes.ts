@@ -9,6 +9,7 @@ import { AssetsCategory } from './assets/assets-category';
 import { AssetsInventoryWorkspace } from './assets/inventory-workspace/inventory-workspace';
 import { Sessions } from './sessions/sessions';
 import { Repairs } from './repairs/repairs';
+import { RepairCostLog } from './repair-cost-log/repair-cost-log';
 import { Home } from './home/home';
 import { Login } from './login/login';
 import { Signup } from './signup/signup';
@@ -33,7 +34,8 @@ export const routes: Routes = [
       { path: 'assets/:category',   component: AssetsCategory,    canActivate: [AuthGuard] },
       { path: 'users',      component: Users,      canActivate: [AuthGuard] },
       { path: 'sessions',   component: Sessions,   canActivate: [AdminGuard] },
-      { path: 'repairs',    component: Repairs,    canActivate: [AuthGuard] },
+      { path: 'repairs',        component: Repairs,        canActivate: [AuthGuard] },
+      { path: 'repair-costs',   component: RepairCostLog,  canActivate: [AuthGuard] },
     ]
   },
   { path: '**', redirectTo: 'login' } 

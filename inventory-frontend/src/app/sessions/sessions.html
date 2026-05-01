@@ -150,7 +150,7 @@
         </td>
         <td>{{ a.start_time | date:'dd MMM yy, hh:mm a' }}</td>
         <td>{{ a.end_time ? (a.end_time | date:'dd MMM yy, hh:mm a') : '—' }}</td>
-        <td>{{ a.working_minutes ? a.working_minutes + ' mins' : '—' }}</td>
+       <td>{{ a.working_minutes ? formatDuration(a.working_minutes) : '—' }}</td>
         <td>
           <span class="status-badge"
             [class.active]="a.status === 'Active'"

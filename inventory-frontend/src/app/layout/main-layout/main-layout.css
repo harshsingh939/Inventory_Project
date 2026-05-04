@@ -9,17 +9,23 @@
   min-width: 100px;
   display: flex;
   flex-direction: column;
-  background-color: #0a1223;
+  background: transparent;
   transition: margin-left 0.25s ease;
   margin-top: 60px;
 }
 
-/* ── Page toolbar: Home + current section (matches app cards / buttons) ── */
+/* ── Page toolbar: Home + current section (AI workspace chrome) ── */
 .page-context-bar {
   flex-shrink: 0;
   padding: 12px 20px 14px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 18, 35, 0.92) 100%);
-  border-bottom: 1px solid rgba(51, 65, 85, 0.55);
+  background: linear-gradient(
+    180deg,
+    rgba(12, 10, 22, 0.92) 0%,
+    rgba(15, 23, 42, 0.55) 100%
+  );
+  border-bottom: 1px solid rgba(139, 92, 246, 0.18);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 .page-context-inner {
@@ -36,14 +42,14 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-decoration: none;
   color: #e2e8f0;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(139, 92, 246, 0.1);
   box-shadow: 0 0 0 1px rgba(2, 6, 23, 0.35) inset;
   transition:
     color 0.2s ease,
@@ -55,9 +61,9 @@
 
 .page-home-btn:hover {
   color: #f8fafc;
-  background: rgba(56, 189, 248, 0.18);
-  border-color: rgba(56, 189, 248, 0.75);
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(167, 139, 250, 0.6);
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.2);
   transform: translateY(-1px);
 }
 
@@ -81,7 +87,7 @@
 .page-context-current {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #c4b5fd;
   letter-spacing: 0.03em;
   text-transform: none;
 }

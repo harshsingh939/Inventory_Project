@@ -142,6 +142,7 @@ export class Repairs implements OnInit {
         const repair = this.repairs.find(r => r.id === repairId);
         if (repair) repair.status = status;
         this.applyFilter();
+        this.notifications.fetchNotifications();
         this.successMsg = `✅ Status updated to ${status}`;
         this.cdr.detectChanges();
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);

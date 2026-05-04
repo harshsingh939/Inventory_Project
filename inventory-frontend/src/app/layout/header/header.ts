@@ -51,7 +51,7 @@ export class Header implements OnDestroy {
     const target = event.target as HTMLElement;
     if (!target.closest('.header-right')) {
       if (this.showNotifications) {
-        this.notifService.markAllRead();
+        this.notifService.dismissCurrent();
       }
       this.showDropdown = false;
       this.showNotifications = false;
@@ -89,7 +89,7 @@ export class Header implements OnDestroy {
 
   toggleDropdown() {
     if (this.showNotifications) {
-      this.notifService.markAllRead();
+      this.notifService.dismissCurrent();
     }
     this.showDropdown = !this.showDropdown;
     this.showNotifications = false;
@@ -100,7 +100,7 @@ export class Header implements OnDestroy {
     this.showNotifications = !this.showNotifications;
     this.showDropdown = false;
     if (wasOpen) {
-      this.notifService.markAllRead();
+      this.notifService.dismissCurrent();
     }
   }
 

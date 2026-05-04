@@ -46,34 +46,53 @@
         <div class="notif-header">
           <div class="notif-header-content">
             <span class="notif-header-icon">🔔</span>
-            <span class="notif-header-text">Recent Repairs</span>
+            <span class="notif-header-text">Repair requests</span>
           </div>
-          <span class="notif-count">{{ notifService.notifications().length }}</span>
+          <span class="notif-count" *ngIf="notifService.unreadCount() > 0">
+            {{ notifService.unreadCount() > 1 ? notifService.unreadCount() + ' queued' : '1' }}
+          </span>
         </div>
+
+        <p class="notif-queue-hint" *ngIf="notifService.unreadCount() > 1">
+          Showing the next request. Acknowledge it to see the next in line.
+        </p>
 
         <div class="notif-list">
           <div *ngFor="let n of notifService.notifications()"
             class="notif-item">
             <div class="notif-icon">🔧</div>
             <div class="notif-body">
-              <div class="notif-title">Repair activity</div>
+              <div class="notif-title">Repair request</div>
               <div class="notif-desc">{{ n.asset_type }} — {{ n.brand }}</div>
               <div class="notif-issue">{{ n.issue }}</div>
               <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
             </div>
           </div>
 
-          <div class="notif-empty" *ngIf="notifService.notifications().length === 0">
+          <div class="notif-empty" *ngIf="notifService.unreadCount() === 0">
             <div class="notif-empty-icon">🔧</div>
-            <p class="notif-empty-title">No repair records yet</p>
-            <p class="notif-empty-subtitle">New repairs will appear here</p>
+            <p class="notif-empty-title">No pending repair alerts</p>
+            <p class="notif-empty-subtitle">New employee requests will appear here one at a time</p>
           </div>
+        </div>
+
+        <div class="notif-actions" *ngIf="notifService.notifications().length > 0">
+          <button
+            type="button"
+            class="notif-ack-btn"
+            (click)="notifService.dismissCurrent(); $event.stopPropagation()"
+          >
+            Acknowledge &amp; next
+          </button>
         </div>
 
         <div class="notif-footer">
           <a routerLink="/repairs" (click)="closeNotificationsForNav()">
             View all repairs →
           </a>
+          <button type="button" class="notif-dismiss-all" (click)="notifService.markAllRead(); $event.stopPropagation()">
+            Dismiss all alerts
+          </button>
         </div>
       </div>
     </div>

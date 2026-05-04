@@ -38,16 +38,28 @@ app.get('/api/notifications', authMiddleware, (req, res) => {
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Admin only' });
   }
+  // Only actionable repairs — exclude Fixed (any casing) and non-open statuses
+  const openStatuses = `
+    (
+      r.status IS NULL
+      OR TRIM(COALESCE(r.status, '')) = ''
+      OR LOWER(TRIM(r.status)) IN ('pending', 'in progress')
+    )
+  `;
   const withJoin = `
-    SELECT r.id, r.issue, a.asset_type, a.brand
+    SELECT r.id, r.issue, r.status, a.asset_type, a.brand,
+           COALESCE(r.reported_at, r.created_at) AS created_at
     FROM repairs r
     LEFT JOIN assets a ON r.asset_id = a.id
+    WHERE ${openStatuses.trim()}
     ORDER BY r.id DESC
     LIMIT 15
   `;
   const repairsOnly = `
-    SELECT r.id, r.issue, NULL AS asset_type, NULL AS brand
+    SELECT r.id, r.issue, r.status, NULL AS asset_type, NULL AS brand,
+           COALESCE(r.reported_at, r.created_at) AS created_at
     FROM repairs r
+    WHERE ${openStatuses.trim()}
     ORDER BY r.id DESC
     LIMIT 15
   `;

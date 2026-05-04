@@ -62,7 +62,6 @@ export class Dashboards implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private static readonly LIVE_WINDOW = 18;
 
-  totalUsers     = 0;
   totalAssets    = 0;
   activeSessions = 0;
   pendingRepairs = 0;
@@ -244,7 +243,6 @@ export class Dashboards implements OnInit {
       this.http.get<any[]>(`${this.apiBase}/repairs`).toPromise(),
     ]).then(([users, assets, sessions, repairs]) => {
 
-      this.totalUsers     = users?.length || 0;
       this.totalAssets    = assets?.length || 0;
       this.activeSessions = sessions?.length || 0;
       this.pendingRepairs = repairs?.filter((r: any) => r.status === 'Pending').length || 0;

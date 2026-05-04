@@ -81,8 +81,8 @@
 }
 
 .refresh-btn:hover {
-  border-color: #38bdf8;
-  color: #38bdf8;
+  border-color: rgba(167, 139, 250, 0.55);
+  color: #c4b5fd;
 }
 
 .loading-state {
@@ -99,7 +99,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid #1e293b;
-  border-top-color: #38bdf8;
+  border-top-color: #a78bfa;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -109,7 +109,7 @@
 /* ===== Stats Cards ===== */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -132,7 +132,6 @@
 .stat-card--enter:nth-child(1) { animation-delay: 0.04s; }
 .stat-card--enter:nth-child(2) { animation-delay: 0.1s; }
 .stat-card--enter:nth-child(3) { animation-delay: 0.16s; }
-.stat-card--enter:nth-child(4) { animation-delay: 0.22s; }
 
 @keyframes fadeRise {
   from {
@@ -150,7 +149,7 @@
   box-shadow: 0 12px 30px rgba(0,0,0,0.3);
 }
 
-.stat-card.blue   { border-left: 4px solid #38bdf8; }
+.stat-card.blue   { border-left: 4px solid #a78bfa; }
 .stat-card.green  { border-left: 4px solid #22c55e; }
 .stat-card.yellow { border-left: 4px solid #facc15; }
 .stat-card.red    { border-left: 4px solid #ef4444; }
@@ -189,10 +188,12 @@
 }
 
 .chart-card {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 16px;
   padding: 20px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .chart-card--enter {
@@ -205,8 +206,8 @@
 .chart-card--live {
   position: relative;
   overflow: hidden;
-  border-color: rgba(56, 189, 248, 0.25);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08);
+  border-color: rgba(167, 139, 250, 0.28);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);
 }
 
 .chart-card--live::before {
@@ -216,7 +217,7 @@
   background: linear-gradient(
     110deg,
     transparent 40%,
-    rgba(56, 189, 248, 0.06) 50%,
+    rgba(167, 139, 250, 0.07) 50%,
     transparent 60%
   );
   background-size: 200% 100%;
@@ -257,8 +258,8 @@
 }
 
 @keyframes badgeGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
-  50% { box-shadow: 0 0 12px 1px rgba(56, 189, 248, 0.25); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0); }
+  50% { box-shadow: 0 0 12px 1px rgba(167, 139, 250, 0.28); }
 }
 
 .chart-header {
@@ -277,7 +278,7 @@
 
 .badge {
   background: #1e293b;
-  color: #38bdf8;
+  color: #c4b5fd;
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -337,7 +338,7 @@
 }
 
 .view-all {
-  color: #38bdf8;
+  color: #a78bfa;
   text-decoration: none;
   font-size: 0.8rem;
 }
@@ -379,20 +380,20 @@ tr:hover td { background: rgba(30,41,59,0.4); }
 .mini-avatar {
   width: 28px;
   height: 28px;
-  background: #38bdf8;
+  background: linear-gradient(135deg, #7c3aed, #0d9488);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0a1223;
+  color: #f8fafc;
   font-weight: 700;
   font-size: 0.75rem;
   flex-shrink: 0;
 }
 
 .badge-id {
-  background: rgba(56,189,248,0.1);
-  color: #38bdf8;
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
   padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.78rem;

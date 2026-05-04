@@ -94,6 +94,9 @@
 }
 .search-card {
   padding: 16px 20px !important;
+  background: #0a1223;
+  z-index: 10;
+  position: relative;
 }
 
 .search-row {
@@ -137,6 +140,153 @@
 
 .search-input::placeholder {
   color: #475569;
+}
+
+/* Replace your existing .sort-field and .sort-select with this */
+
+.sort-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0a1223;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 14px;
+  transition: 0.2s;
+}
+
+.sort-field:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56,189,248,0.2);
+}
+
+.sort-label {
+  color: #64748b;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sort-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sort-select {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 20px;
+  min-width: 100px;
+}
+
+.sort-select option {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.sort-chevron {
+  position: absolute;
+  right: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+  pointer-events: none;
+
+}
+/* Sort buttons */
+.sort-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sort-btn {
+  background: #0a1223;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.sort-btn:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.sort-btn.active {
+  background: rgba(56,189,248,0.1);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+/* Name suggestions */
+.suggestions-box {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  z-index: 999;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.name-sort-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.name-sort-btn:hover {
+  color: #38bdf8;
+}
+
+.suggestion-item {
+  padding: 9px 14px;
+  font-size: 0.875rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.suggestion-item:hover {
+  background: #1e293b;
+  color: #38bdf8;
+}
+
+.btn-dir {
+  background: #0a1223;
+  border: 1px solid #1e293b;
+  color: #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.btn-dir:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
 
 .btn-clear {

@@ -26,10 +26,12 @@
   <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 </div>
 
-<!-- ✅ Search Filter -->
+<!-- Search + Sort Filter -->
 <div class="card search-card">
   <div class="search-row">
-    <div class="search-field">
+
+    <!-- Name search with suggestions + sort arrow -->
+    <div class="search-field" style="position: relative;">
       <span class="search-icon">🔍</span>
       <input
         class="search-input"
@@ -37,18 +39,60 @@
         placeholder="Search by name..."
         [(ngModel)]="searchName"
         (ngModelChange)="applyFilter()"
+        (focus)="showSuggestions = true"
+        (blur)="hideSuggestions()"
+        autocomplete="off"
       />
+      <!-- ✅ Sort arrow inside the name box -->
+      <button class="name-sort-btn" (click)="setSort('name')" title="Sort by name">
+        {{ sortField === 'name' ? (sortDir === 'asc' ? '↑' : '↓') : '↕' }}
+      </button>
+      <!-- Suggestions dropdown -->
+      <div class="suggestions-box" *ngIf="showSuggestions && nameSuggestions.length > 0">
+        <div
+          class="suggestion-item"
+          *ngFor="let s of nameSuggestions"
+          (mousedown)="selectSuggestion(s)"
+        >
+          {{ s }}
+        </div>
+      </div>
     </div>
-    <div class="search-field">
-      <span class="search-icon">🏢</span>
-      <input
-        class="search-input"
-        type="text"
-        placeholder="Search by department..."
-        [(ngModel)]="searchDept"
-        (ngModelChange)="applyFilter()"
-      />
+
+   <!-- Department search -->
+<div class="search-field">
+  <span class="search-icon">🏢</span>
+  <input
+    class="search-input"
+    type="text"
+    placeholder="Search by department..."
+    [(ngModel)]="searchDept"
+    (ngModelChange)="applyFilter()"
+  />
+  <!-- ✅ Sort arrow inside department box -->
+  <button class="name-sort-btn" (click)="setSort('department')" title="Sort by department">
+    {{ sortField === 'department' ? (sortDir === 'asc' ? '↑' : '↓') : '↕' }}
+  </button>
+</div>
+
+    <!-- Sort buttons -->
+    <div class="sort-buttons">
+<div class="search-field">
+  <span class="search-icon">🪪</span>
+  <input
+    class="search-input"
+    type="text"
+    placeholder="Search by employee ID..."
+    [(ngModel)]="searchEmpId"
+    (ngModelChange)="applyFilter()"
+  />
+  <!-- ✅ Sort arrow inside employee ID box -->
+  <button class="name-sort-btn" (click)="setSort('employee_id')" title="Sort by employee ID">
+    {{ sortField === 'employee_id' ? (sortDir === 'asc' ? '↑' : '↓') : '↕' }}
+  </button>
+</div>
     </div>
+
     <button class="btn-clear" (click)="clearFilter()">✕ Clear</button>
   </div>
   <p class="result-count">
@@ -58,31 +102,40 @@
 
 <!-- Users Table -->
 <div class="card">
-    <div class="table-container">
-  <div class="loading" *ngIf="isLoading">⏳ Loading users...</div>
+  <div class="table-container">
+    <div class="loading" *ngIf="isLoading">⏳ Loading users...</div>
 
-  <table *ngIf="!isLoading">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Employee ID</th>
-        <th>Department</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let u of filteredUsers; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ u.name }}</td>
-        <td>{{ u.employee_id }}</td>
-        <td>{{ u.department }}</td>
-      </tr>
-      <tr *ngIf="filteredUsers.length === 0">
-        <td colspan="4" class="empty-row">
-          {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+    <table *ngIf="!isLoading">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th class="sortable" (click)="setSort('name')">
+            Name
+          
+          </th>
+          <th class="sortable" (click)="setSort('employee_id')">
+            Employee ID
+          
+          </th>
+          <th class="sortable" (click)="setSort('department')">
+            Department
+            
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filteredUsers; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ u.name }}</td>
+          <td>{{ u.employee_id }}</td>
+          <td>{{ u.department }}</td>
+        </tr>
+        <tr *ngIf="filteredUsers.length === 0">
+          <td colspan="4" class="empty-row">
+            {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>

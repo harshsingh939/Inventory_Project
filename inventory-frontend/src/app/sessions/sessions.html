@@ -18,7 +18,7 @@
 
     <div class="form-field">
       <label>Select Employee</label>
-      <select [(ngModel)]="selectedUserId" class="input select-input">
+      <select [(ngModel)]="selectedUserId" class="input select-input" title="select employee">
         <option value="">-- Select Employee --</option>
         <option *ngFor="let u of users" [value]="u.id">
           {{ u.name }} ({{ u.employee_id }}) — {{ u.department }}
@@ -28,7 +28,7 @@
 
     <div class="form-field">
       <label>Select Available Asset</label>
-      <select [(ngModel)]="selectedAssetId" class="input select-input">
+      <select [(ngModel)]="selectedAssetId" class="input select-input" title="available asset">
         <option value="">-- Select Asset --</option>
         <option *ngFor="let a of availableAssets" [value]="a.id">
           {{ a.asset_type }} — {{ a.brand }} {{ a.model }}
@@ -38,7 +38,7 @@
 
     <div class="form-field">
       <label>Condition</label>
-      <select [(ngModel)]="conditionBefore" class="input select-input">
+      <select [(ngModel)]="conditionBefore" class="input select-input" title="condition">
         <option value="Good">Good</option>
         <option value="Fair">Fair</option>
         <option value="Poor">Poor</option>
@@ -65,9 +65,15 @@
     (click)="activeTab = 'active'">
     🟢 Active Assignments ({{ activeAssignments.length }})
   </button>
+
   <button class="tab-btn" [class.active]="activeTab === 'history'"
     (click)="activeTab = 'history'">
     📋 History ({{ allAssignments.length }})
+  </button>
+
+  <button class="tab-btn" [class.active]="activeTab === 'employee'"
+    (click)="activeTab = 'employee'">
+    👤 Employee Details
   </button>
 </div>
 
@@ -82,7 +88,7 @@
         <div class="user-info">
           <div class="avatar-sm">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
           <div>
-            <div class="user-name">{{ a.user_name }}</div>
+            <div class="user-name emp-link">{{ a.user_name }}</div>
             <div class="user-dept">{{ a.department }} • {{ a.employee_id }}</div>
           </div>
         </div>
@@ -101,13 +107,13 @@
       </div>
 
       <div class="assignment-footer">
-        <div class="assign-date">
-          📅 {{ a.start_time | date:'dd MMM yyyy, hh:mm a' }}
-        </div>
-        <button class="btn-unassign" (click)="unassignAsset(a.assignment_id)">
-          🔓 Unassign
-        </button>
-      </div>
+  <div class="assign-date">
+    📅 {{ a.start_time | date:'dd MMM yyyy, hh:mm a' }}
+  </div>
+  <button class="btn-unassign" (click)="unassignAsset(a.assignment_id)">
+    🔓 Unassign
+  </button>
+</div>
     </div>
 
     <div class="empty-state" *ngIf="activeAssignments.length === 0">
@@ -118,51 +124,231 @@
 
   </div>
 </div>
-
+<div class="available-count-bar">
+  <span class="available-dot">●</span>
+  <span>{{ availableAssets.length }} asset{{ availableAssets.length === 1 ? '' : 's' }} currently available</span>
+</div>
 <!-- History Table -->
 <div class="card" *ngIf="activeTab === 'history'">
-  <div class="table-container history-table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Employee</th>
-        <th>Asset</th>
-        <th>Assigned On</th>
-        <th>Returned On</th>
-        <th>Duration</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let a of allAssignments">
-        <td>
-          <div class="user-cell-sm">
-            <div class="mini-avatar">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
-            <div>
-              <div>{{ a.user_name }}</div>
-              <small>{{ a.employee_id }}</small>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div>{{ a.asset_type }} — {{ a.brand }}</div>
-          <small>{{ a.model }}</small>
-        </td>
-        <td>{{ a.start_time | date:'dd MMM yy, hh:mm a' }}</td>
-        <td>{{ a.end_time ? (a.end_time | date:'dd MMM yy, hh:mm a') : '—' }}</td>
-       <td>{{ a.working_minutes ? formatDuration(a.working_minutes) : '—' }}</td>
-        <td>
-          <span class="status-badge"
-            [class.active]="a.status === 'Active'"
-            [class.done]="a.status === 'Completed'">
-            {{ a.status }}
-          </span>
-        </td>
-      </tr>
-      <tr *ngIf="allAssignments.length === 0">
-        <td colspan="6" class="empty-row">No assignment history</td>
-      </tr>
-    </tbody>
-  </table>
+
+  <div class="history-search-row">
+    <div class="search-field">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by employee name..."
+        [(ngModel)]="historySearchName"
+        (ngModelChange)="applyHistoryFilter()"
+        autocomplete="off"
+      />
+    </div>
+    <div class="search-field">
+      <span class="search-icon">💻</span>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by asset..."
+        [(ngModel)]="historySearchAsset"
+        (ngModelChange)="applyHistoryFilter()"
+        autocomplete="off"
+      />
+    </div>
+    <button class="btn-clear" (click)="clearHistoryFilter()">✕ Clear</button>
   </div>
+  <p class="result-count">
+    Showing <strong>{{ filteredAssignments.length }}</strong> of <strong>{{ allAssignments.length }}</strong> records
+  </p>
+
+  <div class="table-container history-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Asset</th>
+          <th>Assigned On</th>
+          <th>Returned On</th>
+          <th>Duration</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of filteredAssignments">
+          <td>
+            <div class="user-cell-sm">
+              <div class="mini-avatar">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
+              <div>
+                <div class="emp-link">{{ a.user_name }}</div>
+                <small>{{ a.employee_id }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div>{{ a.asset_type }} — {{ a.brand }}</div>
+            <small>{{ a.model }}</small>
+          </td>
+          <td>{{ a.start_time | date:'dd MMM yy, hh:mm a' }}</td>
+          <td>{{ a.end_time ? (a.end_time | date:'dd MMM yy, hh:mm a') : '—' }}</td>
+          <td>{{ a.working_minutes ? formatDuration(a.working_minutes) : '—' }}</td>
+          <td>
+            <span class="status-badge"
+              [class.active]="a.status === 'Active'"
+              [class.done]="a.status === 'Completed'">
+              {{ a.status }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="filteredAssignments.length === 0">
+          <td colspan="6" class="empty-row">
+            {{ historySearchName || historySearchAsset ? 'No records match your search' : 'No assignment history' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Employee Details Tab -->
+<div class="card" *ngIf="activeTab === 'employee'">
+
+  <h3>👤 Employee Details</h3>
+
+  <div class="emp-details-search-row">
+    <div class="autocomplete-box">
+      <div class="search-field">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name or employee ID…"
+          [(ngModel)]="employeeSearch"
+          (input)="applyEmployeeSearch()"
+          (focus)="applyEmployeeSearch()"
+          (blur)="hideDropdown()"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="autocomplete-dropdown" *ngIf="showDropdown">
+        <div
+          class="autocomplete-item"
+          *ngFor="let emp of filteredEmployees"
+          (mousedown)="$event.preventDefault()"
+          (click)="selectEmployee(emp)"
+        >
+          <div class="name emp-suggest-title">
+            {{ emp.user_name }}
+            <span class="emp-suggest-id">({{ emp.employee_id }})</span>
+          </div>
+          <div class="meta" *ngIf="emp.department">{{ emp.department }}</div>
+        </div>
+        <div *ngIf="filteredEmployees.length === 0" class="no-result">No employee found</div>
+      </div>
+    </div>
+    <button type="button" class="btn-clear" (click)="clearEmployeeDetailsSearch()">Clear</button>
+  </div>
+
+  <!-- Selected Employee Details -->
+  <div *ngIf="selectedEmployee">
+
+    <h4 style="margin-top: 20px; color: #f1f5f9;">
+      {{ selectedEmployee.user_name }} ({{ selectedEmployee.employee_id }})
+    </h4>
+
+    <!-- Stats -->
+    <div class="emp-stats-row" style="margin-top: 16px;">
+      <ng-container *ngIf="getEmployeeStats(employeeHistory) as stats">
+        <div class="emp-stat-card">
+          <div class="emp-stat-value">{{ stats.total }}</div>
+          <div class="emp-stat-label">Total Assignments</div>
+        </div>
+        <div class="emp-stat-card">
+          <div class="emp-stat-value active-val">{{ stats.active }}</div>
+          <div class="emp-stat-label">Currently Active</div>
+        </div>
+        <div class="emp-stat-card">
+          <div class="emp-stat-value done-val">{{ stats.completed }}</div>
+          <div class="emp-stat-label">Completed</div>
+        </div>
+        <div class="emp-stat-card">
+          <div class="emp-stat-value time-val">{{ formatDuration(stats.totalMinutes) }}</div>
+          <div class="emp-stat-label">Total Usage Time</div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Active Assets -->
+    <div class="emp-section" *ngIf="employeeActiveAssignments.length > 0" style="margin-top: 20px;">
+      <div class="emp-section-title">🟢 Active Assets</div>
+      <div class="emp-holding-grid">
+        <div class="emp-holding-card" *ngFor="let a of employeeActiveAssignments">
+          <div class="emp-holding-icon">💻</div>
+          <div class="emp-holding-info">
+            <div class="emp-holding-name">{{ a.asset_type }} — {{ a.brand }}</div>
+            <div class="emp-holding-model">{{ a.model }}</div>
+            <div class="emp-holding-since">Since {{ a.start_time | date:'dd MMM yyyy, hh:mm a' }}</div>
+          </div>
+          <span class="status-badge active">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full History -->
+    <div class="emp-section" style="margin-top: 20px;">
+      <div class="emp-section-title">📋 Full History</div>
+      <div class="emp-history-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Assigned On</th>
+              <th>Returned On</th>
+              <th>Duration</th>
+              <th>Condition</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of filteredEmployeeHistory">
+              <td>
+                <div>{{ a.asset_type }} — {{ a.brand }}</div>
+                <small>{{ a.model }}</small>
+                <small *ngIf="a.serial_number" style="color:#38bdf8">SN: {{ a.serial_number }}</small>
+              </td>
+              <td>{{ a.start_time | date:'dd MMM yy, hh:mm a' }}</td>
+              <td>{{ a.end_time ? (a.end_time | date:'dd MMM yy, hh:mm a') : '—' }}</td>
+              <td>{{ a.working_minutes ? formatDuration(a.working_minutes) : '—' }}</td>
+              <td>
+                <span class="condition-badge"
+                  [class.good]="a.condition_before === 'Good'"
+                  [class.fair]="a.condition_before === 'Fair'"
+                  [class.poor]="a.condition_before === 'Poor'">
+                  {{ a.condition_before || '—' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge"
+                  [class.active]="a.status === 'Active'"
+                  [class.done]="a.status === 'Completed'">
+                  {{ a.status }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="filteredEmployeeHistory.length === 0">
+              <td colspan="6" class="empty-row">No assignment history found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Prompt when no employee selected -->
+  <div class="empty-state" *ngIf="!selectedEmployee">
+    <div class="empty-icon">🔍</div>
+    <p>Search for an employee above</p>
+    <span>Type a name or ID to view their assignment history</span>
+  </div>
+
 </div>

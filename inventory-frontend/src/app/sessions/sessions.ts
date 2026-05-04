@@ -18,57 +18,67 @@ import { apiUrl } from '../api-url';
 export class Sessions implements OnInit {
   private readonly apiBase = apiUrl('');
 
-  // dropdown data
-  users:  any[] = [];
-  availableAssets: any[] = [];
-
-  // active assignments
+  users:            any[] = [];
+  availableAssets:  any[] = [];
   activeAssignments: any[] = [];
-  allAssignments:    any[] = [];
+  allAssignments:   any[] = [];
+  filteredAssignments: any[] = [];
 
-  // form
   selectedUserId  = '';
   selectedAssetId = '';
   conditionBefore = 'Good';
+  // 🔽 ADD THIS
+groupedEmployees: any[] = [];
+filteredEmployees: any[] = [];
+employeeSearch: string = '';
+  historySearchName  = '';
+  historySearchAsset = '';
 
-  isLoading  = false;
+  isLoading   = false;
   isAssigning = false;
-  errorMsg   = '';
-  successMsg = '';
-  /** API failed for /assets/available */
+  errorMsg    = '';
+  successMsg  = '';
   assetLoadError = '';
-  /** API returned rows but none matched session type allow-list (custom types) */
-  assetLoadHint = '';
-  activeTab  = 'active'; // 'active' | 'history'
+  assetLoadHint  = '';
+  activeTab = 'active';
+  empSearchName = '';
+empSearchAsset = '';
+filteredEmployeeHistory: any[] = [];
+
+
+  // Employee History Modal
+  selectedEmployee: any = null;
+  employeeHistory: any[] = [];
+  employeeActiveAssignments: any[] = [];
+  isEmployeeModalOpen = false;
+  isLoadingEmployeeHistory = false;
+  showDropdown: boolean = false;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
-  ngOnInit() {
-    this.loadAll();
-  }
+  ngOnInit() { this.loadAll(); }
 
   loadAll() {
     this.isLoading = true;
     this.assetLoadError = '';
     this.assetLoadHint = '';
 
-    // load users
     this.http.get<any[]>(`${this.apiBase}/users`).subscribe({
-      next: (data) => { this.users = data; this.cdr.detectChanges(); }
+      next: (data) => {
+        this.users = data;
+        this.groupEmployees();
+        this.cdr.detectChanges();
+      }
     });
 
-    // load available assets
     this.http.get<any[]>(`${this.apiBase}/assets/available`).subscribe({
       next: (data) => {
         const raw = Array.isArray(data) ? data : [];
         const allow = sessionAssignableTypeSet();
-        const filtered = raw.filter((a) =>
-          allow.has(sessionAssetTypeKey(a.asset_type)),
-        );
+        const filtered = raw.filter(a => allow.has(sessionAssetTypeKey(a.asset_type)));
         if (filtered.length === 0 && raw.length > 0) {
           this.availableAssets = raw;
-          this.assetLoadHint =
-            'Some assets use a custom type name; showing all free assets from the server. Prefer types from the Assets categories for consistency.';
+          this.assetLoadHint = 'Some assets use a custom type name; showing all free assets from the server.';
         } else {
           this.availableAssets = filtered;
         }
@@ -78,16 +88,14 @@ export class Sessions implements OnInit {
         this.assetLoadError =
           err.error?.message ||
           (typeof err.error === 'string' ? err.error : null) ||
-          'Could not load available assets. Check that the API is running and /api/assets/available works.';
+          'Could not load available assets.';
         this.availableAssets = [];
         this.cdr.detectChanges();
-      },
+      }
     });
 
-    // load active assignments
     this.http.get<any[]>(`${this.apiBase}/sessions/active`).subscribe({
       next: (data) => {
-         console.log('Active assignments:', data);
         this.activeAssignments = data;
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -95,19 +103,145 @@ export class Sessions implements OnInit {
       error: () => { this.isLoading = false; }
     });
 
-    // load history
     this.http.get<any[]>(`${this.apiBase}/sessions/all`).subscribe({
-      next: (data) => { this.allAssignments = data; this.cdr.detectChanges(); }
+      next: (data) => {
+        this.allAssignments = data;
+        this.filteredAssignments = data;
+        this.groupEmployees();
+
+
+        this.applyHistoryFilter();
+        this.cdr.detectChanges();
+      }
     });
   }
 
+ applyHistoryFilter() {
+  const name  = this.historySearchName.toLowerCase().trim();
+  const asset = this.historySearchAsset.toLowerCase().trim();
+
+  this.filteredAssignments = this.allAssignments.filter(a => {
+    const matchName = name
+      ? a.user_name?.toLowerCase().includes(name) ||
+        a.employee_id?.toLowerCase().includes(name)
+      : true;
+    const matchAsset = asset
+      ? `${a.asset_type} ${a.brand} ${a.model}`.toLowerCase().includes(asset)
+      : true;
+    return matchName && matchAsset;
+  });
+
+  this.cdr.detectChanges();
+}
+
+applyEmployeeHistoryFilter() {
+  const name  = this.empSearchName.toLowerCase().trim();
+  const asset = this.empSearchAsset.toLowerCase().trim();
+
+  this.filteredEmployeeHistory = this.employeeHistory.filter(a => {
+    const matchName = name
+      ? a.user_name?.toLowerCase().includes(name) ||
+        a.employee_id?.toLowerCase().includes(name)
+      : true;
+    const matchAsset = asset
+      ? `${a.asset_type} ${a.brand} ${a.model}`.toLowerCase().includes(asset)
+      : true;
+    return matchName && matchAsset;
+  });
+
+  this.cdr.detectChanges();
+}
+
+clearEmployeeHistoryFilter() {
+  this.empSearchName = '';
+  this.empSearchAsset = '';
+  this.filteredEmployeeHistory = [...this.employeeHistory];
+  this.cdr.detectChanges();
+}
+  clearHistoryFilter() {
+    this.historySearchName  = '';
+    this.historySearchAsset = '';
+    this.filteredAssignments = [...this.allAssignments];
+    this.cdr.detectChanges();
+  }
+  
+groupEmployees() {
+  if (!this.allAssignments || !Array.isArray(this.allAssignments)) {
+    this.groupedEmployees = [];
+    this.filteredEmployees = [];
+    return;
+  }
+
+  const map = new Map<string, any>();
+
+  this.allAssignments.forEach(a => {
+    const key = a?.employee_id;
+
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        user_name: a.user_name || 'Unknown',
+        employee_id: key,
+        department: a.department || '',
+        total: 0
+      });
+    }
+
+    map.get(key).total++;
+  });
+
+  (this.users || []).forEach((u: any) => {
+    const key = u?.employee_id;
+    if (!key || map.has(key)) return;
+    map.set(key, {
+      user_name: u.name || 'Unknown',
+      employee_id: key,
+      department: u.department || '',
+      total: 0
+    });
+  });
+
+  this.groupedEmployees = Array.from(map.values()).sort((a, b) =>
+    (a.user_name || '').localeCompare(b.user_name || '', undefined, { sensitivity: 'base' })
+  );
+  this.filteredEmployees = [...this.groupedEmployees];
+
+  this.cdr.detectChanges();
+}
+applyEmployeeSearch() {
+  const text = this.employeeSearch.toLowerCase().trim();
+
+  if (!text) {
+    this.filteredEmployees = [];
+    this.showDropdown = false;
+    return;
+  }
+
+  this.filteredEmployees = this.groupedEmployees.filter(emp =>
+    (emp.user_name || '').toLowerCase().includes(text) ||
+    (emp.employee_id || '').toLowerCase().includes(text)
+  );
+
+  this.showDropdown = true;
+}
+
+  clearEmployeeDetailsSearch() {
+    this.employeeSearch = '';
+    this.showDropdown = false;
+    this.filteredEmployees = [];
+    this.selectedEmployee = null;
+    this.employeeHistory = [];
+    this.filteredEmployeeHistory = [];
+    this.employeeActiveAssignments = [];
+    this.empSearchName = '';
+    this.empSearchAsset = '';
+    this.cdr.detectChanges();
+  }
+
   assignAsset() {
-    if (!this.selectedUserId) {
-      this.errorMsg = 'Please select a user'; return;
-    }
-    if (!this.selectedAssetId) {
-      this.errorMsg = 'Please select an asset'; return;
-    }
+    if (!this.selectedUserId)  { this.errorMsg = 'Please select a user';  return; }
+    if (!this.selectedAssetId) { this.errorMsg = 'Please select an asset'; return; }
 
     this.errorMsg = '';
     this.successMsg = '';
@@ -118,13 +252,13 @@ export class Sessions implements OnInit {
       asset_id:         this.selectedAssetId,
       condition_before: this.conditionBefore
     }).subscribe({
-      next: (res) => {
+      next: () => {
         this.isAssigning = false;
         this.successMsg = '✅ Asset assigned successfully!';
         this.selectedUserId  = '';
         this.selectedAssetId = '';
         this.conditionBefore = 'Good';
-        this.loadAll(); // refresh all data
+        this.loadAll();
         this.cdr.detectChanges();
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);
       },
@@ -163,20 +297,75 @@ export class Sessions implements OnInit {
     const asset = this.availableAssets.find(a => a.id == id);
     return asset ? `${asset.asset_type} - ${asset.brand}` : '';
   }
-   // 👇 Add this right here
-  formatDuration(minutes: number): string {
-  if (!minutes && minutes !== 0) return '—';
-  const totalSeconds = Math.round(minutes * 60);
-  const d = Math.floor(totalSeconds / 86400);
-  const h = Math.floor((totalSeconds % 86400) / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
 
-  const parts: string[] = [];
-  if (d > 0) parts.push(`${d}d`);
-  if (h > 0) parts.push(`${h}h`);
-  if (m > 0) parts.push(`${m}m`);
-  if (s > 0 || parts.length === 0) parts.push(`${s}s`);
-  return parts.join(' ');
+  formatDuration(minutes: number): string {
+    if (!minutes && minutes !== 0) return '—';
+    const totalSeconds = Math.round(minutes * 60);
+    const d = Math.floor(totalSeconds / 86400);
+    const h = Math.floor((totalSeconds % 86400) / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+
+    const parts: string[] = [];
+    if (d > 0) parts.push(`${d}d`);
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+    return parts.join(' ');
+  }
+  selectEmployee(emp: any) {
+    this.employeeSearch = `${emp.user_name} (${emp.employee_id})`;
+    this.showDropdown = false;
+    this.openEmployeeHistory(emp);
+  }
+hideDropdown() {
+  setTimeout(() => {
+    this.showDropdown = false;
+  }, 200);
 }
+
+  openEmployeeHistory(employee: any) {
+    const eid = employee?.employee_id;
+    if (!eid) return;
+
+    this.selectedEmployee = {
+      user_name: employee.user_name || employee.name || 'Unknown',
+      employee_id: eid,
+      department: employee.department || ''
+    };
+    this.activeTab = 'employee';
+
+    const rows = this.allAssignments.filter(a => a.employee_id === eid);
+    this.employeeHistory = [...rows].sort((x, y) => {
+      const tx = new Date(x.start_time).getTime();
+      const ty = new Date(y.start_time).getTime();
+      return ty - tx;
+    });
+    this.filteredEmployeeHistory = [...this.employeeHistory];
+
+    this.employeeActiveAssignments = this.activeAssignments.filter(a =>
+      a.employee_id === eid
+    );
+
+    this.cdr.detectChanges();
+  }
+
+  closeEmployeeModal() {
+    this.isEmployeeModalOpen = false;
+    this.selectedEmployee = null;
+    this.employeeHistory = [];
+    this.employeeActiveAssignments = [];
+    this.cdr.detectChanges();
+  }
+
+  getEmployeeStats(history: any[]) {
+    const total = history.length;
+    const completed = history.filter(a => a.status === 'Completed').length;
+    const active = history.filter(a => a.status === 'Active').length;
+    const totalMinutes = history
+      .filter(a => a.working_minutes)
+      .reduce((sum, a) => sum + a.working_minutes, 0);
+    return { total, completed, active, totalMinutes };
+  }
+  
 }

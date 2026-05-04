@@ -55,26 +55,129 @@
 
   </div>
 
+  <div
+    *ngIf="getSelectedUserReturnStatus() as ret"
+    class="return-status-banner"
+    [class.all-returned]="ret.allReturned"
+    [class.has-open]="!ret.allReturned"
+  >
+    <span class="return-status-title">{{ ret.allReturned ? 'No assignments remaining' : 'Open assignments: ' + ret.count }}</span>
+    <span class="return-status-detail" *ngIf="ret.allReturned">
+      No active inventory for this employee. From this system’s data, they are clear to leave (confirm with your own HR / checklist).
+    </span>
+    <span class="return-status-detail" *ngIf="!ret.allReturned">
+      Unassign remaining items on <strong>Active Assignments</strong> until nothing is left out for them.
+    </span>
+  </div>
+
   <div class="msg-error"   *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
   <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
+  <button class="tab-btn" [class.active]="activeTab === 'overview'"
+    (click)="activeTab = 'overview'">
+    📊 Overview
+  </button>
+
   <button class="tab-btn" [class.active]="activeTab === 'active'"
     (click)="activeTab = 'active'">
     🟢 Active Assignments ({{ activeAssignments.length }})
   </button>
 
+  <!-- History tab (hidden)
   <button class="tab-btn" [class.active]="activeTab === 'history'"
     (click)="activeTab = 'history'">
     📋 History ({{ allAssignments.length }})
   </button>
+  -->
 
   <button class="tab-btn" [class.active]="activeTab === 'employee'"
     (click)="activeTab = 'employee'">
     👤 Employee Details
   </button>
+</div>
+
+<!-- Overview Tab -->
+<div class="card overview-tab-card" *ngIf="activeTab === 'overview'">
+  <header class="overview-header">
+    <h3 class="overview-title">📊 Asset Return Overview</h3>
+    <p class="field-note overview-lead">Who has gear out and who is clear—at a glance.</p>
+  </header>
+
+  <div class="overview-stats-row">
+    <div class="emp-stat-card overview-stat-tile">
+      <div class="emp-stat-value overview-stat-val--avail">{{ availableAssets.length }}</div>
+      <div class="emp-stat-label">Available</div>
+    </div>
+    <div class="emp-stat-card overview-stat-tile">
+      <div class="emp-stat-value overview-stat-val--use">{{ activeAssignments.length }}</div>
+      <div class="emp-stat-label">In use</div>
+    </div>
+    <div class="emp-stat-card overview-stat-tile">
+      <div class="emp-stat-value overview-stat-val--hold">{{ employeesWithOpenAssets().length }}</div>
+      <div class="emp-stat-label">Employee-holding</div>
+    </div>
+    <div class="emp-stat-card overview-stat-tile">
+      <div class="emp-stat-value overview-stat-val--clear">{{ employeesFullyCleared().length }}</div>
+      <div class="emp-stat-label">Remaining</div>
+    </div>
+  </div>
+
+  <div class="overview-main">
+    <div class="overview-panel-head">
+      <span class="overview-panel-title">{{ overviewPeopleFilter === 'holding' ? 'Out with staff' : 'Remaining in pool' }}</span>
+      <select
+        id="overview-people-filter"
+        [(ngModel)]="overviewPeopleFilter"
+        class="input select-input overview-people-select"
+        title="Checked out vs remaining (nothing left out)"
+      >
+        <option value="holding">Allocated</option>
+        <option value="remaining">Remaining</option>
+      </select>
+    </div>
+
+    <div class="overview-list-wrap" *ngIf="overviewPeopleFilter === 'holding'">
+      <div class="overview-list-head" aria-hidden="true">
+        <span>Asset</span>
+        <span>Status</span>
+      </div>
+      <ul class="overview-asset-list">
+        <li *ngFor="let a of activeAssignmentsOrdered" class="overview-asset-item">
+          <div class="overview-asset-text">
+            <div class="overview-asset-cell-title">{{ a.asset_type }} — {{ a.brand }}</div>
+            <small class="overview-asset-model">{{ a.model }}</small>
+            <small *ngIf="a.serial_number" class="overview-asset-sn">SN: {{ a.serial_number }}</small>
+          </div>
+          <span class="status-badge overview-holding-badge overview-item-badge">Out</span>
+        </li>
+      </ul>
+      <div *ngIf="activeAssignmentsOrdered.length === 0" class="overview-list-empty">Nothing checked out right now.</div>
+    </div>
+
+    <div class="overview-available-section" *ngIf="overviewPeopleFilter === 'remaining'">
+      <div class="overview-available-head">
+        <span class="overview-available-title">Remaining ({{ availableAssets.length }})</span>
+        <span class="overview-available-sub">Assignable pool — same items as Select available asset in the form above</span>
+      </div>
+      <ul class="overview-available-list" *ngIf="availableAssets.length > 0">
+        <li *ngFor="let a of availableAssets" class="overview-available-item">
+          <span class="overview-available-main">{{ a.asset_type }} — {{ a.brand }}</span>
+          <span class="overview-available-meta">{{ a.model }}</span>
+        </li>
+      </ul>
+      <p *ngIf="availableAssets.length === 0" class="overview-available-empty">No assets remaining in this pool.</p>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="activeAssignments.length === 0">
+    <div class="empty-icon">🎉</div>
+    <p>Nothing left out</p>
+    <span>No active assignments at the moment</span>
+  </div>
 </div>
 
 <!-- Active Assignments -->
@@ -83,7 +186,7 @@
 
   <div class="assignment-grid" *ngIf="!isLoading">
 
-    <div class="assignment-card" *ngFor="let a of activeAssignments">
+    <div class="assignment-card" *ngFor="let a of activeAssignmentsOrdered">
       <div class="assignment-header">
         <div class="user-info">
           <div class="avatar-sm">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
@@ -116,7 +219,7 @@
 </div>
     </div>
 
-    <div class="empty-state" *ngIf="activeAssignments.length === 0">
+    <div class="empty-state" *ngIf="activeAssignmentsOrdered.length === 0">
       <div class="empty-icon">📭</div>
       <p>No active assignments</p>
       <span>Assign an asset above to get started</span>
@@ -124,11 +227,9 @@
 
   </div>
 </div>
-<div class="available-count-bar">
-  <span class="available-dot">●</span>
-  <span>{{ availableAssets.length }} asset{{ availableAssets.length === 1 ? '' : 's' }} currently available</span>
-</div>
-<!-- History Table -->
+
+<!--
+History tab panel (hidden — uncomment with the History tab button above to restore)
 <div class="card" *ngIf="activeTab === 'history'">
 
   <div class="history-search-row">
@@ -207,6 +308,7 @@
     </table>
   </div>
 </div>
+-->
 
 <!-- Employee Details Tab -->
 <div class="card" *ngIf="activeTab === 'employee'">
@@ -254,6 +356,20 @@
     <h4 style="margin-top: 20px; color: #f1f5f9;">
       {{ selectedEmployee.user_name }} ({{ selectedEmployee.employee_id }})
     </h4>
+
+    <div
+      class="return-status-banner"
+      [class.all-returned]="employeeActiveAssignments.length === 0"
+      [class.has-open]="employeeActiveAssignments.length > 0"
+    >
+      <span class="return-status-title">{{ employeeActiveAssignments.length === 0 ? 'No assignments remaining' : 'Open assignments: ' + employeeActiveAssignments.length }}</span>
+      <span class="return-status-detail" *ngIf="employeeActiveAssignments.length === 0">
+        No active assets for this person in this system. Still confirm badges, keys, and non-tracked items outside this app.
+      </span>
+      <span class="return-status-detail" *ngIf="employeeActiveAssignments.length > 0">
+        See <strong>Active Assets</strong> below; unassign each on the Active Assignments tab when hardware is back.
+      </span>
+    </div>
 
     <!-- Stats -->
     <div class="emp-stats-row" style="margin-top: 16px;">

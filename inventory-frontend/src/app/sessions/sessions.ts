@@ -41,6 +41,14 @@ employeeSearch: string = '';
   assetLoadError = '';
   assetLoadHint  = '';
   activeTab = 'active';
+  /** Active tab: sort order for assignment cards */
+  activeSortKey: 'start_desc' | 'start_asc' | 'employee' | 'asset' = 'start_desc';
+  /** Active tab: same data as `activeAssignments`, sorted for display */
+  activeAssignmentsOrdered: any[] = [];
+
+  /** Overview: checked-out vs remaining (no open assignments) roster; `holding` = assets with staff */
+  overviewPeopleFilter: 'holding' | 'remaining' = 'holding';
+
   empSearchName = '';
 empSearchAsset = '';
 filteredEmployeeHistory: any[] = [];
@@ -53,6 +61,12 @@ filteredEmployeeHistory: any[] = [];
   isEmployeeModalOpen = false;
   isLoadingEmployeeHistory = false;
   showDropdown: boolean = false;
+  // Clearance Check
+clearanceSearch = '';
+clearanceEmployee: any = null;
+clearanceActiveAssets: any[] = [];
+clearanceFilteredEmployees: any[] = [];
+showClearanceDropdown = false;
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
 
@@ -97,6 +111,7 @@ filteredEmployeeHistory: any[] = [];
     this.http.get<any[]>(`${this.apiBase}/sessions/active`).subscribe({
       next: (data) => {
         this.activeAssignments = data;
+        this.reorderActiveAssignments();
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -115,6 +130,7 @@ filteredEmployeeHistory: any[] = [];
       }
     });
   }
+  
 
  applyHistoryFilter() {
   const name  = this.historySearchName.toLowerCase().trim();
@@ -239,6 +255,40 @@ applyEmployeeSearch() {
     this.cdr.detectChanges();
   }
 
+  reorderActiveAssignments() {
+    const list = [...(this.activeAssignments || [])];
+    const cmp = (x: string, y: string) =>
+      (x || '').localeCompare(y || '', undefined, { sensitivity: 'base' });
+    const assetLabel = (a: any) =>
+      `${a.asset_type || ''} ${a.brand || ''} ${a.model || ''}`.trim();
+
+    switch (this.activeSortKey) {
+      case 'start_asc':
+        list.sort(
+          (a, b) =>
+            new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+        );
+        break;
+      case 'employee':
+        list.sort(
+          (a, b) =>
+            cmp(a.user_name, b.user_name) ||
+            cmp(String(a.employee_id ?? ''), String(b.employee_id ?? ''))
+        );
+        break;
+      case 'asset':
+        list.sort((a, b) => cmp(assetLabel(a), assetLabel(b)));
+        break;
+      case 'start_desc':
+      default:
+        list.sort(
+          (a, b) =>
+            new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+        );
+    }
+    this.activeAssignmentsOrdered = list;
+  }
+
   assignAsset() {
     if (!this.selectedUserId)  { this.errorMsg = 'Please select a user';  return; }
     if (!this.selectedAssetId) { this.errorMsg = 'Please select an asset'; return; }
@@ -286,6 +336,19 @@ applyEmployeeSearch() {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  /** Active rows for a user id (assign form / exit check). */
+  activeAssignmentsForUserId(userId: string | number | null | undefined): any[] {
+    if (userId === null || userId === undefined || userId === '') return [];
+    return this.activeAssignments.filter(a => String(a.user_id) === String(userId));
+  }
+
+  /** Summary for whether any assignments remain out, in the assign form. */
+  getSelectedUserReturnStatus(): { count: number; allReturned: boolean } | null {
+    if (!this.selectedUserId) return null;
+    const list = this.activeAssignmentsForUserId(this.selectedUserId);
+    return { count: list.length, allReturned: list.length === 0 };
   }
 
   getUserName(id: string): string {
@@ -367,5 +430,34 @@ hideDropdown() {
       .reduce((sum, a) => sum + a.working_minutes, 0);
     return { total, completed, active, totalMinutes };
   }
-  
+
+  employeesWithOpenAssets(): any[] {
+    const map = new Map<string, any>();
+    this.activeAssignments.forEach(a => {
+      const key = a.employee_id;
+      if (!key) return;
+      if (!map.has(key)) {
+        map.set(key, {
+          user_name: a.user_name,
+          employee_id: key,
+          department: a.department || '',
+          assets: []
+        });
+      }
+      map.get(key).assets.push(a);
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      (a.user_name || '').localeCompare(b.user_name || '', undefined, { sensitivity: 'base' })
+    );
+  }
+
+  employeesFullyCleared(): any[] {
+    const holdingIds = new Set(
+      this.activeAssignments
+        .map(a => a?.employee_id)
+        .filter((id): id is string | number => id !== null && id !== undefined && `${id}` !== '')
+        .map(id => String(id))
+    );
+    return this.groupedEmployees.filter(emp => !holdingIds.has(String(emp.employee_id)));
+  }
 }

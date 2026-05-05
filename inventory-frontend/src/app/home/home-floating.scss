@@ -328,11 +328,11 @@ $slate: #94a3b8;
 
 .hero-particles span {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: rgba(56, 189, 248, 0.65);
-  box-shadow: 0 0 18px rgba(56, 189, 248, 0.65), 0 0 36px rgba(56, 189, 248, 0.25);
+  background: rgba(100, 120, 145, 0.35);
+  box-shadow: none;
   animation: float-particle ease-in-out infinite;
 }
 
@@ -414,52 +414,50 @@ $slate: #94a3b8;
 }
 
 .hero-content h1 {
-  animation: float-card 10s ease-in-out infinite;
+  animation: none;
 }
 
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px;
+  gap: 8px;
+  padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  background: rgba(15, 23, 42, 0.65);
-  color: $slate;
-  font-size: clamp(0.7rem, 0.62rem + 0.25vw, 0.82rem);
+  border: 1px solid rgba(100, 120, 145, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: #8b9aac;
+  font-size: clamp(0.6rem, 0.58rem + 0.15vw, 0.7rem);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-bottom: clamp(18px, 2.5vh, 24px);
-  animation:
-    badge-float 4s ease-in-out infinite,
-    badge-border-pulse 3s ease-in-out infinite;
+  margin-bottom: clamp(14px, 2vh, 20px);
+  animation: none;
 }
 
 .badge-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: $accent;
-  box-shadow: 0 0 12px $accent;
-  animation: accent-pop 2.2s ease-in-out infinite;
+  background: #6b8299;
+  box-shadow: none;
+  animation: none;
 }
 
 .hero-content h1 .accent {
   display: inline-block;
-  animation: accent-pop 3.2s ease-in-out infinite;
+  animation: none;
 }
 
 .hero-sub {
-  animation: hero-sub-pulse 4s ease-in-out infinite;
+  animation: none;
 }
 
 .hero-actions .hero-btn.primary {
-  animation: btn-glow-pulse 2.8s ease-in-out infinite;
+  animation: none;
 }
 
 .hero-actions .hero-btn.secondary {
-  animation: border-breathe 4s ease-in-out infinite;
+  animation: none;
 }
 
 .hero-actions .hero-btn .btn-arrow {
@@ -467,54 +465,29 @@ $slate: #94a3b8;
   animation: btn-arrow-nudge 1.6s ease-in-out infinite;
 }
 
-.hero-stats > .stat {
-  animation: float-card 5.2s ease-in-out infinite;
-}
-.hero-stats > .stat:nth-child(1) {
-  animation-delay: 0s;
-}
-.hero-stats > .stat:nth-child(3) {
-  animation-delay: 0.4s;
-}
-.hero-stats > .stat:nth-child(5) {
-  animation-delay: 0.8s;
-}
-
-.hero-stats .stat-num {
-  display: inline-block;
-  animation: stat-num-glow 2.4s ease-in-out infinite;
-}
-
-.hero-stats > .stat:nth-child(3) .stat-num {
-  animation-delay: 0.35s;
-}
-.hero-stats > .stat:nth-child(5) .stat-num {
-  animation-delay: 0.7s;
-}
-
 // ── Section headings (animated gradient) ──
 .home-animate-heading,
 .section-header .section-title {
   background: linear-gradient(
     90deg,
-    rgba(34, 156, 186, 0.95) 0%,
-    #38bdf8 25%,
-    #7dd3fc 50%,
-    #38bdf8 75%,
-    rgba(34, 156, 186, 0.95) 100%
+    #7a8a9c 0%,
+    #9aa8b8 35%,
+    #b8c2cc 50%,
+    #9aa8b8 65%,
+    #7a8a9c 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  animation: heading-shimmer 5s linear infinite;
+  animation: heading-shimmer 12s linear infinite;
 }
 
 .features-section {
   position: relative;
-  padding: 72px 40px 80px;
-  background: linear-gradient(165deg, #0b0e16 0%, #0f1117 45%, #0a1628 100%);
+  padding: 52px clamp(16px, 4vw, 40px) 56px;
+  background: linear-gradient(165deg, #0b0e16 0%, #0f1117 45%, #0c121c 100%);
   overflow: hidden;
 }
 
@@ -523,9 +496,9 @@ $slate: #94a3b8;
   position: absolute;
   inset: -20% -10% auto;
   height: 55%;
-  background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 70%);
+  background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(80, 100, 125, 0.08), transparent 70%);
   pointer-events: none;
-  animation: features-ambient 10s ease-in-out infinite;
+  animation: features-ambient 14s ease-in-out infinite;
   z-index: 0;
 }
 
@@ -536,7 +509,7 @@ $slate: #94a3b8;
 }
 
 .section-header p {
-  animation: hero-sub-pulse 5s ease-in-out infinite;
+  animation: none;
 }
 
 .feature-icon-wrap {
@@ -571,10 +544,10 @@ $slate: #94a3b8;
   position: absolute;
   inset: -8px;
   border-radius: 14px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 72%);
-  opacity: 0.55;
+  background: radial-gradient(circle, rgba(90, 110, 135, 0.2) 0%, transparent 72%);
+  opacity: 0.35;
   z-index: 0;
-  animation: floatGlow 2.8s ease-in-out infinite;
+  animation: none;
 }
 
 .feature-card:nth-child(1) {
@@ -726,7 +699,7 @@ $slate: #94a3b8;
 }
 
 .cta-section .hero-btn.primary {
-  animation: btn-glow-pulse 2.4s ease-in-out infinite;
+  animation: none;
 }
 
 // ── Timeline ──
@@ -757,6 +730,10 @@ $slate: #94a3b8;
 @media (prefers-reduced-motion: reduce) {
   .hero::before,
   .hero::after,
+  .hero-bg-motion__img,
+  .hero-bg-motion__shelves,
+  .hero-bg-motion__scan,
+  .inv-float,
   .hero-particles span,
   .hero-badge,
   .badge-dot,
@@ -766,8 +743,6 @@ $slate: #94a3b8;
   .hero-actions .hero-btn.primary,
   .hero-actions .hero-btn.secondary,
   .hero-actions .hero-btn .btn-arrow,
-  .hero-stats .stat,
-  .hero-stats .stat-num,
   .home-animate-heading,
   .section-header .section-title,
   .features-section::before,

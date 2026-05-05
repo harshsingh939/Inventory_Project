@@ -1,6 +1,7 @@
-<div class="header">
+<div class="header" [class.header--vendor-nav]="isLoggedIn && isRepairAuthority" [class.header--admin-nav]="isLoggedIn && isAdmin">
 
   <button
+    *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
     type="button"
     class="nav-menu-trigger"
     [class.open]="sidebarOpen"
@@ -14,13 +15,64 @@
   </button>
 
   <!-- Brand -->
-  <a routerLink="/" class="header-brand" (click)="closeSidebar()">
+  <a [routerLink]="isAdmin ? '/dashboard' : '/'" class="header-brand" (click)="closeSidebar()">
     <div class="brand-logo">IT</div>
     <div class="brand-text">
       <span class="brand-name">InvenTrack</span>
       <span class="brand-sub">INVENTORY SYSTEM</span>
     </div>
   </a>
+
+  <!-- Admin: primary routes in top bar (no sidebar) -->
+  <nav *ngIf="isLoggedIn && isAdmin" class="header-admin-nav" aria-label="Admin navigation">
+    <a routerLink="/dashboard" routerLinkActive="header-admin-nav__link--active" [routerLinkActiveOptions]="{ exact: true }"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Dashboard</a>
+    <a routerLink="/users" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Users</a>
+    <a routerLink="/assignment-requests" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Assign requests</a>
+    <a routerLink="/assets" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Assets</a>
+    <a routerLink="/repairs" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Repairs</a>
+    <a routerLink="/disposed" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Disposed</a>
+  </nav>
+
+  <!-- Vendor: top-centre icon nav (no sidebar) -->
+  <nav
+    *ngIf="isLoggedIn && isRepairAuthority"
+    class="header-vendor-nav"
+    aria-label="Vendor navigation">
+    <a
+      routerLink="/"
+      routerLinkActive="vendor-nav-btn--active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="vendor-nav-btn"
+      title="Home"
+      (click)="closeSidebar()">
+      <span aria-hidden="true">🏠</span>
+      <span class="vendor-nav-btn__sr">Home</span>
+    </a>
+    <a
+      routerLink="/repairs"
+      routerLinkActive="vendor-nav-btn--active"
+      class="vendor-nav-btn"
+      title="Repairs"
+      (click)="closeSidebar()">
+      <span aria-hidden="true">🔧</span>
+      <span class="vendor-nav-btn__sr">Repairs</span>
+    </a>
+    <a
+      routerLink="/repair-authority"
+      routerLinkActive="vendor-nav-btn--active"
+      class="vendor-nav-btn"
+      title="Vendor repairs"
+      (click)="closeSidebar()">
+      <span aria-hidden="true">🛠️</span>
+      <span class="vendor-nav-btn__sr">Vendor repairs</span>
+    </a>
+  </nav>
 
   <div class="header-spacer"></div>
 
@@ -33,7 +85,7 @@
   <!-- Right side -->
   <div class="header-right">
 
-    <!-- Notifications — admins only (recent repairs from any user) -->
+    <!-- Admin activity: pending repairs + new assignment requests -->
     <div class="notif-wrapper" *ngIf="isLoggedIn && isAdmin">
       <button type="button" class="icon-btn notif-btn" (click)="toggleNotifications()" aria-label="Notifications">
         🔔
@@ -46,34 +98,41 @@
         <div class="notif-header">
           <div class="notif-header-content">
             <span class="notif-header-icon">🔔</span>
-            <span class="notif-header-text">Recent Repairs</span>
+            <span class="notif-header-text">Admin activity</span>
           </div>
           <span class="notif-count">{{ notifService.notifications().length }}</span>
         </div>
 
         <div class="notif-list">
-          <div *ngFor="let n of notifService.notifications()"
-            class="notif-item">
-            <div class="notif-icon">🔧</div>
+          <div *ngFor="let n of notifService.notifications()" class="notif-item" [class.notif-item--request]="n.kind === 'assignment_request'">
+            <div class="notif-icon" *ngIf="n.kind !== 'assignment_request'">🔧</div>
+            <div class="notif-icon notif-icon--inbox" *ngIf="n.kind === 'assignment_request'">📥</div>
             <div class="notif-body">
-              <div class="notif-title">Repair activity</div>
-              <div class="notif-desc">{{ n.asset_type }} — {{ n.brand }}</div>
-              <div class="notif-issue">{{ n.issue }}</div>
-              <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
+              <ng-container *ngIf="n.kind === 'repair'">
+                <div class="notif-title">Repair</div>
+                <div class="notif-desc">{{ n.asset_type || '—' }} — {{ n.brand || '—' }}</div>
+                <div class="notif-issue">{{ n.issue }}</div>
+              </ng-container>
+              <ng-container *ngIf="n.kind === 'assignment_request'">
+                <div class="notif-title">Assignment request</div>
+                <div class="notif-desc"><span class="notif-id">#{{ n.id }}</span> · {{ n.brand }}</div>
+                <div class="notif-types">{{ n.asset_type || 'Equipment' }}</div>
+                <div class="notif-issue" *ngIf="n.issue">{{ n.issue }}</div>
+              </ng-container>
+              <div class="notif-time">{{ timeAgo(n.created_at || undefined) }}</div>
             </div>
           </div>
 
           <div class="notif-empty" *ngIf="notifService.notifications().length === 0">
-            <div class="notif-empty-icon">🔧</div>
-            <p class="notif-empty-title">No repair records yet</p>
-            <p class="notif-empty-subtitle">New repairs will appear here</p>
+            <div class="notif-empty-icon">✓</div>
+            <p class="notif-empty-title">You’re up to date</p>
+            <p class="notif-empty-subtitle">New repairs and requests will show here</p>
           </div>
         </div>
 
-        <div class="notif-footer">
-          <a routerLink="/repairs" (click)="closeNotificationsForNav()">
-            View all repairs →
-          </a>
+        <div class="notif-footer notif-footer-split">
+          <a routerLink="/repairs" (click)="closeNotificationsForNav()">Repairs</a>
+          <a routerLink="/assignment-requests" (click)="closeNotificationsForNav()">Requests</a>
         </div>
       </div>
     </div>
@@ -110,15 +169,17 @@
   </div>
 </div>
 
-<!-- Sidebar backdrop (below fixed header) -->
+<!-- Sidebar backdrop — guests & employees only (vendor + admin use top nav) -->
 <div
+  *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
   class="sidebar-backdrop"
   [class.sidebar-backdrop--visible]="sidebarOpen"
   (click)="closeSidebar()"
   aria-hidden="true"></div>
 
-<!-- Slide-in navigation -->
+<!-- Slide-in navigation — guests & employees -->
 <aside
+  *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
   id="app-nav-sidebar"
   class="nav-sidebar"
   [class.nav-sidebar--open]="sidebarOpen"
@@ -129,35 +190,33 @@
   </div>
   <nav class="nav-sidebar-inner">
     <ng-container *ngIf="isLoggedIn; else guestNavMessage">
-      <a routerLink="/" routerLinkActive="nav-sidebar-link--active" [routerLinkActiveOptions]="{exact:true}"
-        class="nav-sidebar-link" (click)="closeSidebar()">
-        <span class="nav-sidebar-icon">🏠</span><span class="nav-sidebar-label">Home</span>
-      </a>
-      <a routerLink="/users" routerLinkActive="nav-sidebar-link--active"
-        class="nav-sidebar-link" (click)="closeSidebar()">
-        <span class="nav-sidebar-icon">👥</span><span class="nav-sidebar-label">Users</span>
-      </a>
-      <a routerLink="/repairs" routerLinkActive="nav-sidebar-link--active"
-        class="nav-sidebar-link" (click)="closeSidebar()">
-        <span class="nav-sidebar-icon">🔧</span><span class="nav-sidebar-label">Repairs</span>
-      </a>
-      <a routerLink="/repair-costs" routerLinkActive="nav-sidebar-link--active"
-        class="nav-sidebar-link" (click)="closeSidebar()">
-        <span class="nav-sidebar-icon">📋</span><span class="nav-sidebar-label">Repair costs</span>
-      </a>
-      <ng-container *ngIf="isAdmin">
-        <a routerLink="/dashboard" routerLinkActive="nav-sidebar-link--active"
-          class="nav-sidebar-link" (click)="closeSidebar()">
-          <span class="nav-sidebar-icon">📊</span><span class="nav-sidebar-label">Dashboard</span>
-        </a>
-        <a routerLink="/assets" routerLinkActive="nav-sidebar-link--active"
-          class="nav-sidebar-link" (click)="closeSidebar()">
-          <span class="nav-sidebar-icon">📦</span><span class="nav-sidebar-label">Assets</span>
-        </a>
-        <a routerLink="/sessions" routerLinkActive="nav-sidebar-link--active"
-          class="nav-sidebar-link" (click)="closeSidebar()">
-          <span class="nav-sidebar-icon">🔗</span><span class="nav-sidebar-label">Sessions</span>
-        </a>
+      <!-- Employee (admin uses top bar; repair_authority has no sidebar) -->
+      <ng-container *ngIf="!isAdmin && !isRepairAuthority">
+        <div class="nav-sidebar-section">
+          <div class="nav-sidebar-section-label">General</div>
+          <a routerLink="/" routerLinkActive="nav-sidebar-link--active" [routerLinkActiveOptions]="{ exact: true }"
+            class="nav-sidebar-link" (click)="closeSidebar()">
+            <span class="nav-sidebar-icon">🏠</span><span class="nav-sidebar-label">Home</span>
+          </a>
+        </div>
+        <div class="nav-sidebar-section">
+          <div class="nav-sidebar-section-label">Team &amp; support</div>
+          <a routerLink="/users" routerLinkActive="nav-sidebar-link--active"
+            class="nav-sidebar-link" (click)="closeSidebar()">
+            <span class="nav-sidebar-icon">👥</span><span class="nav-sidebar-label">Users</span>
+          </a>
+          <a routerLink="/repairs" routerLinkActive="nav-sidebar-link--active"
+            class="nav-sidebar-link" (click)="closeSidebar()">
+            <span class="nav-sidebar-icon">🔧</span><span class="nav-sidebar-label">Repairs</span>
+          </a>
+        </div>
+        <div class="nav-sidebar-section">
+          <div class="nav-sidebar-section-label">My work</div>
+          <a routerLink="/my-workspace" routerLinkActive="nav-sidebar-link--active"
+            class="nav-sidebar-link" (click)="closeSidebar()">
+            <span class="nav-sidebar-icon">👤</span><span class="nav-sidebar-label">My workspace</span>
+          </a>
+        </div>
       </ng-container>
     </ng-container>
     <ng-template #guestNavMessage>

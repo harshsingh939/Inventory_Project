@@ -1,72 +1,85 @@
 <div class="dashboard-container">
 
-  <!-- Header -->
   <div class="dash-header">
     <div>
-      <h2>Dashboard</h2>
-      <p>Overview of your inventory system</p>
+      <p class="dash-kicker">InvenTrack · Admin</p>
+      <h2>Operations overview</h2>
+      <p class="dash-sub">Inventories, fleet size, checkouts, and live signals</p>
     </div>
     <div class="dash-header-actions">
       <span class="live-pill" *ngIf="!isLoading" title="Sessions and repairs refresh every 5 seconds">
         <span class="live-dot" aria-hidden="true"></span>
         Live
       </span>
-      <button class="refresh-btn" type="button" (click)="loadDashboard()">🔄 Refresh</button>
+      <button class="refresh-btn" type="button" (click)="loadDashboard()">↻ Refresh</button>
     </div>
   </div>
 
-  <!-- Loading -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
-    <p>Loading dashboard...</p>
+    <p>Loading dashboard…</p>
   </div>
 
   <div *ngIf="!isLoading">
 
-    <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card blue stat-card--enter">
-        <div class="stat-icon">👥</div>
+      <div class="stat-card stat-card--violet stat-card--enter">
+        <div class="stat-icon">📂</div>
         <div class="stat-info">
-          <p class="stat-label">Total Users</p>
-          <h3 class="stat-value">{{ totalUsers }}</h3>
-          <p class="stat-sub">Registered employees</p>
+          <p class="stat-label">Total inventories</p>
+          <h3 class="stat-value">{{ totalInventories }}</h3>
+          <p class="stat-sub">Named lists in the system</p>
         </div>
       </div>
-      <div class="stat-card green stat-card--enter">
+      <div class="stat-card stat-card--cyan stat-card--enter">
         <div class="stat-icon">📦</div>
         <div class="stat-info">
-          <p class="stat-label">Total Assets</p>
+          <p class="stat-label">Total assets</p>
           <h3 class="stat-value">{{ totalAssets }}</h3>
-          <p class="stat-sub">In inventory</p>
+          <p class="stat-sub">All devices across inventories</p>
         </div>
       </div>
-      <div class="stat-card yellow stat-card--enter">
-        <div class="stat-icon">🕐</div>
+      <div class="stat-card stat-card--amber stat-card--enter">
+        <div class="stat-icon">🔗</div>
         <div class="stat-info">
-          <p class="stat-label">Active Sessions</p>
-          <h3 class="stat-value">{{ activeSessions }}</h3>
-          <p class="stat-sub">Currently active</p>
+          <p class="stat-label">Total assigned</p>
+          <h3 class="stat-value">{{ totalAssigned }}</h3>
+          <p class="stat-sub">Active checkouts (with users)</p>
         </div>
       </div>
-      <div class="stat-card red stat-card--enter">
+      <div class="stat-card stat-card--rose stat-card--enter">
         <div class="stat-icon">🔧</div>
         <div class="stat-info">
-          <p class="stat-label">Pending Repairs</p>
+          <p class="stat-label">Pending repairs</p>
           <h3 class="stat-value">{{ pendingRepairs }}</h3>
-          <p class="stat-sub">Awaiting repair</p>
+          <p class="stat-sub">Awaiting action</p>
         </div>
       </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="charts-row">
+    <div class="inv-panel inv-panel--empty chart-card--enter" *ngIf="inventoryBreakdown.length === 0">
+      <p class="inv-empty-text">No inventories to list yet. When you add inventories and link assets to them, counts appear here.</p>
+    </div>
 
-      <!-- Bar Chart -->
+    <div class="inv-panel chart-card--enter" *ngIf="inventoryBreakdown.length">
+      <div class="inv-panel-head">
+        <h3>Assets by inventory</h3>
+        <span class="inv-panel-meta">{{ totalAssets }} assets total</span>
+      </div>
+      <div class="inv-panel-grid">
+        <div class="inv-tile" *ngFor="let row of inventoryBreakdown">
+          <span class="inv-tile-name">{{ row.name }}</span>
+          <span class="inv-tile-count">{{ row.count }}</span>
+          <span class="inv-tile-label">assets</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
       <div class="chart-card chart-card--enter">
         <div class="chart-header">
-          <h4>👥 Employees by Department</h4>
-          <span class="badge">{{ totalUsers }} total</span>
+          <h4>📊 Assets per inventory</h4>
+          <span class="badge">{{ totalAssets }} assets</span>
         </div>
         <div class="chart-body">
           <canvas baseChart
@@ -77,10 +90,9 @@
         </div>
       </div>
 
-      <!-- Doughnut Chart -->
       <div class="chart-card chart-card--enter">
         <div class="chart-header">
-          <h4>📦 Asset Status</h4>
+          <h4>◎ Asset status mix</h4>
           <span class="badge">{{ totalAssets }} total</span>
         </div>
         <div class="chart-body">
@@ -91,10 +103,8 @@
           </canvas>
         </div>
       </div>
-
     </div>
 
-    <!-- Live line chart -->
     <div class="live-chart-wrap chart-card--enter">
       <div class="chart-card chart-card--live">
         <div class="chart-header">
@@ -112,13 +122,10 @@
       </div>
     </div>
 
-    <!-- Recent Row -->
     <div class="recent-row">
-
-      <!-- Recent Users -->
       <div class="recent-card recent-card--enter">
         <div class="recent-header">
-          <h4>👤 Recent Users</h4>
+          <h4>👤 Recent users</h4>
           <a routerLink="/users" class="view-all">View all →</a>
         </div>
         <table>
@@ -147,10 +154,9 @@
         </table>
       </div>
 
-      <!-- Recent Assets -->
       <div class="recent-card recent-card--enter">
         <div class="recent-header">
-          <h4>📦 Recent Assets</h4>
+          <h4>📦 Recent assets</h4>
           <a routerLink="/assets" class="view-all">View all →</a>
         </div>
         <table>
@@ -180,7 +186,6 @@
           </tbody>
         </table>
       </div>
-
     </div>
 
   </div>

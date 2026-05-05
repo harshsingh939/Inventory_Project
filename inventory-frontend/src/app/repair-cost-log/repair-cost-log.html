@@ -1,7 +1,7 @@
 <div class="page-header page-header-row">
   <div>
     <h2>📋 Repair cost history</h2>
-    <p>Completed repairs: device, cost, notes, and when each was closed</p>
+    <p>Completed repairs: device, cost, bill (upload when marking fixed → <strong>Yes, add details</strong>), notes, and completion time.</p>
   </div>
   <div class="header-actions">
     <a routerLink="/repairs" class="link-back">← Back to repairs</a>
@@ -13,6 +13,7 @@
   <div class="loading" *ngIf="isLoading">Loading history…</div>
   <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
+  <p class="table-scroll-hint" *ngIf="!isLoading && !errorMsg && rows.length">Scroll horizontally to see Bill, Notes, and Completed.</p>
   <div class="table-wrap" *ngIf="!isLoading && !errorMsg">
     <table>
       <thead>
@@ -21,6 +22,7 @@
           <th>Device</th>
           <th>Original issue</th>
           <th>Cost</th>
+          <th>Bill</th>
           <th>Notes</th>
           <th>Completed</th>
         </tr>
@@ -34,10 +36,23 @@
           </td>
           <td class="issue-cell">{{ r.issue }}</td>
           <td>
-            <ng-container *ngIf="r.repair_cost != null; else noCost">
-              ₹{{ r.repair_cost | number: '1.2-2' }}
+            <ng-container *ngIf="hasRepairCost(r); else noCost">
+              ₹{{ repairCostAmount(r)! | number: '1.2-2' }}
             </ng-container>
             <ng-template #noCost><span class="muted">—</span></ng-template>
+          </td>
+          <td class="bill-cell">
+            <div *ngIf="hasBill(r)" class="bill-actions">
+              <a class="bill-link" [href]="billFileUrl(r)" target="_blank" rel="noopener noreferrer">View</a>
+              <span class="bill-sep" aria-hidden="true">·</span>
+              <a
+                class="bill-link bill-link-download"
+                [href]="billFileUrl(r)"
+                [attr.download]="billDownloadName(r)"
+                rel="noopener noreferrer"
+              >Download</a>
+            </div>
+            <span *ngIf="!hasBill(r)" class="muted">—</span>
           </td>
           <td class="notes-cell">{{ r.repair_notes || '—' }}</td>
           <td class="date-cell">
@@ -49,7 +64,7 @@
           </td>
         </tr>
         <tr *ngIf="rows.length === 0">
-          <td colspan="6" class="empty">No completed repairs yet. When you mark a repair as fixed, it appears here.</td>
+          <td colspan="7" class="empty">No completed repairs yet. When you mark a repair as fixed, it appears here.</td>
         </tr>
       </tbody>
     </table>

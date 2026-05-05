@@ -1,0 +1,19 @@
+.assignments-embed {
+  margin-top: 8px;
+}
+
+.assignments-embed .page-header {
+  margin-bottom: 14px;
+}
+
+.assignments-embed .page-header h3 {
+  color: #f1f5f9;
+  font-size: 1.15rem;
+  margin: 0 0 4px;
+}
+
+.assignments-embed .page-header p {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0;
+}

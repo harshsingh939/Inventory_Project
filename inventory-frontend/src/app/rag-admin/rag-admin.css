@@ -1,0 +1,126 @@
+.rag-admin {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.rag-admin__head h1 {
+  margin: 0.35rem 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.rag-admin__sub {
+  margin: 0;
+  color: #5c6570;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.rag-admin__back {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.rag-admin__back:hover {
+  text-decoration: underline;
+}
+
+.rag-card {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.rag-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.rag-card h3 {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.rag-hint {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: #6b7280;
+}
+
+.rag-actions {
+  margin-bottom: 0.75rem;
+}
+
+.rag-chat-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rag-input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn.warn {
+  background: #b45309;
+  color: #fff;
+}
+
+.rag-pre {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 8px;
+  overflow: auto;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  max-height: 320px;
+}
+
+.rag-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+.rag-success {
+  color: #047857;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+.rag-answer-text {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}

@@ -62,10 +62,15 @@ export class Dashboards implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private static readonly LIVE_WINDOW = 18;
 
-  totalUsers     = 0;
-  totalAssets    = 0;
+  totalInventories = 0;
+  totalAssets = 0;
+  /** Devices currently checked out (active sessions) */
+  totalAssigned = 0;
   activeSessions = 0;
   pendingRepairs = 0;
+
+  /** Named inventories with asset counts for the breakdown table */
+  inventoryBreakdown: { id: number | null; name: string; count: number }[] = [];
 
   recentUsers:  any[] = [];
   recentAssets: any[] = [];
@@ -75,7 +80,7 @@ export class Dashboards implements OnInit {
   barChartData: ChartData<'bar'> = {
     labels: [],
     datasets: [{
-      label: 'Employees',
+      label: 'Assets',
       data: [],
       backgroundColor: [
         'rgba(56,189,248,0.7)',
@@ -242,27 +247,62 @@ export class Dashboards implements OnInit {
       this.http.get<any[]>(`${this.apiBase}/assets`).toPromise(),
       this.http.get<any[]>(`${this.apiBase}/sessions/active`).toPromise(),
       this.http.get<any[]>(`${this.apiBase}/repairs`).toPromise(),
-    ]).then(([users, assets, sessions, repairs]) => {
+      this.http.get<any[]>(`${this.apiBase}/inventories`).toPromise(),
+    ]).then(([users, assets, sessions, repairs, inventories]) => {
+      const invList = Array.isArray(inventories) ? inventories : [];
+      const assetList = Array.isArray(assets) ? assets : [];
 
-      this.totalUsers     = users?.length || 0;
-      this.totalAssets    = assets?.length || 0;
+      this.totalInventories = invList.length;
+      this.totalAssets = assetList.length;
       this.activeSessions = sessions?.length || 0;
+      this.totalAssigned = this.activeSessions;
       this.pendingRepairs = repairs?.filter((r: any) => r.status === 'Pending').length || 0;
 
-      this.recentUsers  = (users  || []).slice(-5).reverse();
-      this.recentAssets = (assets || []).slice(-5).reverse();
+      this.recentUsers = (users || []).slice(-5).reverse();
+      this.recentAssets = assetList.slice(-5).reverse();
 
-      // ✅ Bar chart — department wise
-      const deptMap: any = {};
-      (users || []).forEach((u: any) => {
-        deptMap[u.department] = (deptMap[u.department] || 0) + 1;
+      const counts = new Map<number, number>();
+      invList.forEach((inv: any) => counts.set(Number(inv.id), 0));
+      let unassigned = 0;
+      assetList.forEach((a: any) => {
+        const iid = a.inventory_id;
+        if (iid == null || iid === '') {
+          unassigned++;
+        } else {
+          const n = Number(iid);
+          if (counts.has(n)) counts.set(n, (counts.get(n) || 0) + 1);
+          else unassigned++;
+        }
       });
+      const rows: { id: number | null; name: string; count: number }[] = invList
+        .map((inv: any) => ({
+          id: Number(inv.id),
+          name: String(inv.name || `Inventory #${inv.id}`),
+          count: counts.get(Number(inv.id)) ?? 0,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (unassigned > 0) {
+        rows.push({ id: null, name: 'Unassigned (no inventory)', count: unassigned });
+      }
+      this.inventoryBreakdown = rows;
+
+      // ✅ Bar chart — assets per inventory (named rows only; unassigned omitted if empty chart)
+      const invChartLabels: string[] = [];
+      const invChartData: number[] = [];
+      invList.forEach((inv: any) => {
+        invChartLabels.push(String(inv.name || `Inv #${inv.id}`));
+        invChartData.push(counts.get(Number(inv.id)) ?? 0);
+      });
+      if (unassigned > 0) {
+        invChartLabels.push('Unassigned');
+        invChartData.push(unassigned);
+      }
 
       this.barChartData = {
-        labels: Object.keys(deptMap),
+        labels: invChartLabels.length ? invChartLabels : ['No inventories'],
         datasets: [{
-          label: 'Employees',
-          data: Object.values(deptMap),
+          label: 'Assets',
+          data: invChartData.length ? invChartData : [0],
           backgroundColor: [
             'rgba(56,189,248,0.7)',
             'rgba(34,197,94,0.7)',
@@ -278,8 +318,9 @@ export class Dashboards implements OnInit {
 
       // ✅ Doughnut chart — asset status
       const statusMap: any = {};
-      (assets || []).forEach((a: any) => {
-        statusMap[a.status] = (statusMap[a.status] || 0) + 1;
+      assetList.forEach((a: any) => {
+        const key = a.status != null && String(a.status).trim() !== '' ? String(a.status) : 'Unknown';
+        statusMap[key] = (statusMap[key] || 0) + 1;
       });
 
       this.doughnutChartData = {

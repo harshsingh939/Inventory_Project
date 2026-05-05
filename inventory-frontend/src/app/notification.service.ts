@@ -3,12 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { apiUrl } from './api-url';
 
+export type NotificationKind = 'repair' | 'assignment_request';
+
 export interface Notification {
+  kind: NotificationKind;
   id: number;
-  issue: string;
-  asset_type: string;
-  brand: string;
-  created_at?: string;
+  issue: string | null;
+  asset_type: string | null;
+  brand: string | null;
+  created_at?: string | null;
   read: boolean;
 }
 
@@ -16,22 +19,27 @@ export interface Notification {
 export class NotificationService {
   private readonly notificationsUrl = apiUrl('notifications');
   notifications = signal<Notification[]>([]);
-  /** Same as visible list length — avoids badge vs list mismatch */
   readonly unreadCount = computed(() => this.notifications().length);
-  /** Dismissed repair keys (string) so API number/string/BigInt ids still match */
   private dismissedKeys = new Set<string>();
   private lastUserId: number | null = null;
-  private interval: any;
+  private interval: ReturnType<typeof setInterval> | undefined;
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+  ) {}
 
-  private repairKey(raw: unknown): string | null {
-    if (raw == null || raw === '') return null;
-    if (typeof raw === 'bigint') return raw.toString();
-    const n = Number(raw);
-    if (Number.isFinite(n)) return String(Math.trunc(n));
-    const s = String(raw).trim();
-    return s.length ? s : null;
+  private rowKey(rawId: unknown, kind?: string): string | null {
+    if (rawId == null || rawId === '') return null;
+    let idStr: string;
+    if (typeof rawId === 'bigint') idStr = rawId.toString();
+    else {
+      const n = Number(rawId);
+      idStr = Number.isFinite(n) ? String(Math.trunc(n)) : String(rawId).trim();
+    }
+    if (!idStr) return null;
+    const k = kind === 'assignment_request' ? 'ar' : 'repair';
+    return `${k}:${idStr}`;
   }
 
   startPolling() {
@@ -66,34 +74,39 @@ export class NotificationService {
     this.http.get<any[]>(this.notificationsUrl, this.auth.getAuthHeaders()).subscribe({
       next: (data) => {
         const visible = (data || [])
-          .filter((n) => {
-            const k = this.repairKey(n.id);
-            return k != null && !this.dismissedKeys.has(k);
+          .map((n) => {
+            const kind = (n.kind === 'assignment_request' ? 'assignment_request' : 'repair') as NotificationKind;
+            const id = typeof n.id === 'number' ? n.id : Number(n.id) || n.id;
+            return {
+              kind,
+              id,
+              issue: n.issue ?? null,
+              asset_type: n.asset_type ?? null,
+              brand: n.brand ?? null,
+              created_at: n.created_at ?? null,
+              read: false,
+            } as Notification;
           })
-          .map((n) => ({
-            ...n,
-            id: typeof n.id === 'number' ? n.id : Number(n.id) || n.id,
-            created_at: n.created_at ?? '',
-            read: false,
-          }));
+          .filter((n) => {
+            const key = this.rowKey(n.id, n.kind);
+            return key != null && !this.dismissedKeys.has(key);
+          });
         this.notifications.set(visible);
       },
       error: () => {
         this.notifications.set([]);
-      }
+      },
     });
   }
 
-  /** Call when admin closes the bell — hidden until new repair ids appear */
   markAllRead() {
     for (const n of this.notifications()) {
-      const k = this.repairKey(n.id);
+      const k = this.rowKey(n.id, n.kind);
       if (k) this.dismissedKeys.add(k);
     }
     this.notifications.set([]);
   }
 
-  /** Call on logout so the next login does not inherit dismissed ids */
   resetDismissed() {
     this.dismissedKeys.clear();
     this.lastUserId = null;

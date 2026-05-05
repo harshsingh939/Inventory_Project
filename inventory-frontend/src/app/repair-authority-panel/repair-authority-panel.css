@@ -1,0 +1,139 @@
+.page-header h2 {
+  color: #f1f5f9;
+  margin: 0 0 6px;
+}
+.page-header p {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+.page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.btn.sm {
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+.btn.primary {
+  background: #0ea5e9;
+  border-color: #0284c7;
+  color: #0f172a;
+  font-weight: 600;
+}
+.btn.danger {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.tbl th,
+.tbl td {
+  padding: 10px;
+  border-bottom: 1px solid #1e293b;
+  text-align: left;
+  color: #cbd5e1;
+}
+.tbl th {
+  color: #64748b;
+}
+.issue {
+  max-width: 280px;
+}
+.msg-error {
+  color: #f87171;
+  margin-bottom: 10px;
+}
+.msg-success {
+  color: #4ade80;
+  margin-bottom: 10px;
+}
+.loading,
+.empty {
+  color: #64748b;
+  padding: 12px;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+.modal {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 440px;
+  width: 100%;
+}
+.modal h3 {
+  color: #f1f5f9;
+  margin: 0 0 8px;
+}
+.lead {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.sn {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+.q {
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+.modal label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin: 10px 0 4px;
+}
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: #e2e8f0;
+}
+.ta {
+  min-height: 72px;
+  resize: vertical;
+}
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.fn {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+.foot {
+  margin-top: 16px;
+}
+.foot a {
+  color: #38bdf8;
+}

@@ -1,0 +1,11 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+httpx>=0.27.0
+python-dotenv>=1.0.1
+pydantic-settings>=2.6.0
+langchain>=0.3.13
+langchain-core>=0.3.28
+langchain-google-genai>=2.0.7
+langchain-pinecone>=0.2.4
+langchain-text-splitters>=0.3.4
+pinecone-client>=5.0.1

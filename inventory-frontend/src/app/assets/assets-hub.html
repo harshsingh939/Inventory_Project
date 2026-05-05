@@ -1,95 +1,113 @@
 <div class="page-header">
-  <h2>📦 Assets</h2>
-  <p>Named inventories, then open a category to add and list devices in that group.</p>
-</div>
-
-<!-- Inventories -->
-<div class="card inv-section">
-  <div class="inv-section-head">
-    <h4 class="form-title">Inventories</h4>
-    <button type="button" class="btn btn-primary btn-sm" (click)="openAddInventory()">+ Add inventory</button>
-  </div>
-  <p class="inv-help" *ngIf="!inventories.length">
-    No inventories yet. Use <strong>+ Add inventory</strong> to create a named list (name, location, owner, notes — date is saved automatically). Then pick it below when opening a category.
-  </p>
-  <div class="inv-cards-grid" *ngIf="inventories.length">
-    <ng-container *ngFor="let inv of inventories">
-      <article class="inv-card card" *ngIf="invParsed(inv) as meta">
-        <div class="inv-card-icon" aria-hidden="true">{{ invIcon(inv.id) }}</div>
-        <h3 class="inv-card-title">{{ inv.name }}</h3>
-        <p class="inv-card-date">Added {{ inv.created_at | date:'mediumDate' }}</p>
-        <div class="inv-card-chips" *ngIf="meta.location || meta.owner">
-          <span class="inv-chip" *ngIf="meta.location">📍 {{ meta.location }}</span>
-          <span class="inv-chip" *ngIf="meta.owner">👤 {{ meta.owner }}</span>
-        </div>
-        <p class="inv-card-blurb">{{ invCardBlurb(inv) }}</p>
-        <div class="inv-card-actions">
-          <a class="btn btn-primary btn-sm inv-open-link" [routerLink]="['/assets/inv', inv.id]">Open →</a>
-          <button type="button" class="btn btn-outline btn-sm" (click)="openEditInventory(inv)">Update</button>
-          <button type="button" class="btn btn-danger-ghost btn-sm" (click)="deleteInventory(inv)">Remove</button>
-        </div>
-      </article>
-    </ng-container>
+  <div class="hub-header-row">
+    <div class="hub-header-text">
+      <h2>📦 Assets</h2>
+      <p>
+        <strong>Categories</strong> use rows from <code>/api/inventories</code> when they match migration 012.
+        <strong>Your inventories</strong> are extra lists you add — same card style; <strong>Open</strong> goes to the workspace
+        with category shortcuts (same as before).
+      </p>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm hub-add-btn" (click)="openAddInventory()">
+      + Add inventory
+    </button>
   </div>
 </div>
 
-<div class="card inv-focus" *ngIf="inventories.length">
-  <label class="inv-focus-label">Open categories for inventory</label>
-  <select class="input select-input inv-select" [(ngModel)]="focusInvId">
-    <option [ngValue]="''">All inventories (mixed)</option>
-    <option *ngFor="let inv of inventories" [ngValue]="inv.id">{{ inv.name }}</option>
-  </select>
-  <p class="field-hint">Category links below pass this choice so lists and new assets stay in that inventory.</p>
-</div>
+<div class="hub-loading card" *ngIf="hubLoading">⏳ Loading inventories…</div>
 
-<div class="hub-grid">
+<div class="hub-grid" *ngIf="!hubLoading">
   <a
     *ngFor="let slug of slugs"
     class="hub-card card"
     [routerLink]="['/assets', slug]"
-    [queryParams]="queryForCategory()">
+    [queryParams]="queryForSlug(slug)">
     <div class="hub-card-icon">{{ meta(slug)?.icon }}</div>
     <h3 class="hub-card-title">{{ meta(slug)?.title }}</h3>
     <p class="hub-card-blurb">{{ meta(slug)?.blurb }}</p>
+    <p class="hub-card-stats" *ngIf="rowForSlug(slug) as row">
+      <span class="hub-stat-count" *ngIf="(row.asset_count ?? 0) > 0">
+        {{ row.asset_count }} asset<span *ngIf="row.asset_count !== 1">s</span>
+      </span>
+      <span class="hub-stat-count hub-stat-zero" *ngIf="(row.asset_count ?? 0) === 0">No assets linked yet</span>
+      <span class="hub-stat-names" *ngIf="row.asset_names">{{ row.asset_names }}</span>
+    </p>
+    <p class="hub-card-missing" *ngIf="!rowForSlug(slug)">
+      No matching row in DB for this category — run migration 012 or align <code>details</code> with
+      <code>Category slug: {{ slug }}</code>.
+    </p>
     <span class="hub-card-cta">Open →</span>
+  </a>
+
+  <a
+    *ngFor="let inv of customInventories"
+    class="hub-card card hub-card--custom"
+    [routerLink]="['/assets/inv', inv.id]">
+    <div class="hub-card-icon" aria-hidden="true">{{ invIcon(inv.id) }}</div>
+    <h3 class="hub-card-title">{{ inv.name }}</h3>
+    <p class="hub-card-blurb">{{ customCardBlurb(inv) }}</p>
+    <div class="hub-card-chips" *ngIf="invDetailChips(inv) as meta">
+      <span class="hub-chip" *ngIf="meta.location">📍 {{ meta.location }}</span>
+      <span class="hub-chip" *ngIf="meta.owner">👤 {{ meta.owner }}</span>
+    </div>
+    <p class="hub-card-stats">
+      <span class="hub-stat-count" *ngIf="(inv.asset_count ?? 0) > 0">
+        {{ inv.asset_count }} asset<span *ngIf="inv.asset_count !== 1">s</span>
+      </span>
+      <span class="hub-stat-count hub-stat-zero" *ngIf="(inv.asset_count ?? 0) === 0">No assets linked yet</span>
+      <span class="hub-stat-names" *ngIf="inv.asset_names">{{ inv.asset_names }}</span>
+    </p>
+    <div class="hub-card-footer">
+      <span class="hub-card-cta">Open →</span>
+      <button
+        type="button"
+        class="hub-card-remove"
+        (click)="deleteCustomInventory(inv, $event)"
+        title="Remove this list">
+        Remove
+      </button>
+    </div>
   </a>
 </div>
 
-<!-- Modal: add / update inventory -->
+<!-- Add inventory -->
 <div class="inv-modal-overlay" *ngIf="showInvModal" (click)="closeInvModal()">
   <div class="inv-modal card" (click)="$event.stopPropagation()">
     <div class="inv-modal-head">
-      <h3>{{ editingInv ? 'Update inventory' : 'Add inventory' }}</h3>
+      <h3>Add inventory</h3>
       <button type="button" class="close-btn" (click)="closeInvModal()">✕</button>
     </div>
-    <p class="inv-modal-lead">These fields match what appears on your inventory cards below.</p>
+    <p class="inv-modal-lead">
+      Set a name and optional details. After save, the new card appears here; <strong>Open</strong> uses the same workspace
+      as before (category tiles with this list pre-selected).
+    </p>
     <div class="form-field">
       <label>List name <span class="req">*</span></label>
-      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. Mobile, Main office stock" />
+      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. LAN cable, Building B stock" />
     </div>
     <div class="inv-modal-row">
       <div class="form-field">
         <label>Location / site</label>
-        <input class="input" [(ngModel)]="invForm.location" placeholder="e.g. Building A, shelf 12" />
+        <input class="input" [(ngModel)]="invForm.location" placeholder="e.g. Shelf 12" />
       </div>
       <div class="form-field">
         <label>Owner / team</label>
-        <input class="input" [(ngModel)]="invForm.owner" placeholder="e.g. IT procurement" />
+        <input class="input" [(ngModel)]="invForm.owner" placeholder="e.g. IT" />
       </div>
     </div>
     <div class="form-field">
       <label>Description &amp; notes</label>
       <textarea
         class="input textarea"
-        rows="4"
+        rows="3"
         [(ngModel)]="invForm.description"
-        placeholder="What belongs in this list, handover notes, or anything people should know…"></textarea>
+        placeholder="What belongs in this list…"></textarea>
     </div>
     <div class="msg-error" *ngIf="invErr">{{ invErr }}</div>
     <div class="inv-modal-actions">
       <button type="button" class="btn" (click)="closeInvModal()">Cancel</button>
       <button type="button" class="btn btn-primary" (click)="saveInventory()" [disabled]="invSaving">
-        {{ invSaving ? 'Saving…' : (editingInv ? 'Save changes' : 'Create inventory') }}
+        {{ invSaving ? 'Saving…' : 'Save' }}
       </button>
     </div>
   </div>

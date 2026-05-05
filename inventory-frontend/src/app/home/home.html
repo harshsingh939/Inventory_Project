@@ -1,9 +1,124 @@
+@if (isVendorHome) {
+<div class="vendor-home">
+  <div class="vendor-home__particles" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="vendor-home__glyph" aria-hidden="true">
+    <div class="vendor-home__glyph-ring"></div>
+    <span class="vendor-home__glyph-icon">🔧</span>
+  </div>
+  <div class="vendor-home__top">
+    <div class="vendor-home__grid">
+      <div class="vendor-home__col">
+        <main class="vendor-home__copy">
+          <div class="vendor-home__stagger">
+            <p class="vendor-home__eyebrow">InvenTrack · Vendor partner</p>
+            <h1 class="vendor-home__title">
+              <span class="vendor-home__accent">Hardware or software</span>—we assign with trust; we grow together.
+            </h1>
+            <p class="vendor-home__tagline">
+              One bond: hardware healed, software steadied, reputations lifted side by side.
+            </p>
+            <p class="vendor-home__quote">“In every good repair, two names rise together.”</p>
+            <div class="vendor-home__pills">
+              <span class="vendor-home__pill">We connect</span>
+              <span class="vendor-home__pill">We trust</span>
+              <span class="vendor-home__pill">We grow</span>
+              <span class="vendor-home__pill">Fix with pride</span>
+            </div>
+            <div class="vendor-home__panel">
+              <div class="vendor-home__stat">
+                <span class="vendor-home__stat-label">Your queue</span>
+                @if (vendorQueueLoading()) {
+                  <span class="vendor-home__stat-value">…</span>
+                } @else {
+                  <span class="vendor-home__stat-value">{{ vendorQueueCount() === null ? '—' : vendorQueueCount() }}</span>
+                }
+              </div>
+              <a routerLink="/repair-authority" class="vendor-home__cta">Start repairs</a>
+            </div>
+          </div>
+        </main>
+      </div>
+      <aside class="vendor-home__aside" aria-live="polite" aria-atomic="true">
+        <div class="vendor-home__tw">
+          <span class="vendor-home__tw-kicker">Words we stand on</span>
+          <p class="vendor-home__tw-text">
+            <span class="vendor-home__tw-line">{{ vendorTypedText() }}</span><span class="vendor-home__tw-cursor" aria-hidden="true">▍</span>
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <section class="vendor-home__handles" aria-labelledby="vendor-handles-h">
+    <h2 id="vendor-handles-h" class="vendor-home__handles-title">What we handle for repair</h2>
+    <p class="vendor-home__handles-lead">Desktops, laptops, and the accessories that keep teams running.</p>
+    <div class="vendor-home__handles-grid">
+      <article class="vendor-home__handle">
+        <div class="vendor-home__handle-visual">
+          <img
+            src="/vendor-repair/desktop.svg"
+            alt="Desktop and workstation setup"
+            width="640"
+            height="400"
+            loading="lazy"
+          />
+        </div>
+        <h3 class="vendor-home__handle-name">Desktop</h3>
+        <p class="vendor-home__handle-note">PCs, workstations, all-in-ones</p>
+      </article>
+      <article class="vendor-home__handle">
+        <div class="vendor-home__handle-visual">
+          <img
+            src="/vendor-repair/laptop.svg"
+            alt="Laptop on a desk"
+            width="640"
+            height="400"
+            loading="lazy"
+          />
+        </div>
+        <h3 class="vendor-home__handle-name">Laptop</h3>
+        <p class="vendor-home__handle-note">Ultrabooks, notebooks, portables</p>
+      </article>
+      <article class="vendor-home__handle">
+        <div class="vendor-home__handle-visual">
+          <img
+            src="/vendor-repair/accessories.svg"
+            alt="Headphones and tech accessories"
+            width="640"
+            height="400"
+            loading="lazy"
+          />
+        </div>
+        <h3 class="vendor-home__handle-name">Other accessories</h3>
+        <p class="vendor-home__handle-note">Monitors, docks, peripherals &amp; more</p>
+      </article>
+    </div>
+  </section>
+</div>
+} @else {
+<div class="home-public">
 <div class="hero">
+  <div class="hero-bg-motion" aria-hidden="true">
+    <div class="hero-bg-motion__img"></div>
+    <div class="hero-bg-motion__shelves"></div>
+    <div class="hero-bg-motion__scan"></div>
+  </div>
   <div class="hero-overlay"></div>
   <div class="hero-particles" aria-hidden="true">
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="hero-inventory-float" aria-hidden="true">
+    <span class="inv-float inv-float--a">📦</span>
+    <span class="inv-float inv-float--b">🖥️</span>
+    <span class="inv-float inv-float--c">📋</span>
+    <span class="inv-float inv-float--d">🏷️</span>
+    <span class="inv-float inv-float--e">📊</span>
+    <span class="inv-float inv-float--f">🔧</span>
   </div>
   <div class="hero-layout">
     <div class="hero-content">
@@ -21,27 +136,11 @@
           View Assets
         </a>
       </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-num">99%</span>
-          <span class="stat-label">Uptime</span>
-        </div>
-        <div class="stat-divider" aria-hidden="true"></div>
-        <div class="stat">
-          <span class="stat-num">10k+</span>
-          <span class="stat-label">Assets Tracked</span>
-        </div>
-        <div class="stat-divider" aria-hidden="true"></div>
-        <div class="stat">
-          <span class="stat-num">24/7</span>
-          <span class="stat-label">Monitoring</span>
-        </div>
-      </div>
     </div>
 
     <aside class="hero-typewriter" aria-live="polite" aria-atomic="true">
       <div class="hero-typewriter-card">
-        <span class="hero-tw-kicker">In the system</span>
+        <span class="hero-tw-kicker">Live in your stack</span>
         <p class="hero-tw-text">
           <span class="hero-tw-line">{{ typedText() }}</span><span class="hero-tw-cursor" aria-hidden="true">▍</span>
         </p>
@@ -348,6 +447,8 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 InvenTrack. All rights reserved.</p>
+    <p>© 2026 InvenTrack. All rights reserved.</p>
   </div>
 </footer>
+</div>
+}

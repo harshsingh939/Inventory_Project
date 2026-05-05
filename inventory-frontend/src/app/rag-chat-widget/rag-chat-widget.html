@@ -1,0 +1,57 @@
+<div class="rag-widget" *ngIf="auth.isLoggedIn() && auth.isAdmin()">
+  <div
+    class="rag-widget__backdrop"
+    *ngIf="open"
+    (click)="close()"
+    aria-hidden="true"></div>
+
+  <section
+    class="rag-widget__panel"
+    *ngIf="open"
+    role="dialog"
+    aria-label="Inventory assistant"
+    aria-modal="true">
+    <header class="rag-widget__head">
+      <span class="rag-widget__title">Inventory assistant</span>
+      <div class="rag-widget__head-actions">
+        <a routerLink="/rag-admin" class="rag-widget__link" (click)="close()" title="Indexing & status">⚙</a>
+        <button type="button" class="rag-widget__iconbtn" (click)="close()" aria-label="Close chat">✕</button>
+      </div>
+    </header>
+    <div class="rag-widget__messages">
+      <div *ngIf="messages.length === 0 && !loading" class="rag-widget__empty">
+        Ask about assets, assignments, repairs, or users (indexed snapshot).
+      </div>
+      <div
+        *ngFor="let m of messages"
+        class="rag-widget__bubble"
+        [class.rag-widget__bubble--user]="m.role === 'user'"
+        [class.rag-widget__bubble--bot]="m.role === 'assistant'">
+        {{ m.text }}
+      </div>
+      <div *ngIf="loading" class="rag-widget__typing">Thinking…</div>
+    </div>
+    <div class="rag-widget__composer">
+      <input
+        type="text"
+        class="rag-widget__input"
+        [(ngModel)]="input"
+        placeholder="Ask…"
+        (keydown.enter)="send()"
+        [disabled]="loading" />
+      <button type="button" class="rag-widget__send" (click)="send()" [disabled]="loading || !input.trim()">
+        Send
+      </button>
+    </div>
+  </section>
+
+  <button
+    type="button"
+    class="rag-widget__fab"
+    (click)="toggle()"
+    [class.rag-widget__fab--active]="open"
+    [attr.aria-expanded]="open"
+    aria-label="Open inventory assistant">
+    <span class="rag-widget__fab-icon" aria-hidden="true">💬</span>
+  </button>
+</div>

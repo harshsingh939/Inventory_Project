@@ -19,6 +19,7 @@
       <h2><span class="inv-ws-ico" aria-hidden="true">{{ invIcon() }}</span> {{ inventory.name }}</h2>
       <p>
         Choose a category below. Each opens the same <strong>add row + table + columns</strong> as the main Assets pages, with this inventory already selected for filtering and new items.
+        Admins: use <strong>Assignments</strong> on that category page to check out available items from this list.
       </p>
     </div>
 
@@ -28,6 +29,13 @@
         <span class="inv-chip" *ngIf="wsMeta.owner">👤 {{ wsMeta.owner }}</span>
       </div>
       <p class="inv-ws-notes" *ngIf="wsMeta.description">{{ wsMeta.description }}</p>
+    </div>
+
+    <div class="inv-ws-assets card" *ngIf="(inventory.asset_count ?? 0) > 0">
+      <h4 class="inv-ws-assets-title">Assets in this list ({{ inventory.asset_count }})</h4>
+      <ul class="inv-ws-assets-list">
+        <li *ngFor="let a of (inventory.assets || [])">{{ a.name }}</li>
+      </ul>
     </div>
   </ng-container>
 

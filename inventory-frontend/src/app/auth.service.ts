@@ -89,6 +89,11 @@ export class AuthService {
 isAdmin(): boolean {
   return this.getRole() === 'admin';
 }
+
+/** Repair vendor / in-house technician login (separate panel) */
+isRepairAuthority(): boolean {
+  return this.getRole() === 'repair_authority';
+}
 getUserId(): number | null {
   const profile = this.getProfile();
   return profile ? profile.id : null;

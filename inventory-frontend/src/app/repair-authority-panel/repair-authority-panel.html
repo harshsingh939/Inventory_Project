@@ -1,0 +1,77 @@
+<div class="page-header page-header-row">
+  <div>
+    <h2>🛠️ Vendor repairs</h2>
+    <p>
+      This queue is separate from the main <strong>Repairs</strong> screen admins use. When an admin assigns a job to your login here,
+      it appears below with full device details — work it in parallel; admins still see status on Repairs.
+    </p>
+  </div>
+  <button type="button" class="btn" (click)="load()" [disabled]="loading">Refresh</button>
+</div>
+
+<div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+<div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+
+<div class="card">
+  <div class="loading" *ngIf="loading">Loading queue…</div>
+  <div class="empty" *ngIf="!loading && !queue.length">Nothing assigned right now.</div>
+  <table *ngIf="!loading && queue.length" class="tbl">
+    <thead>
+      <tr>
+        <th>Device</th>
+        <th>Serial</th>
+        <th>Issue</th>
+        <th>Reported</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of queue">
+        <td>{{ deviceLabel(r) }}</td>
+        <td>{{ r.serial_number || '—' }}</td>
+        <td class="issue">{{ r.issue }}</td>
+        <td>{{ r.reported_at || r.created_at | date: 'short' }}</td>
+        <td>
+          <button type="button" class="btn sm primary" (click)="openFix(r)">Review / resolve</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+@if (dialog) {
+<div class="modal-overlay" (click)="closeDialog()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h3>Repair #{{ dialog.id }}</h3>
+    <p class="lead">{{ deviceLabel(dialog) }}</p>
+    <p class="sn" *ngIf="dialog.serial_number">Serial: {{ dialog.serial_number }}</p>
+    <p class="issue">{{ dialog.issue }}</p>
+
+    @if (step === 'ask') {
+      <p class="q">Mark as fixed (with optional cost & bill), or cannot repair?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn" (click)="closeDialog()" [disabled]="saving">Cancel</button>
+        <button type="button" class="btn danger" (click)="cannotFix()" [disabled]="saving">Cannot repair</button>
+        <button type="button" class="btn" (click)="markFixedQuick()" [disabled]="saving">Fixed (quick)</button>
+        <button type="button" class="btn primary" (click)="goDetails()" [disabled]="saving">Fixed + details</button>
+      </div>
+    } @else {
+      <label>Cost ₹ (optional)</label>
+      <input type="number" class="input" [(ngModel)]="repairCost" min="0" step="0.01" />
+      <label>Resolution notes</label>
+      <textarea class="input ta" rows="3" [(ngModel)]="repairNotes"></textarea>
+      <label>Bill (optional)</label>
+      <input #billInput type="file" class="input" (change)="onBill($event)" accept=".pdf,.jpg,.jpeg,.png" />
+      <p class="fn" *ngIf="billName">{{ billName }}</p>
+      <div class="modal-actions">
+        <button type="button" class="btn" (click)="step = 'ask'" [disabled]="saving">Back</button>
+        <button type="button" class="btn primary" (click)="submitDetails()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Submit fixed' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>
+}
+
+<p class="foot"><a routerLink="/repairs">All repairs</a></p>

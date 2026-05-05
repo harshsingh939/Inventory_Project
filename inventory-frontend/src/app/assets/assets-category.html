@@ -9,12 +9,30 @@
   <p>{{ cat.blurb }}</p>
 </div>
 
-<div class="category-hint card" *ngIf="cat && showSessionsHint">
-  <strong>Sessions:</strong> items here can be assigned to employees from the Sessions page.
+<div class="card category-assign-card" *ngIf="cat && auth.isAdmin()">
+  <div class="category-assign-row">
+    <div>
+      <h4 class="form-title">Assign to employees</h4>
+      <p class="field-note">
+        Open assignments to check out <strong>Available</strong> assets in this category. If you use an inventory filter above, only that list is included.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-primary category-assign-btn"
+      (click)="setAssignmentsOpen(!showAssignmentsPanel)">
+      {{ showAssignmentsPanel ? 'Hide assignments' : 'Assignments' }}
+    </button>
+  </div>
 </div>
-<div class="category-hint card hint-compact" *ngIf="cat && !showSessionsHint">
-  <strong>Checkout:</strong> these assets are not listed in Sessions. Use <a routerLink="/repairs">Repairs</a> for service — same flow as computers.
-</div>
+
+<app-asset-assignments-panel
+  *ngIf="cat && auth.isAdmin() && showAssignmentsPanel"
+  [categorySlug]="slug"
+  [assignmentScopeAssetIds]="assignmentScopeIds"
+  [scopeLabel]="assignmentScopeLabel"
+  [assignmentRequestId]="assignmentRequestId"
+  [prefillAuthUserId]="prefillAuthUserId" />
 
 <div class="card inv-panel" *ngIf="cat">
   <h4 class="form-title">Inventory</h4>

@@ -1,0 +1,201 @@
+<div class="assignments-embed">
+  <div class="page-header">
+    <h3>🔗 Asset assignments — {{ categoryTitle() }}</h3>
+    <p *ngIf="scopeLabel">
+      Showing <strong>{{ scopeLabel }}</strong>. The asset list and assignment history match this inventory when one is selected above.
+    </p>
+    <p *ngIf="!scopeLabel">
+      Only <strong>Available</strong> assets in <strong>{{ categoryTitle() }}</strong> appear below. Active and history rows are filtered the same way.
+    </p>
+  </div>
+
+  <div class="card">
+    <h4 class="form-title">Assign asset to user</h4>
+    <p class="field-note ar-from-request" *ngIf="assignmentRequestId != null">
+      Completing assignment request <strong>REQ-{{ assignmentRequestId }}</strong>. Employee must match the ticket login; each checkout counts toward the ticket until it is fulfilled.
+    </p>
+    <div class="assign-form-help">
+      <p class="field-note hint-warn" *ngIf="assetLoadHint">{{ assetLoadHint }}</p>
+      <p class="msg-error assign-form-asset-err" *ngIf="assetLoadError">⚠️ {{ assetLoadError }}</p>
+    </div>
+    <div class="assign-form">
+      <div class="form-field">
+        <label>Select employee</label>
+        <select [(ngModel)]="selectedUserId" class="input select-input">
+          <option value="">-- Select employee --</option>
+          <option *ngFor="let u of users" [value]="u.id">
+            {{ u.name }} ({{ u.employee_id }}) — {{ u.department }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Select available asset</label>
+        <select [(ngModel)]="selectedAssetId" class="input select-input">
+          <option value="">-- Select asset --</option>
+          <option *ngFor="let a of availableAssets" [value]="a.id">
+            {{ a.asset_type }} — {{ a.brand }} {{ a.model }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label>Condition</label>
+        <select [(ngModel)]="conditionBefore" class="input select-input">
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+
+      <div class="form-field btn-field">
+        <label>&nbsp;</label>
+        <button
+          type="button"
+          class="btn btn-primary assign-btn"
+          (click)="assignAsset()"
+          [disabled]="isAssigning">
+          {{ isAssigning ? 'Assigning…' : '🔗 Assign asset' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+    <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+  </div>
+
+  <div class="tabs">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'active'"
+      (click)="activeTab = 'active'">
+      🟢 Active ({{ activeAssignments.length }})
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab === 'history'"
+      (click)="activeTab = 'history'">
+      📋 History ({{ allAssignments.length }})
+    </button>
+  </div>
+
+  <div class="card" *ngIf="activeTab === 'active'">
+    <div class="loading" *ngIf="isLoading">⏳ Loading…</div>
+
+    <div class="assignment-grid" *ngIf="!isLoading">
+      <div class="assignment-card" *ngFor="let a of activeAssignments">
+        <div class="assignment-header">
+          <div class="user-info">
+            <div class="avatar-sm">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
+            <div>
+              <div class="user-name">{{ a.user_name }}</div>
+              <div class="user-dept">{{ a.department }} • {{ a.employee_id }}</div>
+            </div>
+          </div>
+          <span class="status-active">● Active</span>
+        </div>
+
+        <div class="asset-info">
+          <div class="asset-icon">💻</div>
+          <div>
+            <div class="asset-name">{{ a.asset_type }} — {{ a.brand }}</div>
+            <div class="asset-model">{{ a.model }}</div>
+            <div class="asset-serial" *ngIf="a.serial_number">SN: {{ a.serial_number }}</div>
+          </div>
+        </div>
+
+        <div class="assignment-footer">
+          <div class="assign-date">📅 {{ a.start_time | date : 'dd MMM yyyy, hh:mm a' }}</div>
+          <div class="assignment-actions">
+            <button type="button" class="btn-unassign" (click)="unassignAsset(a.assignment_id)">
+              🔓 Return to stock
+            </button>
+            <button type="button" class="btn-dispose" (click)="openDisposeModal(a)">🗑️ Dispose</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="activeAssignments.length === 0">
+        <div class="empty-icon">📭</div>
+        <p>No active assignments in this view</p>
+        <span>Assign an asset above or widen the inventory filter</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="activeTab === 'history'">
+    <div class="table-container history-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Asset</th>
+            <th>Assigned on</th>
+            <th>Returned on</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of allAssignments">
+            <td>
+              <div class="user-cell-sm">
+                <div class="mini-avatar">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
+                <div>
+                  <div>{{ a.user_name }}</div>
+                  <small>{{ a.employee_id }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>{{ a.asset_type }} — {{ a.brand }}</div>
+              <small>{{ a.model }}</small>
+            </td>
+            <td>{{ a.start_time | date : 'dd MMM yy, hh:mm a' }}</td>
+            <td>{{ a.end_time ? (a.end_time | date : 'dd MMM yy, hh:mm a') : '—' }}</td>
+            <td>{{ formatSessionDuration(a.working_minutes) }}</td>
+            <td>
+              <span
+                class="status-badge"
+                [class.active]="a.status === 'Active'"
+                [class.done]="a.status === 'Completed'">
+                {{ a.status }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="allAssignments.length === 0">
+            <td colspan="6" class="empty-row">No history in this view</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="dispose-overlay" *ngIf="disposeModalAssignment" (click)="closeDisposeModal()">
+    <div class="dispose-dialog" (click)="$event.stopPropagation()">
+      <h3>Dispose this item?</h3>
+      <p class="dispose-lead">
+        This ends the assignment and <strong>removes the asset from its inventory</strong>. Use only when the item
+        cannot go back to stock (damaged beyond use, lost consumable, etc.).
+      </p>
+      <div class="dispose-summary" *ngIf="disposeModalAssignment as d">
+        <div>{{ d.asset_type }} — {{ d.brand }} {{ d.model }}</div>
+        <div class="dispose-meta">{{ d.user_name }} · {{ d.department }}</div>
+      </div>
+      <label class="dispose-label">Notes (optional)</label>
+      <textarea
+        class="dispose-notes"
+        rows="2"
+        [(ngModel)]="disposeNotes"
+        placeholder="Reason or reference…"></textarea>
+      <div class="dispose-actions">
+        <button type="button" class="btn-cancel" (click)="closeDisposeModal()" [disabled]="disposing">Cancel</button>
+        <button type="button" class="btn-dispose-confirm" (click)="confirmDispose()" [disabled]="disposing">
+          {{ disposing ? 'Working…' : 'Confirm dispose' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

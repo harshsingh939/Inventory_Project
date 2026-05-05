@@ -1,0 +1,81 @@
+<div class="dispose-page">
+  <div class="dispose-ambient" aria-hidden="true"></div>
+
+  <div class="dispose-inner">
+    <header class="dispose-header">
+      <div class="dispose-header__brand">
+        <div class="dispose-bin" aria-hidden="true">
+          <span class="dispose-bin__lid"></span>
+          <span class="dispose-bin__body"></span>
+        </div>
+        <div>
+          <h1 class="dispose-title">Disposed items</h1>
+          <p class="dispose-lead">
+            Audit log · <a routerLink="/assets" class="dispose-lead__link">Assets</a>
+          </p>
+        </div>
+      </div>
+      <div class="dispose-toolbar">
+        <a routerLink="/assets" class="btn btn-ghost">← Assets</a>
+        <button type="button" class="btn btn-solid" (click)="load()" [disabled]="isLoading">
+          {{ isLoading ? 'Loading…' : 'Refresh' }}
+        </button>
+      </div>
+    </header>
+
+    <div class="dispose-panel">
+      <div class="dispose-loading" *ngIf="isLoading">Loading…</div>
+      <div class="dispose-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <div class="dispose-table-wrap" *ngIf="!isLoading && !errorMsg && rows.length > 0">
+        <table class="dispose-table">
+          <thead>
+            <tr>
+              <th class="col-num">#</th>
+              <th>Device</th>
+              <th>Inventory</th>
+              <th>Assigned to</th>
+              <th>Condition</th>
+              <th>Notes</th>
+              <th class="col-date">Disposed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of rows; let i = index" class="dispose-row">
+              <td class="col-num">{{ i + 1 }}</td>
+              <td>
+                <span class="device-pill">
+                  <span class="device-pill__icon" aria-hidden="true">{{ deviceIcon(r) }}</span>
+                  <span class="device-pill__text">
+                    {{ deviceLabel(r) }}
+                    <span class="device-sn" *ngIf="r.serial_number">· SN {{ r.serial_number }}</span>
+                  </span>
+                </span>
+              </td>
+              <td>
+                <ng-container *ngIf="r.inventory_name || r.inventory_id; else noInv">
+                  {{ r.inventory_name || ('#' + r.inventory_id) }}
+                </ng-container>
+                <ng-template #noInv><span class="muted">—</span></ng-template>
+              </td>
+              <td>
+                <ng-container *ngIf="r.user_name">{{ r.user_name }}</ng-container>
+                <span class="muted" *ngIf="r.department"> · {{ r.department }}</span>
+                <span class="muted" *ngIf="!r.user_name && !r.department">—</span>
+              </td>
+              <td><span class="cond-tag">{{ r.condition_after || '—' }}</span></td>
+              <td class="notes-cell">{{ r.notes || '—' }}</td>
+              <td class="col-date date-cell">{{ r.disposed_at | date: 'dd MMM yyyy, hh:mm a' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dispose-empty" *ngIf="!isLoading && !errorMsg && rows.length === 0">
+        <div class="dispose-empty__icon" aria-hidden="true">🗑️</div>
+        <p class="dispose-empty__title">No disposals recorded</p>
+        <p class="dispose-empty__hint">Dispose from an active assignment when gear cannot return to stock.</p>
+      </div>
+    </div>
+  </div>
+</div>

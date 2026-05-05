@@ -86,3 +86,14 @@ exports.login = (req, res) => {
     });
   });
 };
+
+/** Admin: pick repair-authority accounts when assigning repairs */
+exports.listRepairAuthorities = (req, res) => {
+  db.query(
+    "SELECT id, username, email FROM auth_users WHERE LOWER(TRIM(role)) = 'repair_authority' ORDER BY username",
+    (err, rows) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json(rows || []);
+    },
+  );
+};

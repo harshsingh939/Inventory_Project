@@ -1,0 +1,119 @@
+<div class="assign-page">
+  <div class="assign-ambient" aria-hidden="true"></div>
+
+  <div class="assign-inner">
+    <header class="assign-board-header">
+      <div class="assign-board-title">
+        <span class="assign-ticket-stamp" aria-hidden="true">IT</span>
+        <div>
+          <h1 class="assign-title">Request queue</h1>
+          <p class="assign-lead">Assignment tickets · <a routerLink="/users">Users</a></p>
+        </div>
+      </div>
+      <div class="assign-toolbar">
+        <a routerLink="/users" class="btn btn-ghost">Users</a>
+        <button type="button" class="btn btn-solid" (click)="load()" [disabled]="loading">
+          {{ loading ? 'Loading…' : 'Refresh' }}
+        </button>
+      </div>
+    </header>
+
+    <div class="msg msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+    <div class="msg msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+
+    <div class="assign-board">
+      <div class="assign-loading" *ngIf="loading">Loading…</div>
+      <div class="assign-empty" *ngIf="!loading && !rows.length">No open tickets.</div>
+
+      <article
+        class="req-ticket"
+        *ngFor="let r of rows"
+        [class.req-ticket--pending]="r.status === 'Pending'"
+        [class.req-ticket--fulfilled]="r.status === 'Fulfilled'"
+        [class.req-ticket--rejected]="r.status === 'Rejected'"
+      >
+        <div class="req-ticket__rail" aria-hidden="true"></div>
+        <div class="req-ticket__perforate" aria-hidden="true"></div>
+
+        <header class="req-ticket__mast">
+          <div class="req-ticket__mast-left">
+            <span class="req-ticket__code">REQ-{{ r.id }}</span>
+            <span
+              class="status-pill"
+              [class.status-pill--pending]="r.status === 'Pending'"
+              [class.status-pill--fulfilled]="r.status === 'Fulfilled'"
+              [class.status-pill--rejected]="r.status === 'Rejected'"
+              >{{ r.status }}</span>
+          </div>
+          <time class="req-ticket__opened">{{ r.created_at | date: 'medium' }}</time>
+        </header>
+
+        <div class="req-ticket__grid">
+          <div class="req-field req-field--span2">
+            <span class="req-field__label">Requester</span>
+            <span class="req-field__value">{{ r.username }} · {{ r.email }}</span>
+          </div>
+          <div class="req-field" *ngIf="r.auth_user_id != null">
+            <span class="req-field__label">Login id</span>
+            <span class="req-field__value req-field__mono">{{ r.auth_user_id }}</span>
+          </div>
+          <div class="req-field req-field--span2" *ngIf="r.user_message">
+            <span class="req-field__label">Note</span>
+            <span class="req-field__value">{{ r.user_message }}</span>
+          </div>
+          <div class="req-field req-field--span2" *ngIf="r.inventories?.length">
+            <span class="req-field__label">Inventories</span>
+            <ul class="req-tags">
+              <li *ngFor="let inv of r.inventories">{{ inv.inventory_name || ('#' + inv.inventory_id) }}</li>
+            </ul>
+          </div>
+          <div class="req-field req-field--span2" *ngIf="r.asset_types?.length">
+            <span class="req-field__label">Device types</span>
+            <ul class="req-tags">
+              <li *ngFor="let t of r.asset_types">{{ t.asset_type }}</li>
+            </ul>
+          </div>
+          <div class="req-field req-field--span2" *ngIf="r.items?.length">
+            <span class="req-field__label">Assets</span>
+            <ul class="req-lines">
+              <li *ngFor="let it of r.items">
+                {{ it.asset_type }} — {{ it.brand }} {{ it.model }}
+                <span class="req-sn" *ngIf="it.serial_number">· {{ it.serial_number }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="req-ticket__actions" *ngIf="r.status === 'Pending'">
+          <div class="req-ticket__actions-title">Admin actions</div>
+          <div class="req-actions__block req-actions__block--pick">
+            <div class="req-actions__row">
+              <a
+                class="btn btn-primary"
+                [routerLink]="['/assets', slugForRequest(r)]"
+                [queryParams]="pickAssetsQuery(r)"
+                >Got asset hub</a>
+            </div>
+          </div>
+          <div class="req-actions__block req-actions__block--reject">
+            <label class="req-label" [attr.for]="'rj-' + r.id">Reject note</label>
+            <div class="req-actions__row">
+              <input
+                [attr.id]="'rj-' + r.id"
+                class="req-input req-input--grow"
+                [(ngModel)]="rejectNote[r.id]"
+                placeholder="Optional"
+              />
+              <button type="button" class="btn btn-danger" (click)="reject(r)">Reject</button>
+            </div>
+          </div>
+        </div>
+
+        <footer class="req-ticket__footer" *ngIf="r.admin_note">
+          <span class="req-ticket__footer-label">Admin</span>
+          <p class="req-ticket__footer-text">{{ r.admin_note }}</p>
+        </footer>
+      </article>
+    </div>
+  </div>
+</div>

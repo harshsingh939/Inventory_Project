@@ -1,0 +1,116 @@
+<div class="mw-page">
+  <header class="mw-hero">
+    <h1 class="mw-title">My Workspace</h1>
+    <p class="mw-subtitle">Assigned equipment and new requests</p>
+  </header>
+
+  <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div class="msg-warn" *ngIf="meError">{{ meError }}</div>
+  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+
+  <section class="mw-section card" *ngIf="!loading && linked; else notLinkedAssign">
+    <h2 class="mw-section-title">Assigned to me</h2>
+    <div class="empty mw-empty" *ngIf="active.length === 0">Nothing assigned yet.</div>
+    <div class="assign-grid" *ngIf="active.length > 0">
+      <article class="assign-card" *ngFor="let a of active">
+        <div class="ac-title">{{ a.asset_type }} — {{ a.brand }} {{ a.model }}</div>
+        <div class="ac-meta" *ngIf="a.serial_number">
+          <span class="ac-meta-label">Serial</span> {{ a.serial_number }}
+        </div>
+        <div class="ac-date">Since {{ a.start_time | date: 'dd MMM yyyy, HH:mm' }}</div>
+      </article>
+    </div>
+  </section>
+
+  <ng-template #notLinkedAssign>
+    <section class="mw-section card" *ngIf="!loading">
+      <h2 class="mw-section-title">Assigned to me</h2>
+      <p class="mw-muted">{{ hint || 'Complete your profile under Users first.' }}</p>
+      <a routerLink="/users" class="mw-link">Open Users</a>
+    </section>
+  </ng-template>
+
+  <section class="mw-section card" *ngIf="!loading && linked && history.length">
+    <h2 class="mw-section-title">Return history</h2>
+    <div class="mw-table-wrap">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Returned</th>
+            <th>Duration (min)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of history">
+            <td>{{ h.asset_type }} — {{ h.brand }} {{ h.model }}</td>
+            <td>{{ h.end_time | date: 'dd MMM yyyy' }}</td>
+            <td>{{ h.working_minutes ?? '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mw-section card mw-section--request request-card" [class.card-blocked]="!loading && !linked">
+    <div class="request-card-head">
+      <h2 class="mw-section-title mw-section-title--inline">New request</h2>
+      <span class="request-badge" *ngIf="!loading && linked">Ready</span>
+      <span class="request-badge request-badge-warn" *ngIf="!loading && !linked">Profile required</span>
+    </div>
+    <div class="gate-box" *ngIf="!loading && !linked">
+      <p class="gate-text">
+        Add your details under <a routerLink="/users" class="gate-link">Users</a>, then you can submit a request here.
+      </p>
+    </div>
+    <div class="loading mw-loading" *ngIf="loading">Loading…</div>
+
+    <div class="request-devices" *ngIf="!loading">
+      <p class="mw-field-label">Equipment type</p>
+      <div class="asset-pick asset-pick-static" role="group" aria-label="Equipment type">
+        <label class="pick-row" *ngFor="let t of requestDeviceTypes">
+          <input type="checkbox" [checked]="isTypeSelected(t)" (change)="toggleAssetType(t)" [disabled]="!linked" />
+          <span class="inv-name">{{ t }}</span>
+        </label>
+      </div>
+    </div>
+
+    <label class="mw-field-label" *ngIf="!loading">Note <span class="mw-optional">(optional)</span></label>
+    <textarea
+      *ngIf="!loading"
+      class="input ta"
+      rows="2"
+      [(ngModel)]="requestMessage"
+      placeholder="Add context for admin…"
+      [disabled]="!linked"
+    ></textarea>
+    <button type="button" class="btn btn-primary" (click)="submitRequest()" [disabled]="submitting || (!loading && !linked)">
+      {{ submitting ? 'Sending…' : 'Send request' }}
+    </button>
+  </section>
+
+  <section class="mw-section card">
+    <h2 class="mw-section-title">My requests</h2>
+    <div class="mw-table-wrap" *ngIf="myRequests.length">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Submitted</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let q of myRequests">
+            <td>{{ q.id }}</td>
+            <td>{{ q.status }}</td>
+            <td>{{ q.created_at | date: 'short' }}</td>
+            <td>{{ q.admin_note || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="empty mw-empty" *ngIf="!myRequests.length">No requests submitted yet.</div>
+  </section>
+</div>

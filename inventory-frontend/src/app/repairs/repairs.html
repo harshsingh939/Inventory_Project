@@ -1,184 +1,211 @@
-<div class="page-header page-header-row">
-  <div>
-    <h2>🛠️ Repairs</h2>
-    <p>Manage asset repair requests</p>
-  </div>
-  <a routerLink="/repair-costs" class="link-cost-log">📋 Repair cost history</a>
-</div>
+<div class="repair-page">
+  <div class="repair-ambient" aria-hidden="true"></div>
 
-<!-- Add Repair Form -->
-<div class="card table-card">
-  <h4 class="form-title">New Repair Request</h4>
-  <div class="form-row">
-    <div class="form-field">
-      <label>Select Asset</label>
-      <select [(ngModel)]="repair.asset_id" class="input select-input">
-        <option value="">-- Select Asset --</option>
-        <option *ngFor="let a of assets" [value]="a.id">
-          {{ a.asset_type }} — {{ a.brand }} {{ a.model }}
-          ({{ a.status }})
-        </option>
-      </select>
-    </div>
-    <div class="form-field flex-2">
-      <label>Issue Description</label>
-      <input
-        [(ngModel)]="repair.issue"
-        class="input"
-        placeholder="Describe the issue..."
-      />
-    </div>
-    <div class="form-field btn-field">
-      <label>&nbsp;</label>
-      <button class="btn btn-primary add-btn"
-        (click)="addRepair()" [disabled]="isAdding">
-        {{ isAdding ? 'Adding...' : '+ Add Repair' }}
-      </button>
-    </div>
-  </div>
-
-  <div class="msg-error"   *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
-  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
-</div>
-
-<!-- Search Filter -->
-<div class="card search-card">
-  <div class="search-row">
-    <div class="search-field">
-      <span>🔍</span>
-      <input class="search-input" placeholder="Search by issue..."
-        [(ngModel)]="searchIssue" (ngModelChange)="applyFilter()" />
-    </div>
-    <div class="search-field">
-      <span>📊</span>
-      <input class="search-input" placeholder="Search by status..."
-        [(ngModel)]="searchStatus" (ngModelChange)="applyFilter()" />
-    </div>
-    <button class="btn-clear" (click)="clearFilter()">✕ Clear</button>
-  </div>
-  <p class="result-count">
-    Showing <strong>{{ filteredRepairs.length }}</strong> of
-    <strong>{{ repairs.length }}</strong> repairs
-  </p>
-</div>
-
-<!-- Repairs Table -->
-<div class="card">
-  <div class="loading" *ngIf="isLoading">⏳ Loading repairs...</div>
-      <!-- my add -->
-          <div class="table-container">
-
-      <table *ngIf="!isLoading">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Asset</th>
-        <th>Issue</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let r of filteredRepairs; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>
-          <div class="asset-cell">
-            <span class="asset-icon">💻</span>
-            {{ getAssetName(r.asset_id) }}
-          </div>
-        </td>
-        <td>{{ r.issue }}</td>
-        <td>
-          <span class="status-badge"
-            [class.pending]="r.status === 'Pending'"
-            [class.fixed]="r.status === 'Fixed'"
-            [class.progress]="r.status === 'In Progress'">
-            {{ r.status }}
-          </span>
-        </td>
-        <td>
-          <div class="action-btns">
-            <button class="btn-action progress-btn"
-              *ngIf="r.status === 'Pending'"
-              (click)="updateStatus(r.id, 'In Progress')">
-              🔄 In Progress
-            </button>
-            <button class="btn-action fix-btn"
-              *ngIf="r.status !== 'Fixed'"
-              (click)="openMarkFixedDialog(r)">
-              ✅ Mark Fixed
-            </button>
-            <span class="done-text" *ngIf="r.status === 'Fixed'">
-              ✅ Completed
-            </span>
-          </div>
-        </td>
-      </tr>
-      <tr *ngIf="filteredRepairs.length === 0">
-        <td colspan="5" class="empty-row">
-          {{ searchIssue || searchStatus ? 'No repairs match search' : 'No repairs found' }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-</div>
-
-<!-- Mark Fixed: optional cost & notes (no global .card class — avoids hover shift stealing clicks) -->
-@if (fixDialogRepair) {
-<div class="fix-modal-overlay" (click)="closeFixDialog()">
-  <div class="fix-modal fix-modal-panel" (click)="$event.stopPropagation()">
-    <div class="fix-modal-head">
-      <h3>Mark repair fixed</h3>
-      <button type="button" class="fix-modal-close" (click)="closeFixDialog()" [disabled]="isSavingFix">✕</button>
-    </div>
-
-    @if (fixDialogStep === 'ask') {
-      <p class="fix-modal-lead">
-        Asset: <strong>{{ getAssetName(fixDialogRepair.asset_id) }}</strong>
-      </p>
-      <p class="fix-modal-question">
-        Would you like to add the cost of repair and completion details before marking this as fixed?
-      </p>
-      <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
-      <div class="fix-modal-actions">
-        <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
-        <button type="button" class="btn btn-secondary" (click)="markFixedSkipExtras()" [disabled]="isSavingFix">
-          {{ isSavingFix ? 'Saving…' : 'No, mark fixed' }}
-        </button>
-        <button type="button" class="btn btn-primary" (click)="goToFixDetailsStep()" [disabled]="isSavingFix">
-          Yes, add details
-        </button>
-      </div>
-    } @else {
-      <p class="fix-modal-lead">Enter repair cost in ₹ (optional) and any notes (parts, vendor, work done, etc.).</p>
-      <div class="form-field">
-        <label>Repair cost</label>
-        <div class="cost-input-row">
-          <span class="currency-prefix" aria-hidden="true">₹</span>
-          <input
-            class="input cost-input"
-            type="number"
-            min="0"
-            step="0.01"
-            [(ngModel)]="fixRepairCost"
-            placeholder="0.00"
-          />
+  <div class="repair-inner">
+    <header class="repair-header">
+      <div class="repair-header__brand">
+        <div class="repair-wrench" aria-hidden="true"></div>
+        <div>
+          <h1 class="repair-title">Repairs</h1>
+          <p class="repair-lead" *ngIf="isAdmin">Queue & vendor assign · <a routerLink="/repair-costs" class="repair-lead__link">Cost history</a></p>
+          <p class="repair-lead" *ngIf="!isAdmin">Open tickets for your assigned gear</p>
         </div>
       </div>
-      <div class="form-field">
-        <label>Details / notes</label>
-        <textarea class="input textarea" rows="4" [(ngModel)]="fixRepairNotes" placeholder="Optional notes..."></textarea>
+    </header>
+
+    <section class="repair-panel repair-panel--form">
+      <h2 class="repair-panel__title">New request</h2>
+      <p class="repair-hint" *ngIf="!isAdmin && assets.length === 0">
+        Nothing assigned yet — <a routerLink="/my-workspace">My workspace</a> or ask admin.
+      </p>
+      <div class="form-row form-row-main">
+        <div class="form-field">
+          <label>Asset</label>
+          <select [(ngModel)]="repair.asset_id" class="input select-input">
+            <option value="">— Select —</option>
+            <option *ngFor="let a of assets" [value]="a.id">
+              {{ a.asset_type }} — {{ a.brand }} {{ a.model }} ({{ a.status }})
+            </option>
+          </select>
+        </div>
+        <div class="form-field flex-2">
+          <label>Issue</label>
+          <input [(ngModel)]="repair.issue" class="input" placeholder="What’s wrong?" />
+        </div>
+        <div class="form-field btn-field">
+          <label class="repair-label-spacer">&nbsp;</label>
+          <button class="btn btn-primary add-btn" (click)="addRepair()" [disabled]="isAdding">
+            {{ isAdding ? 'Adding…' : '+ Add repair' }}
+          </button>
+        </div>
       </div>
-      <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
-      <div class="fix-modal-actions">
-        <button type="button" class="btn btn-ghost" (click)="goToFixAskStep()" [disabled]="isSavingFix">Back</button>
-        <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
-        <button type="button" class="btn btn-primary" (click)="submitFixWithDetails()" [disabled]="isSavingFix">
-          {{ isSavingFix ? 'Saving…' : 'Mark as fixed' }}
-        </button>
+      <div class="msg-error" *ngIf="errorMsg && !fixDialogRepair">⚠️ {{ errorMsg }}</div>
+      <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+    </section>
+
+    <section class="repair-panel repair-panel--search">
+      <div class="search-row">
+        <div class="search-field">
+          <input
+            class="search-input"
+            placeholder="Search issue…"
+            [(ngModel)]="searchIssue"
+            (ngModelChange)="applyFilter()"
+          />
+        </div>
+        <div class="search-field">
+          <input
+            class="search-input"
+            placeholder="Search status…"
+            [(ngModel)]="searchStatus"
+            (ngModelChange)="applyFilter()"
+          />
+        </div>
+        <button type="button" class="btn-clear" (click)="clearFilter()">Clear</button>
       </div>
-    }
+      <p class="result-count">
+        Showing <strong>{{ filteredRepairs.length }}</strong> of <strong>{{ repairs.length }}</strong>
+      </p>
+    </section>
+
+    <section class="repair-panel repair-panel--table">
+      <div class="loading" *ngIf="isLoading">Loading repairs…</div>
+      <div class="table-container" *ngIf="!isLoading">
+        <table class="repair-table">
+          <thead>
+            <tr>
+              <th class="col-n">#</th>
+              <th *ngIf="isAdmin">Emp. ID</th>
+              <th *ngIf="isAdmin">Employee</th>
+              <th>Asset</th>
+              <th>Issue</th>
+              <th>Status</th>
+              <th *ngIf="isAdmin">Vendor login</th>
+              <th *ngIf="isAdmin">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of filteredRepairs; let i = index" class="repair-row">
+              <td class="col-n">{{ i + 1 }}</td>
+              <td *ngIf="isAdmin">{{ r.reporter_employee_id || '—' }}</td>
+              <td *ngIf="isAdmin">{{ r.reporter_name || '—' }}</td>
+              <td>
+                <div class="asset-cell">
+                  <span class="asset-icon" aria-hidden="true">{{ assetIcon(r.asset_id) }}</span>
+                  <span>{{ getAssetName(r.asset_id) }}</span>
+                </div>
+              </td>
+              <td>{{ r.issue }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.pending]="r.status === 'Pending'"
+                  [class.fixed]="r.status === 'Fixed'"
+                  [class.progress]="r.status === 'In Progress'"
+                  [class.under-repair]="r.status === 'Under repair'"
+                  [class.cannot]="r.status === 'CannotRepair'"
+                  >{{ r.status }}</span>
+              </td>
+              <td *ngIf="isAdmin">
+                <div class="auth-cell" *ngIf="r.status === 'Pending'">
+                  <select
+                    class="input select-input auth-select"
+                    [(ngModel)]="authorityChoice[r.id]"
+                    [title]="authorityList.length ? 'Vendor / repair_authority account' : 'Add repair_authority user in Users'"
+                  >
+                    <option [ngValue]="null">— Vendor —</option>
+                    <option *ngFor="let a of authorityList" [ngValue]="a.id">{{ a.username }} ({{ a.email }})</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="btn-action assign-auth-btn"
+                    [disabled]="assigningId === r.id || (authorityChoice[r.id] ?? 0) <= 0"
+                    (click)="assignAuthority(r)"
+                  >
+                    {{ assigningId === r.id ? '…' : 'Assign' }}
+                  </button>
+                </div>
+                <span class="muted-sm" *ngIf="r.status !== 'Pending'">—</span>
+              </td>
+              <td *ngIf="isAdmin">
+                <div class="action-btns">
+                  <button type="button" class="btn-action progress-btn" *ngIf="r.status === 'Pending'" (click)="updateStatus(r.id, 'In Progress')">
+                    In progress
+                  </button>
+                  <button type="button" class="btn-action fix-btn" *ngIf="r.status !== 'Fixed' && r.status !== 'Under repair'" (click)="openMarkFixedDialog(r)">
+                    Mark fixed
+                  </button>
+                  <button type="button" class="btn-action fix-btn" *ngIf="r.status === 'Under repair'" (click)="openMarkFixedDialog(r)">
+                    Admin mark fixed
+                  </button>
+                  <span class="done-text" *ngIf="r.status === 'Fixed'">Completed</span>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredRepairs.length === 0">
+              <td [attr.colspan]="isAdmin ? 8 : 4" class="empty-row">
+                {{ searchIssue || searchStatus ? 'No matches' : 'No repairs' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>
+
+@if (fixDialogRepair) {
+  <div class="fix-modal-overlay" (click)="closeFixDialog()">
+    <div class="fix-modal fix-modal-panel" (click)="$event.stopPropagation()">
+      <div class="fix-modal-head">
+        <h3>Mark repair fixed</h3>
+        <button type="button" class="fix-modal-close" (click)="closeFixDialog()" [disabled]="isSavingFix">✕</button>
+      </div>
+
+      @if (fixDialogStep === 'ask') {
+        <p class="fix-modal-lead">Asset: <strong>{{ getAssetName(fixDialogRepair.asset_id) }}</strong></p>
+        <p class="fix-modal-question">Add cost / bill / notes before marking fixed?</p>
+        <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+        <div class="fix-modal-actions">
+          <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
+          <button type="button" class="btn btn-secondary" (click)="markFixedSkipExtras()" [disabled]="isSavingFix">
+            {{ isSavingFix ? 'Saving…' : 'No, mark fixed' }}
+          </button>
+          <button type="button" class="btn btn-primary" (click)="goToFixDetailsStep()" [disabled]="isSavingFix">Yes, details</button>
+        </div>
+      } @else {
+        <p class="fix-modal-lead">Cost (₹), optional bill, notes.</p>
+        <div class="form-field">
+          <label>Repair cost</label>
+          <div class="cost-input-row">
+            <span class="currency-prefix" aria-hidden="true">₹</span>
+            <input class="input cost-input" type="number" min="0" step="0.01" [(ngModel)]="fixRepairCost" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Bill (optional)</label>
+          <input
+            #fixBillInput
+            type="file"
+            class="input input-file fix-bill-input"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+            (change)="onFixBillSelected($event)"
+          />
+          <p class="fix-modal-file-hint" *ngIf="fixBillFileName">Selected: {{ fixBillFileName }}</p>
+        </div>
+        <div class="form-field">
+          <label>Notes</label>
+          <textarea class="input textarea" rows="4" [(ngModel)]="fixRepairNotes" placeholder="Optional…"></textarea>
+        </div>
+        <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+        <div class="fix-modal-actions">
+          <button type="button" class="btn btn-ghost" (click)="goToFixAskStep()" [disabled]="isSavingFix">Back</button>
+          <button type="button" class="btn btn-ghost" (click)="closeFixDialog()" [disabled]="isSavingFix">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="submitFixWithDetails()" [disabled]="isSavingFix">
+            {{ isSavingFix ? 'Saving…' : 'Mark fixed' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
 }

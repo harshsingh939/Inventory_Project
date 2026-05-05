@@ -237,6 +237,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.assignment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-dispose {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: 0.2s;
+}
+
+.btn-dispose:hover {
+  background: rgba(245, 158, 11, 0.22);
 }
 
 .assign-date {
@@ -395,4 +419,119 @@ tr:hover td { background: rgba(30,41,59,0.4); }
   .assignment-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Dispose modal */
+.dispose-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(2, 6, 23, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.dispose-dialog {
+  width: 100%;
+  max-width: 440px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.dispose-dialog h3 {
+  margin: 0 0 10px;
+  color: #f1f5f9;
+  font-size: 1.1rem;
+}
+
+.dispose-lead {
+  margin: 0 0 14px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.dispose-summary {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+}
+
+.dispose-meta {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.dispose-label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  margin-bottom: 6px;
+}
+
+.dispose-notes {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 56px;
+  margin-bottom: 16px;
+}
+
+.dispose-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-cancel {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.btn-dispose-confirm {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-dispose-confirm:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.28);
+}
+
+.btn-cancel:disabled,
+.btn-dispose-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }

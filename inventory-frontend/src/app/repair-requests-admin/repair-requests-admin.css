@@ -1,0 +1,10 @@
+.repair-req-page .assign-ticket-stamp {
+  background: linear-gradient(145deg, #c4b5fd 0%, #8b5cf6 50%, #6d28d9 100%);
+  color: #0f172a;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.38);
+}
+
+.repair-req-page .req-ticket__rail {
+  background: linear-gradient(180deg, #c084fc, #7c3aed);
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.24);
+}

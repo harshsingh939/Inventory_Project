@@ -120,6 +120,103 @@ exports.addRepair = (req, res) => {
   });
 };
 
+/** GET /api/repairs/admin/requests — pending repair requests with asset + reporter */
+exports.listAdminRequests = (req, res) => {
+  const queries = [
+    `
+      SELECT
+        r.id,
+        r.asset_id,
+        r.issue,
+        r.status,
+        COALESCE(r.reported_at, r.created_at) AS created_at,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.status = 'Pending'
+      ORDER BY r.id DESC
+    `,
+    `
+      SELECT
+        r.id,
+        r.asset_id,
+        r.issue,
+        r.status,
+        r.reported_at AS created_at,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        ub.name AS reporter_name,
+        ub.employee_id AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.status = 'Pending'
+      ORDER BY r.id DESC
+    `,
+    `
+      SELECT
+        r.id,
+        r.asset_id,
+        r.issue,
+        r.status,
+        r.created_at AS created_at,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        ub.name AS reporter_name,
+        ub.employee_id AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.status = 'Pending'
+      ORDER BY r.id DESC
+    `,
+  ];
+
+  const run = (i) => {
+    if (i >= queries.length) return res.json([]);
+    db.query(queries[i], (err, rows) => {
+      if (err && err.code === 'ER_BAD_FIELD_ERROR') return run(i + 1);
+      if (err) return res.status(500).json({ message: err.message });
+      res.json(rows || []);
+    });
+  };
+  run(0);
+};
+
+/** POST /api/repairs/admin/:id/approve — admin approves repair request into In Progress */
+exports.approveRepairRequest = (req, res) => {
+  const repairId = Number(req.params.id);
+  if (!Number.isFinite(repairId) || repairId <= 0) {
+    return res.status(400).json({ message: 'Invalid repair id' });
+  }
+  db.query(
+    "UPDATE repairs SET status='In Progress' WHERE id = ? AND status = 'Pending'",
+    [repairId],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: err.message });
+      if (!result?.affectedRows) {
+        return res.status(404).json({ message: 'Pending repair request not found' });
+      }
+      notifyRagDebouncedReindex();
+      res.json({ message: 'Repair request approved ✅' });
+    },
+  );
+};
+
 exports.getRepairs = (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: 'Unauthorized' });

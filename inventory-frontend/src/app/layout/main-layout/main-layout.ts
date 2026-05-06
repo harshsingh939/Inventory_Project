@@ -46,6 +46,7 @@ export class MainLayout implements OnDestroy {
       dashboard: 'Dashboard',
       users: 'Users',
       repairs: 'Repairs',
+      'repair-requests': 'Repair requests',
       'repair-authority': 'Vendor repairs',
       'repair-costs': 'Repair cost history',
       sessions: 'Sessions',

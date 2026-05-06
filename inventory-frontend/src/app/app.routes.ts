@@ -21,6 +21,7 @@ import { RepairAuthorityGuard } from './repair-authority.guard';
 import { AssetDetails } from './asset-details/asset-details';
 import { MyWorkspace } from './my-workspace/my-workspace';
 import { AssignmentRequestsAdmin } from './assignment-requests-admin/assignment-requests-admin';
+import { RepairRequestsAdmin } from './repair-requests-admin/repair-requests-admin';
 import { RepairAuthorityPanel } from './repair-authority-panel/repair-authority-panel';
 import { RagAdmin } from './rag-admin/rag-admin';
 
@@ -49,6 +50,7 @@ export const routes: Routes = [
       { path: 'repair-costs',   component: RepairCostLog,  canActivate: [AuthGuard] },
       { path: 'my-workspace', component: MyWorkspace, canActivate: [AuthGuard] },
       { path: 'assignment-requests', component: AssignmentRequestsAdmin, canActivate: [AdminGuard] },
+      { path: 'repair-requests', component: RepairRequestsAdmin, canActivate: [AdminGuard] },
       { path: 'rag-admin', component: RagAdmin, canActivate: [AdminGuard] },
       { path: 'repair-authority', component: RepairAuthorityPanel, canActivate: [RepairAuthorityGuard] },
     ]

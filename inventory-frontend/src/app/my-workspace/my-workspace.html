@@ -1,7 +1,15 @@
 <div class="mw-page">
+  <div class="mw-orbit" aria-hidden="true"></div>
   <header class="mw-hero">
-    <h1 class="mw-title">My Workspace</h1>
-    <p class="mw-subtitle">Assigned equipment and new requests</p>
+    <div>
+      <h1 class="mw-title">My Workspace</h1>
+      <p class="mw-subtitle">Assigned equipment and new requests</p>
+    </div>
+    <div class="mw-hero-meta" *ngIf="!loading">
+      <span class="mw-chip"><strong>{{ active.length }}</strong> Active</span>
+      <span class="mw-chip"><strong>{{ history.length }}</strong> Returns</span>
+      <span class="mw-chip"><strong>{{ openRequestCount }}</strong> Open requests</span>
+    </div>
   </header>
 
   <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
@@ -13,7 +21,10 @@
     <div class="empty mw-empty" *ngIf="active.length === 0">Nothing assigned yet.</div>
     <div class="assign-grid" *ngIf="active.length > 0">
       <article class="assign-card" *ngFor="let a of active">
-        <div class="ac-title">{{ a.asset_type }} — {{ a.brand }} {{ a.model }}</div>
+        <div class="ac-title-row">
+          <span class="ac-glyph" aria-hidden="true">{{ a.asset_type?.slice(0, 1) || 'A' }}</span>
+          <div class="ac-title">{{ a.asset_type }} — {{ a.brand }} {{ a.model }}</div>
+        </div>
         <div class="ac-meta" *ngIf="a.serial_number">
           <span class="ac-meta-label">Serial</span> {{ a.serial_number }}
         </div>
@@ -104,7 +115,15 @@
         <tbody>
           <tr *ngFor="let q of myRequests">
             <td>{{ q.id }}</td>
-            <td>{{ q.status }}</td>
+            <td>
+              <span
+                class="rq-badge"
+                [class.rq-badge--pending]="q.status === 'Pending'"
+                [class.rq-badge--fulfilled]="q.status === 'Fulfilled'"
+                [class.rq-badge--rejected]="q.status === 'Rejected'"
+                >{{ q.status }}</span
+              >
+            </td>
             <td>{{ q.created_at | date: 'short' }}</td>
             <td>{{ q.admin_note || '—' }}</td>
           </tr>

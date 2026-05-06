@@ -36,6 +36,10 @@ export class MyWorkspace implements OnInit {
   successMsg = '';
   myRequests: any[] = [];
 
+  get openRequestCount(): number {
+    return this.myRequests.filter((q) => String(q?.status || '').toLowerCase() === 'pending').length;
+  }
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,

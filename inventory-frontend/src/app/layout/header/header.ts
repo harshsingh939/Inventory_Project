@@ -134,6 +134,7 @@ export class Header implements OnInit, OnDestroy {
   get profile()          { return this.auth.getProfile(); }
   get isLoggedIn(): boolean { return this.auth.isLoggedIn(); }
   get isAdmin(): boolean    { return this.auth.isAdmin(); }
+  get isRepairAuthority(): boolean { return this.auth.isRepairAuthority(); }
 
   timeAgo(dateStr: string | undefined): string {
     if (!dateStr) return 'Recently';

@@ -4,11 +4,12 @@ import { RouterOutlet, RouterLink, Router, NavigationEnd } from '@angular/router
 import { Subscription, filter } from 'rxjs';
 
 import { Header } from '../header/header';
+import { RagChatWidget } from '../../rag-chat-widget/rag-chat-widget';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, Header, RouterOutlet, RouterLink],
+  imports: [CommonModule, Header, RouterOutlet, RouterLink, RagChatWidget],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css',
 })
@@ -45,9 +46,13 @@ export class MainLayout implements OnDestroy {
       dashboard: 'Dashboard',
       users: 'Users',
       repairs: 'Repairs',
+      'repair-authority': 'Vendor repairs',
       'repair-costs': 'Repair cost history',
       sessions: 'Sessions',
       assets: 'Assets',
+      'assignment-requests': 'Assignment requests',
+      disposed: 'Disposed items',
+      'rag-admin': 'Search index',
     };
     const titleCase = (s: string) =>
       s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());

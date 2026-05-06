@@ -1,12 +1,7 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 // import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptorsFromDi,
-  HTTP_INTERCEPTORS,
-} from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
 import { routes } from './app.routes';
 import { AuthInterceptor } from './auth.interceptor';
 

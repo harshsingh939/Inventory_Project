@@ -26,7 +26,7 @@ export const ASSET_CATEGORY_MAP: Record<string, AssetCategoryDefinition> = {
   systems: {
     slug: 'systems',
     title: 'Computers & workstations',
-    blurb: 'Systems, laptops, desktops — assign to employees via Sessions.',
+    blurb: 'Systems, laptops, desktops — assign to employees from Assignments on this page.',
     icon: '💻',
     ui: 'pc',
     types: ['System', 'Laptop', 'Desktop', 'Workstation', 'Tablet'],
@@ -42,7 +42,7 @@ export const ASSET_CATEGORY_MAP: Record<string, AssetCategoryDefinition> = {
   power: {
     slug: 'power',
     title: 'Power & electrical',
-    blurb: 'Extension boards, UPS, strips — assign via Sessions or track by serial / model.',
+    blurb: 'Extension boards, UPS, strips — assign from Assignments or track by serial / model.',
     icon: '🔌',
     ui: 'compact',
     types: ['Extension Board', 'Power Strip', 'UPS', 'Adapter / Charger'],
@@ -58,7 +58,7 @@ export const ASSET_CATEGORY_MAP: Record<string, AssetCategoryDefinition> = {
   peripherals: {
     slug: 'peripherals',
     title: 'Peripherals & storage',
-    blurb: 'Keyboards, docks, monitors, external drives, phones — assign via Sessions like computers.',
+    blurb: 'Keyboards, docks, monitors, external drives, phones — assign like computers from Assignments.',
     icon: '🖱️',
     ui: 'compact',
     types: [
@@ -87,7 +87,7 @@ export const ASSET_CATEGORY_MAP: Record<string, AssetCategoryDefinition> = {
   cables: {
     slug: 'cables',
     title: 'Cables',
-    blurb: 'HDMI, display, and network cables — assign via Sessions or track in inventory.',
+    blurb: 'HDMI, display, and network cables — assign from Assignments or track in inventory.',
     icon: '🔗',
     ui: 'compact',
     types: ['HDMI Cable', 'Display Cable', 'LAN Cable'],
@@ -117,6 +117,54 @@ export const HUB_CATEGORY_ORDER = [
 
 export type HubCategorySlug = (typeof HUB_CATEGORY_ORDER)[number];
 
+/**
+ * Reads `Category slug: systems` from the first line of `inventories.details`
+ * (see `012_inventories_mirror_asset_categories.sql`).
+ */
+export function categorySlugFromInventoryDetails(
+  details: string | null | undefined,
+): string | null {
+  if (details == null || !String(details).trim()) {
+    return null;
+  }
+  const firstLine = String(details).split(/\r?\n/, 1)[0].trim();
+  const m = /^Category slug:\s*(.+)$/i.exec(firstLine);
+  return m ? m[1].trim().toLowerCase() : null;
+}
+
+/** True if this DB inventory row is the bucket for the given hub category slug. */
+export function inventoryMatchesCategorySlug(
+  inv: { name: string; details?: string | null },
+  slug: string,
+): boolean {
+  const s = String(slug).trim().toLowerCase();
+  if (!s) {
+    return false;
+  }
+  const fromDetails = categorySlugFromInventoryDetails(inv.details);
+  if (fromDetails === s) {
+    return true;
+  }
+  const def = definitionForSlug(s);
+  if (def && String(inv.name).trim().toLowerCase() === def.title.trim().toLowerCase()) {
+    return true;
+  }
+  return false;
+}
+
+/** True if this row is one of the fixed hub category buckets (012 / title match), not a user-created list. */
+export function isHubCategoryInventory(inv: {
+  name: string;
+  details?: string | null;
+}): boolean {
+  for (const slug of HUB_CATEGORY_ORDER) {
+    if (inventoryMatchesCategorySlug(inv, slug)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function definitionForSlug(slug: string): AssetCategoryDefinition | null {
   if (slug === 'other') {
     return {
@@ -131,7 +179,7 @@ export function definitionForSlug(slug: string): AssetCategoryDefinition | null 
   return ASSET_CATEGORY_MAP[slug] ?? null;
 }
 
-/** Category slugs whose `types` may be checked out in Sessions (with systems / computers) */
+/** Category slugs whose `types` may be checked out to employees (with systems / computers) */
 export const SESSION_ASSIGNABLE_CATEGORY_SLUGS = [
   'systems',
   'peripherals',
@@ -143,7 +191,7 @@ export function isSessionAssignableCategorySlug(slug: string): boolean {
   return (SESSION_ASSIGNABLE_CATEGORY_SLUGS as readonly string[]).includes(slug);
 }
 
-/** Types allowed in Sessions — computers, peripherals & storage, power, cables */
+/** Types allowed for employee checkout — computers, peripherals & storage, power, cables */
 export function sessionAssignableTypeSet(): Set<string> {
   const out = new Set<string>();
   for (const slug of SESSION_ASSIGNABLE_CATEGORY_SLUGS) {

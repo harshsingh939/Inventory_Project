@@ -1,4 +1,5 @@
 const db = require('../db');
+const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 
 exports.getAssets = (req, res) => {
   const raw = req.query.inventory_id;
@@ -9,10 +10,14 @@ exports.getAssets = (req, res) => {
     String(raw).toLowerCase() !== 'all';
 
   const runAll = () => {
-    db.query('SELECT * FROM assets', (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-      res.json(result);
-    });
+    db.query(
+      `SELECT * FROM assets
+       WHERE LOWER(TRIM(COALESCE(status, ''))) <> 'disposed'`,
+      (err, result) => {
+        if (err) return res.status(500).json({ message: err.message });
+        res.json(result);
+      },
+    );
   };
 
   if (!wantFilter) {
@@ -24,13 +29,19 @@ exports.getAssets = (req, res) => {
     return runAll();
   }
 
-  db.query('SELECT * FROM assets WHERE inventory_id = ?', [n], (err, result) => {
+  db.query(
+    `SELECT * FROM assets
+     WHERE inventory_id = ?
+       AND LOWER(TRIM(COALESCE(status, ''))) <> 'disposed'`,
+    [n],
+    (err, result) => {
     if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
       return runAll();
     }
-    if (err) return res.status(500).json({ message: err.message });
-    res.json(result || []);
-  });
+      if (err) return res.status(500).json({ message: err.message });
+      res.json(result || []);
+    },
+  );
 };
 
 exports.addAsset = (req, res) => {
@@ -62,6 +73,7 @@ exports.addAsset = (req, res) => {
     if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
       return db.query(sqlLegacy, paramsLegacy, (err2, result2) => {
         if (err2) return res.status(500).json({ message: err2.message });
+        notifyRagDebouncedReindex();
         return res.json({ message: 'Asset Added ✅', id: result2.insertId });
       });
     }
@@ -72,6 +84,7 @@ exports.addAsset = (req, res) => {
       });
     }
     if (err) return res.status(500).json({ message: err.message });
+    notifyRagDebouncedReindex();
     res.json({ message: 'Asset Added ✅', id: result.insertId });
   });
 };
@@ -82,13 +95,15 @@ exports.getAvailableAssets = (req, res) => {
     SELECT a.* FROM assets a
     LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
     WHERE x.id IS NULL
-      AND COALESCE(LOWER(TRIM(a.status)), 'available') NOT IN ('assigned', 'under repair')
+      AND COALESCE(LOWER(TRIM(a.status)), 'available') NOT IN ('assigned', 'under repair', 'disposed')
   `;
   db.query(sql, (err, result) => {
     if (err) {
       // Older DBs / missing assignments table: fall back to simple list
       return db.query(
-        "SELECT * FROM assets WHERE status = 'Available' OR status IS NULL OR TRIM(IFNULL(status,'')) = ''",
+        `SELECT * FROM assets
+         WHERE (status = 'Available' OR status IS NULL OR TRIM(IFNULL(status,'')) = '')
+           AND LOWER(TRIM(COALESCE(status, ''))) <> 'disposed'`,
         (err2, rows) => {
           if (err2) return res.status(500).json({ message: err.message || err2.message });
           return res.json(rows || []);

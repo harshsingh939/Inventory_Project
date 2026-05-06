@@ -18,15 +18,23 @@ import {
   AssetCategoryDefinition,
   assetBelongsToSlug,
   definitionForSlug,
-  isSessionAssignableCategorySlug,
+  inventoryMatchesCategorySlug,
 } from './asset-category.config';
 import type { InventoryRow } from './assets-hub';
 import { apiUrl } from '../api-url';
+import { AuthService } from '../auth.service';
+import { AssetAssignmentsPanel } from '../asset-assignments-panel/asset-assignments-panel';
 
 @Component({
   selector: 'app-assets-category',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, QRCodeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    QRCodeComponent,
+    AssetAssignmentsPanel,
+  ],
   templateUrl: './assets-category.html',
   styleUrls: ['./assets.css', './assets-category.css'],
 })
@@ -39,14 +47,19 @@ export class AssetsCategory implements OnInit, OnDestroy {
   slug = '';
   cat: AssetCategoryDefinition | null = null;
   isPc = false;
-  /** Hub category can appear in Sessions assign dropdown */
-  showSessionsHint = false;
+  /** Inline assignment panel (replaces top-nav Sessions page) */
+  showAssignmentsPanel = false;
 
   inventories: InventoryRow[] = [];
   /** '' = all */
   filterInvId: number | '' = '';
   /** '' = not set — required when inventories exist */
   assignInvId: number | '' = '';
+
+  /** When opened from Assign requests → Pick asset in Assets */
+  assignmentRequestId: number | null = null;
+  /** auth_users.id — panel pre-selects matching Users row */
+  prefillAuthUserId: number | null = null;
 
   asset = {
     asset_type: '',
@@ -76,6 +89,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    readonly auth: AuthService,
   ) {}
 
   ngOnInit() {
@@ -95,7 +109,16 @@ export class AssetsCategory implements OnInit, OnDestroy {
       this.slug = s;
       this.cat = def;
       this.isPc = def.ui === 'pc';
-      this.showSessionsHint = isSessionAssignableCategorySlug(s);
+      const wantAssign = qm.get('assign') === '1';
+      this.showAssignmentsPanel = wantAssign && this.auth.isAdmin();
+      if (wantAssign && !this.auth.isAdmin()) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { assign: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
 
       const invQ = qm.get('inv');
       this.filterInvId =
@@ -103,6 +126,13 @@ export class AssetsCategory implements OnInit, OnDestroy {
       if (this.filterInvId !== '') {
         this.assignInvId = this.filterInvId;
       }
+
+      const reqIdQ = qm.get('requestId');
+      const rid = reqIdQ && !isNaN(Number(reqIdQ)) ? Number(reqIdQ) : NaN;
+      this.assignmentRequestId = Number.isFinite(rid) && rid > 0 ? rid : null;
+      const pfa = qm.get('prefillAuth');
+      const paid = pfa && !isNaN(Number(pfa)) ? Number(pfa) : NaN;
+      this.prefillAuthUserId = Number.isFinite(paid) && paid > 0 ? paid : null;
 
       if (slugChanged) {
         this.resetFormForCategory();
@@ -121,6 +151,40 @@ export class AssetsCategory implements OnInit, OnDestroy {
     if (id == null) return '—';
     const row = this.inventories.find((i) => i.id === id);
     return row ? row.name : `#${id}`;
+  }
+
+  /** Limit assignment UI to assets in the selected named inventory (when filtered). */
+  get assignmentScopeIds(): number[] | null {
+    if (this.filterInvId === '') {
+      return null;
+    }
+    return this.allAssets
+      .filter(
+        (a) =>
+          this.inCategory(a) &&
+          Number(a.inventory_id) === Number(this.filterInvId),
+      )
+      .map((a) => Number(a.id));
+  }
+
+  get assignmentScopeLabel(): string | null {
+    if (this.filterInvId === '') {
+      return null;
+    }
+    return this.invLabel(this.filterInvId as number);
+  }
+
+  setAssignmentsOpen(open: boolean) {
+    if (!this.auth.isAdmin()) {
+      return;
+    }
+    this.showAssignmentsPanel = open;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { assign: open ? '1' : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   /** Table colspan for empty row */
@@ -241,7 +305,10 @@ export class AssetsCategory implements OnInit, OnDestroy {
   private loadInventoriesAndAssets() {
     this.http.get<InventoryRow[]>(this.apiInv).subscribe({
       next: (rows) => {
-        this.inventories = rows || [];
+        const all = rows || [];
+        this.inventories = all.filter((inv) =>
+          inventoryMatchesCategorySlug(inv, this.slug),
+        );
         const skipGet = this.syncInventorySelectionsAfterLoad();
         this.cdr.detectChanges();
         if (!skipGet) {
@@ -262,7 +329,10 @@ export class AssetsCategory implements OnInit, OnDestroy {
   private refreshInventoriesThenAssets() {
     this.http.get<InventoryRow[]>(this.apiInv).subscribe({
       next: (rows) => {
-        this.inventories = rows || [];
+        const all = rows || [];
+        this.inventories = all.filter((inv) =>
+          inventoryMatchesCategorySlug(inv, this.slug),
+        );
         const skipGet = this.syncInventorySelectionsAfterLoad();
         this.ensureAssignInventoryDefault();
         this.cdr.detectChanges();

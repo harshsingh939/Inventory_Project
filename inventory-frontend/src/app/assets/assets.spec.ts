@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { FormsModule } from '@angular/forms';
 
 import { AssetsHub } from './assets-hub';
 
@@ -8,7 +10,7 @@ describe('AssetsHubComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AssetsHub],
+      imports: [AssetsHub, HttpClientTestingModule, FormsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AssetsHub);

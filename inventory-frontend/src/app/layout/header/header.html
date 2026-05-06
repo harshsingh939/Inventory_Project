@@ -1,3 +1,19 @@
+<div
+  class="repair-alert-toast"
+  *ngIf="isLoggedIn && isAdmin && notifService.repairAlertToast() as toastMsg"
+  role="alert"
+  aria-live="assertive">
+  <span class="repair-alert-toast__icon" aria-hidden="true">🔔</span>
+  <span class="repair-alert-toast__text">{{ toastMsg }}</span>
+  <button
+    type="button"
+    class="repair-alert-toast__close"
+    (click)="notifService.dismissRepairToast(); $event.stopPropagation()"
+    aria-label="Dismiss alert">
+    ✕
+  </button>
+</div>
+
 <div class="header">
 
   <button
@@ -49,30 +65,48 @@
             <span class="notif-header-text">Repair requests</span>
           </div>
           <span class="notif-count" *ngIf="notifService.unreadCount() > 0">
-            {{ notifService.unreadCount() > 1 ? notifService.unreadCount() + ' queued' : '1' }}
+            {{ notifService.unreadCount() > 1 ? notifService.unreadCount() + ' new' : '1 new' }}
           </span>
         </div>
 
-        <p class="notif-queue-hint" *ngIf="notifService.unreadCount() > 1">
-          Showing the next request. Acknowledge it to see the next in line.
+        <p class="notif-queue-hint">
+          <ng-container *ngIf="notifService.unreadCount() > 1">
+            New requests since your last review. Acknowledge to move them to history.
+          </ng-container>
+          <ng-container *ngIf="notifService.unreadCount() === 1">
+            One new request — acknowledge when you’ve seen it.
+          </ng-container>
+          <ng-container *ngIf="notifService.unreadCount() === 0 && notifService.historyCount() > 0">
+            No new alerts. Older pending items are listed below as history.
+          </ng-container>
+          <ng-container *ngIf="notifService.unreadCount() === 0 && notifService.historyCount() === 0">
+            New employee requests will appear here after your session baseline.
+          </ng-container>
         </p>
+
+        <div class="notif-section-label" *ngIf="notifService.unreadCount() > 0">New</div>
 
         <div class="notif-list">
           <div *ngFor="let n of notifService.notifications()"
-            class="notif-item">
+            class="notif-item notif-item--new">
             <div class="notif-icon">🔧</div>
             <div class="notif-body">
-              <div class="notif-title">Repair request</div>
+              <div class="notif-title">New repair request</div>
               <div class="notif-desc">{{ n.asset_type }} — {{ n.brand }}</div>
               <div class="notif-issue">{{ n.issue }}</div>
               <div class="notif-time">{{ timeAgo(n.created_at) }}</div>
             </div>
           </div>
 
-          <div class="notif-empty" *ngIf="notifService.unreadCount() === 0">
+          <div class="notif-empty notif-empty--inline" *ngIf="notifService.unreadCount() === 0 && notifService.historyCount() > 0">
+            <p class="notif-empty-title">No new alerts</p>
+            <p class="notif-empty-subtitle">You’re caught up on new requests.</p>
+          </div>
+
+          <div class="notif-empty" *ngIf="notifService.unreadCount() === 0 && notifService.historyCount() === 0">
             <div class="notif-empty-icon">🔧</div>
-            <p class="notif-empty-title">No pending repair alerts</p>
-            <p class="notif-empty-subtitle">New employee requests will appear here one at a time</p>
+            <p class="notif-empty-title">No open repair queue</p>
+            <p class="notif-empty-subtitle">Nothing pending right now.</p>
           </div>
         </div>
 
@@ -86,12 +120,29 @@
           </button>
         </div>
 
+        <div class="notif-history-block" *ngIf="notifService.historyCount() > 0">
+          <div class="notif-section-label notif-section-label--muted">
+            History <span class="notif-section-meta">(still pending)</span>
+          </div>
+          <div class="notif-list notif-list--history">
+            <div *ngFor="let h of notifService.historyNotifications()" class="notif-item notif-item--history">
+              <div class="notif-icon">📋</div>
+              <div class="notif-body">
+                <div class="notif-title">Earlier request</div>
+                <div class="notif-desc">{{ h.asset_type }} — {{ h.brand }}</div>
+                <div class="notif-issue">{{ h.issue }}</div>
+                <div class="notif-time">{{ timeAgo(h.created_at) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="notif-footer">
           <a routerLink="/repairs" (click)="closeNotificationsForNav()">
             View all repairs →
           </a>
           <button type="button" class="notif-dismiss-all" (click)="notifService.markAllRead(); $event.stopPropagation()">
-            Dismiss all alerts
+            Clear new alerts
           </button>
         </div>
       </div>

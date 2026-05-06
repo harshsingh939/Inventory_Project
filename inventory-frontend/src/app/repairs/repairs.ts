@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { NotificationService } from '../notification.service';
+import { NotificationService, REPAIR_BROADCAST_CHANNEL } from '../notification.service';
 import { apiUrl } from '../api-url';
 
 @Component({
@@ -124,6 +124,11 @@ export class Repairs implements OnInit {
         this.isAdding = false;
         this.successMsg = '✅ Repair request added!';
         this.repair = { asset_id: '', issue: '' };
+        if (typeof BroadcastChannel !== 'undefined') {
+          const ch = new BroadcastChannel(REPAIR_BROADCAST_CHANNEL);
+          ch.postMessage('repair-created');
+          ch.close();
+        }
         this.notifications.fetchNotifications();
         this.cdr.detectChanges();
         setTimeout(() => { this.successMsg = ''; this.cdr.detectChanges(); }, 3000);

@@ -1,3 +1,66 @@
+/* ===== Repair alert toast (admins) ===== */
+.repair-alert-toast {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1001;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.97) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(139, 92, 246, 0.15);
+  color: #f8fafc;
+  font-size: 14px;
+  line-height: 1.45;
+  animation: repair-toast-in 0.35s ease-out;
+}
+
+@keyframes repair-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.repair-alert-toast__icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.repair-alert-toast__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.repair-alert-toast__close {
+  flex-shrink: 0;
+  margin: -4px -4px -4px 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.repair-alert-toast__close:hover {
+  background: rgba(248, 250, 252, 0.14);
+  color: #e2e8f0;
+}
+
 /* ===== HEADER ===== */
 .header {
   height: 60px;
@@ -592,6 +655,58 @@
   background: rgba(139, 92, 246, 0.08);
   border-radius: 8px;
   border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.notif-section-label {
+  padding: 4px 16px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a78bfa;
+}
+
+.notif-section-label--muted {
+  color: #64748b;
+  padding-top: 10px;
+  border-top: 1px solid rgba(30, 41, 59, 0.9);
+  margin-top: 4px;
+}
+
+.notif-section-meta {
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #475569;
+}
+
+.notif-history-block {
+  flex-shrink: 0;
+}
+
+.notif-list--history {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.notif-item--new {
+  border-left: 3px solid rgba(251, 191, 36, 0.65);
+}
+
+.notif-item--history {
+  opacity: 0.88;
+}
+
+.notif-item--history .notif-title {
+  color: #94a3b8;
+}
+
+.notif-empty--inline {
+  padding: 16px 20px 8px;
+}
+
+.notif-empty--inline .notif-empty-title {
+  margin-bottom: 2px;
 }
 
 .notif-actions {

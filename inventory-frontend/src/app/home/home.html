@@ -103,6 +103,7 @@
 <div class="hero">
   <div class="hero-bg-motion" aria-hidden="true">
     <div class="hero-bg-motion__img"></div>
+    <div class="hero-bg-motion__vehicle"></div>
     <div class="hero-bg-motion__shelves"></div>
     <div class="hero-bg-motion__scan"></div>
   </div>
@@ -112,13 +113,46 @@
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>
   </div>
-  <div class="hero-inventory-float" aria-hidden="true">
-    <span class="inv-float inv-float--a">📦</span>
-    <span class="inv-float inv-float--b">🖥️</span>
-    <span class="inv-float inv-float--c">📋</span>
-    <span class="inv-float inv-float--d">🏷️</span>
-    <span class="inv-float inv-float--e">📊</span>
-    <span class="inv-float inv-float--f">🔧</span>
+  <div class="hero-network-layer" aria-hidden="true">
+    <svg class="hero-network-svg" viewBox="0 0 1200 640" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <path
+        class="hero-network-path"
+        d="M-40,420 C180,280 360,520 560,380 S920,300 1240,400"
+      />
+      <path
+        class="hero-network-path hero-network-path--b"
+        d="M0,180 C240,120 480,260 720,200 S1040,80 1220,220"
+      />
+      <path
+        class="hero-network-path hero-network-path--c"
+        d="M80,520 C320,440 520,580 780,480 S1080,360 1180,500"
+      />
+    </svg>
+  </div>
+  <div class="hero-product-layer" aria-hidden="true">
+    <div class="hero-pglyph hero-pglyph--a">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
+      </svg>
+    </div>
+    <div class="hero-pglyph hero-pglyph--b">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <path d="M8 21h8M12 17v4" />
+      </svg>
+    </div>
+    <div class="hero-pglyph hero-pglyph--c">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+        <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2" />
+      </svg>
+    </div>
+    <div class="hero-pglyph hero-pglyph--d">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M18 20V10M12 20V4M6 20v-6" />
+      </svg>
+    </div>
   </div>
   <div class="hero-layout">
     <div class="hero-content">
@@ -138,12 +172,33 @@
       </div>
     </div>
 
-    <aside class="hero-typewriter" aria-live="polite" aria-atomic="true">
-      <div class="hero-typewriter-card">
-        <span class="hero-tw-kicker">Live in your stack</span>
-        <p class="hero-tw-text">
-          <span class="hero-tw-line">{{ typedText() }}</span><span class="hero-tw-cursor" aria-hidden="true">▍</span>
-        </p>
+    <aside class="hero-rail" aria-label="Live status">
+      <div class="hero-widget hero-widget--clock">
+        <div class="hero-widget__inner">
+          <span class="hero-widget__label">Local time</span>
+          <time class="hero-digital" [attr.datetime]="clockIso()">
+            <span class="hero-digital__date">{{ clockDate() }}</span>
+            <span class="hero-digital__time">{{ clockHms() }}</span>
+          </time>
+          <p class="hero-widget__status">{{ liveStatusLine() }}</p>
+        </div>
+      </div>
+      <div class="hero-widget hero-widget--intel">
+        <div class="hero-widget__inner">
+          <div class="hero-widget__intel-head">
+            <span class="hero-tw-kicker">Live in your stack</span>
+            <div class="hero-micro-chart" aria-hidden="true">
+              <span class="hero-micro-chart__bar" style="--h: 38%"></span>
+              <span class="hero-micro-chart__bar" style="--h: 62%"></span>
+              <span class="hero-micro-chart__bar" style="--h: 44%"></span>
+              <span class="hero-micro-chart__bar" style="--h: 78%"></span>
+              <span class="hero-micro-chart__bar" style="--h: 52%"></span>
+            </div>
+          </div>
+          <p class="hero-tw-text" aria-live="polite" aria-atomic="true">
+            <span class="hero-tw-line">{{ typedText() }}</span><span class="hero-tw-cursor" aria-hidden="true">▍</span>
+          </p>
+        </div>
       </div>
     </aside>
   </div>

@@ -1,10 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { defer, EMPTY, fromEvent, merge, of } from 'rxjs';
+import { debounceTime, filter, tap } from 'rxjs/operators';
 import { apiUrl } from '../api-url';
-import { HUB_CATEGORY_ORDER, assetBelongsToSlug } from '../assets/asset-category.config';
 
 @Component({
   selector: 'app-assignment-requests-admin',
@@ -13,49 +15,48 @@ import { HUB_CATEGORY_ORDER, assetBelongsToSlug } from '../assets/asset-category
   templateUrl: './assignment-requests-admin.html',
   styleUrl: './assignment-requests-admin.css',
 })
-export class AssignmentRequestsAdmin implements OnInit {
+export class AssignmentRequestsAdmin {
   private readonly api = apiUrl('assignment-requests');
+  private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   rows: any[] = [];
   rejectNote: Record<number, string> = {};
   loading = false;
+  fulfillingId: number | null = null;
   errorMsg = '';
   successMsg = '';
 
-  constructor(
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef,
-  ) {}
-
-  ngOnInit() {
-    this.load();
+  constructor() {
+    let hiddenAt = 0;
+    merge(
+      defer(() =>
+        this.isAssignmentRequestsUrl(this.router.url) ? of(undefined) : EMPTY,
+      ),
+      this.router.events.pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        filter((e) => this.isAssignmentRequestsUrl(e.urlAfterRedirects)),
+      ),
+      fromEvent(document, 'visibilitychange').pipe(
+        tap(() => {
+          if (document.visibilityState === 'hidden') {
+            hiddenAt = Date.now();
+          }
+        }),
+        filter(() => document.visibilityState === 'visible'),
+        filter(() => hiddenAt > 0 && Date.now() - hiddenAt > 1500),
+        filter(() => this.isAssignmentRequestsUrl(this.router.url)),
+      ),
+    )
+      .pipe(debounceTime(80), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.load());
   }
 
-  /** Category route under /assets — used so Assignments opens with ticket context (fulfilled after checkout). */
-  slugForRequest(r: any): string {
-    const types = (r?.asset_types || [])
-      .map((x: any) => String(x?.asset_type || '').trim())
-      .filter(Boolean);
-    for (const slug of HUB_CATEGORY_ORDER) {
-      if (slug === 'other') continue;
-      for (const t of types) {
-        if (assetBelongsToSlug(t, slug)) return slug;
-      }
-    }
-    return 'systems';
-  }
-
-  /** Opens Assignments with this ticket so POST /sessions/start sends assignment_request_id → status Fulfilled when slots filled. */
-  pickAssetsQuery(r: any): Record<string, string> {
-    const invs = r.inventories || [];
-    return {
-      assign: '1',
-      requestId: String(r.id),
-      ...(r.auth_user_id != null ? { prefillAuth: String(r.auth_user_id) } : {}),
-      ...(invs.length === 1 && invs[0]?.inventory_id != null
-        ? { inv: String(invs[0].inventory_id) }
-        : {}),
-    };
+  private isAssignmentRequestsUrl(raw: string): boolean {
+    const path = (raw || '').split(/[?#]/)[0];
+    return path === '/assignment-requests' || path.endsWith('/assignment-requests');
   }
 
   load() {
@@ -70,6 +71,32 @@ export class AssignmentRequestsAdmin implements OnInit {
       error: (err) => {
         this.loading = false;
         this.errorMsg = err.error?.message || 'Failed to load';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  /** Mark ticket fulfilled only (no stock check; POST /admin/:id/fulfill-manual). */
+  markAssigned(row: any) {
+    const id = Number(row?.id);
+    if (!Number.isFinite(id)) return;
+    this.errorMsg = '';
+    this.successMsg = '';
+    this.fulfillingId = id;
+    this.http.post<any>(`${this.api}/admin/${id}/fulfill-manual`, {}).subscribe({
+      next: (res) => {
+        this.fulfillingId = null;
+        this.successMsg = res?.message || 'Assigned';
+        this.load();
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 2500);
+      },
+      error: (err) => {
+        this.fulfillingId = null;
+        this.errorMsg = err.error?.message || 'Assign failed';
         this.cdr.detectChanges();
       },
     });

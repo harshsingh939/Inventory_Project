@@ -7,6 +7,7 @@ const assignmentRequestController = require('../controllers/assignmentRequestCon
 router.post('/', authMiddleware, assignmentRequestController.createRequest);
 router.get('/mine', authMiddleware, assignmentRequestController.listMine);
 router.get('/admin', authMiddleware, requireAdmin, assignmentRequestController.listAdmin);
+router.post('/admin/:id/fulfill-manual', authMiddleware, requireAdmin, assignmentRequestController.fulfillManual);
 router.post('/admin/:id/fulfill', authMiddleware, requireAdmin, assignmentRequestController.fulfill);
 router.post('/admin/:id/reject', authMiddleware, requireAdmin, assignmentRequestController.reject);
 

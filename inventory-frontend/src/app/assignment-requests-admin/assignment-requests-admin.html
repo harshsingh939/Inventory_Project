@@ -88,11 +88,14 @@
           <div class="req-ticket__actions-title">Admin actions</div>
           <div class="req-actions__block req-actions__block--pick">
             <div class="req-actions__row">
-              <a
+              <button
+                type="button"
                 class="btn btn-primary"
-                [routerLink]="['/assets', slugForRequest(r)]"
-                [queryParams]="pickAssetsQuery(r)"
-                >Got asset hub</a>
+                (click)="markAssigned(r)"
+                [disabled]="loading || fulfillingId === r.id"
+              >
+                {{ fulfillingId === r.id ? 'Assigning…' : 'Assigned' }}
+              </button>
             </div>
           </div>
           <div class="req-actions__block req-actions__block--reject">

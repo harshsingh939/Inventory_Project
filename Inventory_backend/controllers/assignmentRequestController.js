@@ -525,6 +525,25 @@ exports.fulfill = (req, res) => {
   });
 };
 
+/**
+ * POST /api/assignment-requests/admin/:id/fulfill-manual
+ * Admin-only: mark ticket Fulfilled with no stock/asset checks (offline assignment already done).
+ */
+exports.fulfillManual = (req, res) => {
+  const requestId = Number(req.params.id);
+  if (!Number.isFinite(requestId)) return res.status(400).json({ message: 'Invalid id' });
+  db.query(
+    "UPDATE assignment_requests SET status='Fulfilled', processed_at=NOW() WHERE id=? AND status='Pending'",
+    [requestId],
+    (err, r) => {
+      if (err) return res.status(500).json({ message: err.message });
+      if (!r.affectedRows) return res.status(404).json({ message: 'Pending request not found' });
+      notifyRagDebouncedReindex();
+      res.json({ message: 'Request fulfilled' });
+    },
+  );
+};
+
 exports.reject = (req, res) => {
   const requestId = Number(req.params.id);
   const admin_note = req.body?.admin_note != null ? String(req.body.admin_note).trim().slice(0, 2000) : null;

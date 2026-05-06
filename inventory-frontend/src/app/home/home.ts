@@ -9,11 +9,18 @@ import { apiUrl } from '../api-url';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './home.html',
-  styleUrls: ['./home.css', './home-floating.scss', './vendor-home.css'],
+  styleUrls: ['./home.css', './home-floating.scss', './home-hero-premium.css', './vendor-home.css'],
 })
 export class Home implements OnInit, OnDestroy {
   /** Public home — typewriter (right panel of hero) */
   readonly typedText = signal('');
+
+  /** Public hero — rotating status line */
+  readonly liveStatusLine = signal('');
+  /** Digital clock (date + HH:MM:SS local) */
+  readonly clockDate = signal('');
+  readonly clockHms = signal('');
+  readonly clockIso = signal('');
 
   /** Vendor home — typewriter (repair lane aside) */
   readonly vendorTypedText = signal('');
@@ -23,6 +30,8 @@ export class Home implements OnInit, OnDestroy {
   readonly vendorQueueLoading = signal(false);
 
   private intervalId?: ReturnType<typeof setInterval>;
+  private clockId?: ReturnType<typeof setInterval>;
+  private statusRotateId?: ReturnType<typeof setInterval>;
   private phraseIndex = 0;
   private charIndex = 0;
   private phase: 'typing' | 'holding' | 'deleting' = 'typing';
@@ -50,6 +59,16 @@ export class Home implements OnInit, OnDestroy {
     'Secure access for your team',
   ];
 
+  private readonly liveStatusMessages: readonly string[] = [
+    'Live floor view · sync with your warehouse',
+    'Smart inventory · track every handoff',
+    'Digital twin energy · ops stay visible',
+    'From dock to desk · one clear thread',
+    'InvenTrack · built for real movement',
+  ];
+
+  private statusLineIndex = 0;
+
   private readonly vendorPhrases: readonly string[] = [
     'Trust is the quiet engine behind every good fix.',
     'Hardware rests; relationships should not.',
@@ -72,6 +91,7 @@ export class Home implements OnInit, OnDestroy {
       return;
     }
     this.startTypewriter(this.publicPhrases, this.typedText);
+    this.startLiveHeroWidgets();
   }
 
   /** Starts cycling typewriter into `out`; respects reduced motion. */
@@ -99,6 +119,36 @@ export class Home implements OnInit, OnDestroy {
     if (this.intervalId !== undefined) {
       clearInterval(this.intervalId);
     }
+    if (this.clockId !== undefined) {
+      clearInterval(this.clockId);
+    }
+    if (this.statusRotateId !== undefined) {
+      clearInterval(this.statusRotateId);
+    }
+  }
+
+  private startLiveHeroWidgets(): void {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const tickClock = () => {
+      const now = new Date();
+      this.clockDate.set(
+        now.toLocaleDateString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        }),
+      );
+      this.clockHms.set(`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
+      this.clockIso.set(now.toISOString());
+    };
+    tickClock();
+    this.clockId = setInterval(tickClock, 1000);
+
+    this.liveStatusLine.set(this.liveStatusMessages[0]);
+    this.statusRotateId = setInterval(() => {
+      this.statusLineIndex = (this.statusLineIndex + 1) % this.liveStatusMessages.length;
+      this.liveStatusLine.set(this.liveStatusMessages[this.statusLineIndex]);
+    }, 5200);
   }
 
   private loadVendorQueueCount(): void {

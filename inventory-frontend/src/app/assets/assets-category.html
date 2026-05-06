@@ -32,9 +32,10 @@
   [assignmentScopeAssetIds]="assignmentScopeIds"
   [scopeLabel]="assignmentScopeLabel"
   [assignmentRequestId]="assignmentRequestId"
-  [prefillAuthUserId]="prefillAuthUserId" />
+  [prefillAuthUserId]="prefillAuthUserId"
+  (historyTabActive)="onAssignmentsHistoryTab($event)" />
 
-<div class="card inv-panel" *ngIf="cat">
+<div class="card inv-panel" *ngIf="cat && categoryInventoryVisible">
   <h4 class="form-title">Inventory</h4>
   <div class="inv-panel-row">
     <div class="form-field">
@@ -58,7 +59,7 @@
 </div>
 
 <!-- Add form: PC -->
-<div class="card" *ngIf="cat && isPc">
+<div class="card" *ngIf="cat && categoryInventoryVisible && isPc">
   <h4 class="form-title">Add computer / workstation</h4>
   <div class="form-row">
     <div class="form-field">
@@ -105,7 +106,7 @@
 </div>
 
 <!-- Add form: compact (cameras, power, etc.) -->
-<div class="card add-compact" *ngIf="cat && !isPc">
+<div class="card add-compact" *ngIf="cat && categoryInventoryVisible && !isPc">
   <h4 class="form-title">Add asset</h4>
   <div class="compact-form-row">
     <div class="form-field" *ngIf="slug !== 'other'">
@@ -141,26 +142,11 @@
   <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 </div>
 
-<!-- Search -->
-<div class="card search-card" *ngIf="cat">
-  <div class="search-row">
-    <div class="search-field">
-      <span>🏷️</span>
-      <input class="search-input" placeholder="Brand…" [(ngModel)]="searchBrand" (ngModelChange)="applyFilter()" />
-    </div>
-    <div class="search-field">
-      <span>📊</span>
-      <input class="search-input" placeholder="Status…" [(ngModel)]="searchStatus" (ngModelChange)="applyFilter()" />
-    </div>
-    <button type="button" class="btn-clear" (click)="clearFilter()">✕ Clear</button>
-  </div>
-  <p class="result-count">
+<!-- Table -->
+<div class="card" *ngIf="cat && categoryInventoryVisible">
+  <p class="assets-category-result-count" *ngIf="!isLoading">
     Showing <strong>{{ filteredAssets.length }}</strong> in this category
   </p>
-</div>
-
-<!-- Table -->
-<div class="card" *ngIf="cat">
   <div class="loading" *ngIf="isLoading">⏳ Loading…</div>
   <div class="table-container" *ngIf="!isLoading">
   <table>

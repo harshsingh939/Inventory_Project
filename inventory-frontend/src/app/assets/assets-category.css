@@ -115,3 +115,13 @@
     width: 100%;
   }
 }
+
+.assets-category-result-count {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin: 0 0 14px;
+}
+
+.assets-category-result-count strong {
+  color: #38bdf8;
+}

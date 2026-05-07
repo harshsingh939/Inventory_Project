@@ -1,13 +1,16 @@
 import {
   Component,
   OnDestroy,
+  OnInit,
   HostListener,
   Inject,
   PLATFORM_ID,
   afterNextRender
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { NotificationService } from '../../notification.service';
@@ -19,13 +22,14 @@ import { NotificationService } from '../../notification.service';
   templateUrl: './header.html',
   styleUrl: './header.css'
 })
-export class Header implements OnDestroy {
+export class Header implements OnInit, OnDestroy {
   showDropdown = false;
   showNotifications = false;
   showLogoutPopup = false;
   /** Slide-in navigation panel */
   sidebarOpen = false;
   isBrowser: boolean;
+  private navSub?: Subscription;
 
   constructor(
     public auth: AuthService,
@@ -35,13 +39,29 @@ export class Header implements OnDestroy {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
-      if (this.auth.isLoggedIn() && this.auth.isAdmin()) {
-        this.notifService.startPolling();
-      }
+      this.syncAdminNotifications();
     });
   }
 
+  ngOnInit() {
+    this.syncAdminNotifications();
+    this.navSub = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.syncAdminNotifications());
+  }
+
+  /** Start repair alerts polling once session shows an admin (covers SSR/hydration timing). */
+  private syncAdminNotifications() {
+    if (!this.isBrowser) return;
+    if (this.auth.isLoggedIn() && this.auth.isAdmin()) {
+      this.notifService.startPolling();
+    } else {
+      this.notifService.stopPolling();
+    }
+  }
+
   ngOnDestroy() {
+    this.navSub?.unsubscribe();
     this.notifService.stopPolling();
   }
 
@@ -50,9 +70,6 @@ export class Header implements OnDestroy {
     if (!this.isBrowser) return;
     const target = event.target as HTMLElement;
     if (!target.closest('.header-right')) {
-      if (this.showNotifications) {
-        this.notifService.markAllRead();
-      }
       this.showDropdown = false;
       this.showNotifications = false;
     }
@@ -88,26 +105,16 @@ export class Header implements OnDestroy {
   }
 
   toggleDropdown() {
-    if (this.showNotifications) {
-      this.notifService.markAllRead();
-    }
     this.showDropdown = !this.showDropdown;
     this.showNotifications = false;
   }
 
   toggleNotifications() {
-    const wasOpen = this.showNotifications;
     this.showNotifications = !this.showNotifications;
     this.showDropdown = false;
-    if (wasOpen) {
-      this.notifService.markAllRead();
-    }
   }
 
   closeNotificationsForNav() {
-    if (this.showNotifications) {
-      this.notifService.markAllRead();
-    }
     this.showNotifications = false;
   }
 

@@ -87,7 +87,16 @@ export class AuthService {
 }
 
 isAdmin(): boolean {
-  return this.getRole() === 'admin';
+  const r = this.getRole()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+  return (
+    r === 'admin' ||
+    r === 'administrator' ||
+    r === 'super_admin' ||
+    r === 'superadmin'
+  );
 }
 
 /** Repair vendor / in-house technician login (separate panel) */

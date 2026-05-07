@@ -2,10 +2,10 @@
   <div class="page-header">
     <h3>🔗 Asset assignments — {{ categoryTitle() }}</h3>
     <p *ngIf="scopeLabel">
-      Showing <strong>{{ scopeLabel }}</strong>. The asset list and assignment history match this inventory when one is selected above.
+      Showing <strong>{{ scopeLabel }}</strong> for available assets and active assignments. Open <strong>History</strong> to search and pick an employee for their full record.
     </p>
     <p *ngIf="!scopeLabel">
-      Only <strong>Available</strong> assets in <strong>{{ categoryTitle() }}</strong> appear below. Active and history rows are filtered the same way.
+      Only <strong>Available</strong> assets in <strong>{{ categoryTitle() }}</strong> appear below. Active assignments follow this filter; <strong>History</strong> is shown only after you search and select an employee.
     </p>
   </div>
 
@@ -69,15 +69,15 @@
       type="button"
       class="tab-btn"
       [class.active]="activeTab === 'active'"
-      (click)="activeTab = 'active'">
+      (click)="setAssignmentsTab('active')">
       🟢 Active ({{ activeAssignments.length }})
     </button>
     <button
       type="button"
       class="tab-btn"
       [class.active]="activeTab === 'history'"
-      (click)="activeTab = 'history'">
-      📋 History ({{ allAssignments.length }})
+      (click)="setAssignmentsTab('history')">
+      📋 History{{ historyTabCountLabel }}
     </button>
   </div>
 
@@ -125,51 +125,128 @@
     </div>
   </div>
 
-  <div class="card" *ngIf="activeTab === 'history'">
-    <div class="table-container history-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Employee</th>
-            <th>Asset</th>
-            <th>Assigned on</th>
-            <th>Returned on</th>
-            <th>Duration</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let a of allAssignments">
-            <td>
-              <div class="user-cell-sm">
-                <div class="mini-avatar">{{ a.user_name?.charAt(0)?.toUpperCase() }}</div>
-                <div>
-                  <div>{{ a.user_name }}</div>
-                  <small>{{ a.employee_id }}</small>
-                </div>
+  <div class="card history-card" *ngIf="activeTab === 'history'">
+    <div class="history-toolbar">
+      <label class="history-search-label" for="history-employee-search">1. Search by name or employee ID</label>
+      <div class="history-search-row">
+        <input
+          id="history-employee-search"
+          type="search"
+          class="input history-search-input"
+          [(ngModel)]="historyPickerQuery"
+          [disabled]="historySelectedUserId != null"
+          placeholder="e.g. Harsh or EMP2611"
+          autocomplete="off" />
+        <button
+          type="button"
+          class="btn history-search-clear"
+          *ngIf="historySelectedUserId != null || historyPickerQuery.trim()"
+          (click)="clearHistoryEmployeeSelection()">
+          {{ historySelectedUserId != null ? 'Change employee' : 'Clear' }}
+        </button>
+      </div>
+      <p class="history-step-hint" *ngIf="historySelectedUserId == null">
+        2. Click an employee in the list below to load their full assignment history (every category).
+      </p>
+    </div>
+
+    <div class="history-picker" *ngIf="historySelectedUserId == null">
+      <ul class="history-pick-list" *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length > 0">
+        <li *ngFor="let u of historyEmployeesMatching()">
+          <button type="button" class="history-pick-row" (click)="selectEmployeeForHistory(u)">
+            <span class="history-pick-avatar">{{ u.name?.charAt(0)?.toUpperCase() }}</span>
+            <span class="history-pick-text">
+              <span class="history-pick-name">{{ u.name }}</span>
+              <span class="history-pick-meta">{{ u.employee_id }} · {{ u.department }}</span>
+            </span>
+          </button>
+        </li>
+      </ul>
+      <p
+        class="history-no-employees"
+        *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length === 0">
+        No employees match that search.
+      </p>
+      <div class="history-idle-hint" *ngIf="!historyPickerQuery.trim()">
+        Nothing listed yet — type in the search box to find someone, then select them.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Full history card (modal) after picking an employee -->
+  <div
+    class="history-detail-overlay"
+    *ngIf="activeTab === 'history' && historySelectedUserId != null"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="history-detail-title"
+    (click)="clearHistoryEmployeeSelection()">
+    <div class="history-detail-dialog" (click)="$event.stopPropagation()">
+      <div class="history-detail-header">
+        <h3 id="history-detail-title">Assignment history</h3>
+        <button
+          type="button"
+          class="history-detail-close"
+          (click)="clearHistoryEmployeeSelection()"
+          aria-label="Close history">
+          ✕
+        </button>
+      </div>
+
+      <div class="history-selected-bar history-cart-banner">
+        <div class="history-cart-banner-user">
+          <span class="history-cart-banner-avatar">{{ historySelectedUserName.charAt(0) | uppercase }}</span>
+          <div>
+            <div class="history-cart-banner-label">Employee</div>
+            <div><strong>{{ historySelectedUserName }}</strong> · all categories</div>
+          </div>
+        </div>
+        <span class="history-cart-banner-count" *ngIf="historyRowsForView.length > 0">
+          {{ historyRowsForView.length }}
+          checkout<ng-container *ngIf="historyRowsForView.length !== 1">s</ng-container>
+        </span>
+      </div>
+
+      <div class="history-cart">
+        <div class="history-cart-lines" *ngIf="historyRowsForView.length > 0">
+          <div class="history-cart-line" *ngFor="let a of historyRowsForView">
+            <div class="history-cart-line-thumb">📦</div>
+            <div class="history-cart-line-body">
+              <div class="history-cart-line-title">{{ a.asset_type }} — {{ a.brand }}</div>
+              <div class="history-cart-line-model">{{ a.model }}</div>
+              <div class="history-cart-line-sn" *ngIf="a.serial_number">SN: {{ a.serial_number }}</div>
+              <div class="history-cart-line-dates">
+                <span class="history-cart-pill">
+                  Assigned {{ a.start_time | date : 'dd MMM yy, hh:mm a' }}
+                </span>
+                <span class="history-cart-pill history-cart-pill-muted" *ngIf="a.end_time">
+                  Returned {{ a.end_time | date : 'dd MMM yy, hh:mm a' }}
+                </span>
+                <span class="history-cart-pill history-cart-pill-muted" *ngIf="!a.end_time">Still active — no return yet</span>
               </div>
-            </td>
-            <td>
-              <div>{{ a.asset_type }} — {{ a.brand }}</div>
-              <small>{{ a.model }}</small>
-            </td>
-            <td>{{ a.start_time | date : 'dd MMM yy, hh:mm a' }}</td>
-            <td>{{ a.end_time ? (a.end_time | date : 'dd MMM yy, hh:mm a') : '—' }}</td>
-            <td>{{ formatSessionDuration(a.working_minutes) }}</td>
-            <td>
+            </div>
+            <div class="history-cart-line-side">
               <span
                 class="status-badge"
                 [class.active]="a.status === 'Active'"
                 [class.done]="a.status === 'Completed'">
                 {{ a.status }}
               </span>
-            </td>
-          </tr>
-          <tr *ngIf="allAssignments.length === 0">
-            <td colspan="6" class="empty-row">No history in this view</td>
-          </tr>
-        </tbody>
-      </table>
+              <div class="history-cart-duration">{{ formatSessionDuration(a.working_minutes) }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="history-cart-empty" *ngIf="historyRowsForView.length === 0">
+          No assignments on file for this employee.
+        </div>
+      </div>
+
+      <div class="history-detail-actions">
+        <button type="button" class="btn-cancel" (click)="clearHistoryEmployeeSelection()">
+          Pick another employee
+        </button>
+      </div>
     </div>
   </div>
 

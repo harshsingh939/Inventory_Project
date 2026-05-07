@@ -1,8 +1,10 @@
 import {
   Component,
+  EventEmitter,
   Input,
   OnChanges,
   OnInit,
+  Output,
   SimpleChanges,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -55,6 +57,8 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
   @Input() assignmentRequestId: number | null = null;
   /** auth_users.id — pre-select employee whose Users row is linked to this login */
   @Input() prefillAuthUserId: number | null = null;
+  /** Parent can hide inventory / add-asset UI while History tab is open */
+  @Output() historyTabActive = new EventEmitter<boolean>();
 
   users: any[] = [];
   rawAvailableAssets: any[] = [];
@@ -82,13 +86,24 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
   disposeNotes = '';
   disposing = false;
 
+  /** Filters the roster for history employee picker */
+  historyPickerQuery = '';
+  /** When set, history table shows rawAllAssignments rows for this user only (full org, any category). */
+  historySelectedUserId: number | null = null;
+
   constructor(
     private readonly http: HttpClient,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
+    this.historyTabActive.emit(false);
     this.loadAll();
+  }
+
+  setAssignmentsTab(tab: 'active' | 'history'): void {
+    this.activeTab = tab;
+    this.historyTabActive.emit(tab === 'history');
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -230,6 +245,74 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
 
   categoryTitle(): string {
     return definitionForSlug(this.categorySlug)?.title ?? this.categorySlug;
+  }
+
+  /** Employees from /users matching the picker query (for explicit selection before showing history). */
+  historyEmployeesMatching(): any[] {
+    const q = String(this.historyPickerQuery || '').trim().toLowerCase();
+    if (!q || !(this.users || []).length) {
+      return [];
+    }
+    const list = this.users.filter((u) => {
+      const name = String(u.name ?? '').toLowerCase();
+      const emp = String(u.employee_id ?? '').toLowerCase();
+      return name.includes(q) || emp.includes(q);
+    });
+    return list.slice(0, 40);
+  }
+
+  selectEmployeeForHistory(u: any): void {
+    const id = Number(u?.id);
+    if (!Number.isFinite(id)) {
+      return;
+    }
+    this.historySelectedUserId = id;
+    this.cdr.detectChanges();
+  }
+
+  clearHistoryEmployeeSelection(): void {
+    this.historySelectedUserId = null;
+    this.historyPickerQuery = '';
+    this.cdr.detectChanges();
+  }
+
+  get historyRowsForView(): any[] {
+    const uid = this.historySelectedUserId;
+    if (uid == null || !Number.isFinite(Number(uid))) {
+      return [];
+    }
+    const rows = this.rawAllAssignments.filter(
+      (row) => Number(row.user_id) === Number(uid),
+    );
+    return rows.slice().sort((a, b) => {
+      const ta = new Date(a.start_time ?? 0).getTime();
+      const tb = new Date(b.start_time ?? 0).getTime();
+      return tb - ta;
+    });
+  }
+
+  /** Tab label suffix, e.g. " (12)" once an employee is selected. */
+  get historyTabCountLabel(): string {
+    if (this.historySelectedUserId == null) {
+      return '';
+    }
+    return ` (${this.historyRowsForView.length})`;
+  }
+
+  get historySelectedUserName(): string {
+    const id = this.historySelectedUserId;
+    if (id == null) {
+      return '';
+    }
+    const u = (this.users || []).find((x) => Number(x.id) === Number(id));
+    if (u) {
+      return `${u.name} (${u.employee_id})`;
+    }
+    const row = this.rawAllAssignments.find((r) => Number(r.user_id) === Number(id));
+    if (row) {
+      return `${row.user_name} (${row.employee_id})`;
+    }
+    return `User #${id}`;
   }
 
   assignAsset() {

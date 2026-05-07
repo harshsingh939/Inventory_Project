@@ -49,6 +49,8 @@ export class AssetsCategory implements OnInit, OnDestroy {
   isPc = false;
   /** Inline assignment panel (replaces top-nav Sessions page) */
   showAssignmentsPanel = false;
+  /** True while assignments panel History tab is open — hide inventory / add UI below */
+  assignmentsHistoryTab = false;
 
   inventories: InventoryRow[] = [];
   /** '' = all */
@@ -73,8 +75,6 @@ export class AssetsCategory implements OnInit, OnDestroy {
 
   allAssets: any[] = [];
   filteredAssets: any[] = [];
-  searchBrand = '';
-  searchStatus = '';
   isLoading = false;
   isAdding = false;
   errorMsg = '';
@@ -111,6 +111,9 @@ export class AssetsCategory implements OnInit, OnDestroy {
       this.isPc = def.ui === 'pc';
       const wantAssign = qm.get('assign') === '1';
       this.showAssignmentsPanel = wantAssign && this.auth.isAdmin();
+      if (!this.showAssignmentsPanel) {
+        this.assignmentsHistoryTab = false;
+      }
       if (wantAssign && !this.auth.isAdmin()) {
         this.router.navigate([], {
           relativeTo: this.route,
@@ -174,9 +177,22 @@ export class AssetsCategory implements OnInit, OnDestroy {
     return this.invLabel(this.filterInvId as number);
   }
 
+  /** Inventories / add forms / asset table hidden during History lookup */
+  get categoryInventoryVisible(): boolean {
+    return !(this.showAssignmentsPanel && this.assignmentsHistoryTab);
+  }
+
+  onAssignmentsHistoryTab(active: boolean) {
+    this.assignmentsHistoryTab = active;
+    this.cdr.detectChanges();
+  }
+
   setAssignmentsOpen(open: boolean) {
     if (!this.auth.isAdmin()) {
       return;
+    }
+    if (!open) {
+      this.assignmentsHistoryTab = false;
     }
     this.showAssignmentsPanel = open;
     this.router.navigate([], {
@@ -373,21 +389,8 @@ export class AssetsCategory implements OnInit, OnDestroy {
   }
 
   applyFilter() {
-    const brand = this.searchBrand.toLowerCase().trim();
-    const status = this.searchStatus.toLowerCase().trim();
-    this.filteredAssets = this.allAssets.filter((a) => {
-      if (!this.inCategory(a)) return false;
-      const matchBrand = brand ? a.brand?.toLowerCase().includes(brand) : true;
-      const matchStatus = status ? a.status?.toLowerCase().includes(status) : true;
-      return matchBrand && matchStatus;
-    });
+    this.filteredAssets = this.allAssets.filter((a) => this.inCategory(a));
     this.cdr.detectChanges();
-  }
-
-  clearFilter() {
-    this.searchBrand = '';
-    this.searchStatus = '';
-    this.applyFilter();
   }
 
   addAsset() {

@@ -43,13 +43,6 @@ export class Repairs implements OnInit {
   @ViewChild('fixBillInput') private fixBillInput?: ElementRef<HTMLInputElement>;
   isSavingFix = false;
 
-  /** Admin assigns pending repair to repair_authority account */
-  authorityList: { id: number; username: string; email: string }[] = [];
-  /** Selected auth_users.id per repair row (number | null — avoid string '' → Number → 0 bug) */
-  authorityChoice: Record<number, number | null> = {};
-  authorityListLoaded = false;
-  assigningId: number | null = null;
-
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
@@ -76,60 +69,6 @@ export class Repairs implements OnInit {
   ngOnInit() {
     this.getRepairs();
     this.loadRepairAssetChoices();
-    if (this.auth.isAdmin()) {
-      this.http.get<any[]>(`${this.apiBase}/auth/repair-authorities`).subscribe({
-        next: (rows) => {
-          this.authorityList = Array.isArray(rows) ? rows : [];
-          this.authorityListLoaded = true;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.authorityListLoaded = true;
-          this.authorityList = [];
-        },
-      });
-    }
-  }
-
-  assignAuthority(r: any) {
-    const raw = this.authorityChoice[r.id];
-    const aid = typeof raw === 'number' ? raw : Number(String(raw ?? '').trim());
-    if (!Number.isFinite(aid) || aid <= 0) {
-      this.errorMsg = this.authorityList.length
-        ? 'Choose a repair authority from the dropdown before assigning.'
-        : 'No repair-authority logins exist yet. Create an account with role repair_authority, then refresh this page.';
-      this.cdr.detectChanges();
-      return;
-    }
-    this.errorMsg = '';
-    this.assigningId = r.id;
-    this.http
-      .post<any>(`${this.apiBase}/repairs/assign-to-authority`, {
-        repair_id: r.id,
-        authority_auth_user_id: aid,
-      })
-      .subscribe({
-        next: () => {
-          this.assigningId = null;
-          const row = this.repairs.find((x) => x.id === r.id);
-          if (row) {
-            row.status = Repairs.REPAIR_HANDOFF;
-            row.assigned_authority_auth_user_id = aid;
-          }
-          this.applyFilter();
-          this.successMsg = 'Assigned to repair authority ✅';
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.successMsg = '';
-            this.cdr.detectChanges();
-          }, 3000);
-        },
-        error: (err) => {
-          this.assigningId = null;
-          this.errorMsg = err.error?.message || 'Assign failed';
-          this.cdr.detectChanges();
-        },
-      });
   }
 
   /** Admin: all assets. User: only equipment on an active assignment to them (same source as My workspace). */

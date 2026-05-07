@@ -7,7 +7,7 @@
         <div class="repair-wrench" aria-hidden="true"></div>
         <div>
           <h1 class="repair-title">Repairs</h1>
-          <p class="repair-lead" *ngIf="isAdmin">Queue & vendor assign · <a routerLink="/repair-costs" class="repair-lead__link">Cost history</a></p>
+          <p class="repair-lead" *ngIf="isAdmin">Repair queue · <a routerLink="/repair-costs" class="repair-lead__link">Cost history</a></p>
           <p class="repair-lead" *ngIf="!isAdmin">Open tickets for your assigned gear</p>
         </div>
       </div>
@@ -80,7 +80,6 @@
               <th>Asset</th>
               <th>Issue</th>
               <th>Status</th>
-              <th *ngIf="isAdmin">Vendor login</th>
               <th *ngIf="isAdmin">Action</th>
             </tr>
           </thead>
@@ -107,27 +106,6 @@
                   >{{ r.status }}</span>
               </td>
               <td *ngIf="isAdmin">
-                <div class="auth-cell" *ngIf="r.status === 'Pending'">
-                  <select
-                    class="input select-input auth-select"
-                    [(ngModel)]="authorityChoice[r.id]"
-                    [title]="authorityList.length ? 'Vendor / repair_authority account' : 'Add repair_authority user in Users'"
-                  >
-                    <option [ngValue]="null">— Vendor —</option>
-                    <option *ngFor="let a of authorityList" [ngValue]="a.id">{{ a.username }} ({{ a.email }})</option>
-                  </select>
-                  <button
-                    type="button"
-                    class="btn-action assign-auth-btn"
-                    [disabled]="assigningId === r.id || (authorityChoice[r.id] ?? 0) <= 0"
-                    (click)="assignAuthority(r)"
-                  >
-                    {{ assigningId === r.id ? '…' : 'Assign' }}
-                  </button>
-                </div>
-                <span class="muted-sm" *ngIf="r.status !== 'Pending'">—</span>
-              </td>
-              <td *ngIf="isAdmin">
                 <div class="action-btns">
                   <button type="button" class="btn-action progress-btn" *ngIf="r.status === 'Pending'" (click)="updateStatus(r.id, 'In Progress')">
                     In progress
@@ -143,7 +121,7 @@
               </td>
             </tr>
             <tr *ngIf="filteredRepairs.length === 0">
-              <td [attr.colspan]="isAdmin ? 8 : 4" class="empty-row">
+              <td [attr.colspan]="isAdmin ? 7 : 4" class="empty-row">
                 {{ searchIssue || searchStatus ? 'No matches' : 'No repairs' }}
               </td>
             </tr>

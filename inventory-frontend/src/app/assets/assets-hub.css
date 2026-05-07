@@ -98,12 +98,6 @@
   font-weight: 500;
 }
 
-.hub-stat-names {
-  display: block;
-  color: #64748b;
-  word-break: break-word;
-}
-
 .hub-card-missing {
   margin: 10px 0 0;
   font-size: 0.72rem;

@@ -20,6 +20,8 @@ function esc(s) {
  * @param {string} p.typesLine - e.g. "Desktop, Laptop"
  * @param {string} [p.userMessage]
  * @param {string} [p.dashboardUrl] - link to assignment-requests admin UI
+ * @param {string} [p.queueUrl] - deep link to highlight one request
+ * @param {string} [p.emailApproveUrl] - open app + signed token (confirm assign in browser)
  */
 exports.assignmentRequestAdminEmailHtml = (p) => {
   const types = esc(p.typesLine || 'Equipment');
@@ -27,6 +29,8 @@ exports.assignmentRequestAdminEmailHtml = (p) => {
   const email = esc(p.requesterEmail || '');
   const note = p.userMessage ? `<p style="margin:16px 0 0;color:#94a3b8;font-size:14px;line-height:1.5;"><strong style="color:#e2e8f0;">Note</strong><br/>${esc(p.userMessage)}</p>` : '';
   const dash = esc(p.dashboardUrl || '#');
+  const queue = esc(p.queueUrl || p.dashboardUrl || '#');
+  const approve = p.emailApproveUrl ? esc(p.emailApproveUrl) : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -56,13 +60,24 @@ exports.assignmentRequestAdminEmailHtml = (p) => {
                 </tr>
               </table>
               ${note}
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:28px;">
+              <p style="margin:20px 0 0;font-size:14px;line-height:1.55;color:#94a3b8;">
+                <strong style="color:#e2e8f0;">Auto-assign:</strong> the green button opens a short page that <strong style="color:#e2e8f0;">completes assignment without signing in</strong> (same as <strong style="color:#e2e8f0;">Assigned</strong> in the admin queue). Use “Open this request” if you prefer to sign in first, then click <strong style="color:#e2e8f0;">Assigned</strong> on that ticket.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:20px;">
                 <tr>
-                  <td style="border-radius:10px;background:linear-gradient(180deg,#38bdf8,#0284c7);">
-                    <a href="${dash}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:600;color:#020617;text-decoration:none;">Open assignment requests</a>
+                  ${
+                    approve
+                      ? `<td style="border-radius:10px;background:linear-gradient(180deg,#34d399,#059669);padding:0 12px 12px 0;">
+                    <a href="${approve}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:600;color:#022c22;text-decoration:none;">Approve &amp; auto-assign</a>
+                  </td>`
+                      : ''
+                  }
+                  <td style="border-radius:10px;background:linear-gradient(180deg,#38bdf8,#0284c7);padding:0 0 12px 0;">
+                    <a href="${queue}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:600;color:#020617;text-decoration:none;">Open this request</a>
                   </td>
                 </tr>
               </table>
+              <p style="margin:14px 0 0;font-size:12px;color:#64748b;"><a href="${dash}" style="color:#7dd3fc;text-decoration:none;">Full queue</a></p>
               <p style="margin:24px 0 0;font-size:12px;color:#475569;line-height:1.5;">You are receiving this because you are an administrator in InvenTrack. If SMTP is not configured, use the in-app bell for alerts.</p>
             </td>
           </tr>

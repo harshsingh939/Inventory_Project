@@ -30,7 +30,6 @@
         {{ row.asset_count }} asset<span *ngIf="row.asset_count !== 1">s</span>
       </span>
       <span class="hub-stat-count hub-stat-zero" *ngIf="(row.asset_count ?? 0) === 0">No assets linked yet</span>
-      <span class="hub-stat-names" *ngIf="row.asset_names">{{ row.asset_names }}</span>
     </p>
     <p class="hub-card-missing" *ngIf="!rowForSlug(slug)">
       No matching row in DB for this category — run migration 012 or align <code>details</code> with
@@ -55,7 +54,6 @@
         {{ inv.asset_count }} asset<span *ngIf="inv.asset_count !== 1">s</span>
       </span>
       <span class="hub-stat-count hub-stat-zero" *ngIf="(inv.asset_count ?? 0) === 0">No assets linked yet</span>
-      <span class="hub-stat-names" *ngIf="inv.asset_names">{{ inv.asset_names }}</span>
     </p>
     <div class="hub-card-footer">
       <span class="hub-card-cta">Open →</span>

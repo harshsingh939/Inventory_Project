@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+const getJwtSecret = require('../config/jwtSecret');
 const { sendAssignmentRequestEmailToAdmins } = require('./mailer');
 
 /**
@@ -35,7 +37,22 @@ exports.notifyAdminsNewRequest = (db, requestId) => {
           process.env.PUBLIC_APP_URL ||
           process.env.FRONTEND_URL ||
           'http://localhost:4200';
-        const dashboardUrl = `${String(base).replace(/\/$/, '')}/assignment-requests`;
+        const root = String(base).replace(/\/$/, '');
+        const dashboardUrl = `${root}/assignment-requests`;
+        // After login, land on highlighted ticket (AdminGuard applies only post-login).
+        const queueUrl = `${root}/login?returnUrl=${encodeURIComponent(`/assignment-requests?requestId=${rid}`)}`;
+        let emailApproveUrl = '';
+        try {
+          const tok = jwt.sign(
+            { purpose: 'ar_fulfill', rid, typ: 'ar_fulfill' },
+            getJwtSecret(),
+            { expiresIn: '48h' },
+          );
+          // Public page — no AdminGuard — auto POSTs email-fulfill on open.
+          emailApproveUrl = `${root}/assignment-email?requestId=${encodeURIComponent(String(rid))}&emailFulfill=${encodeURIComponent(tok)}`;
+        } catch (e) {
+          console.error('[assignmentRequestNotify] sign email link:', e.message);
+        }
 
         sendAssignmentRequestEmailToAdmins(db, {
           requestId: rid,
@@ -44,6 +61,8 @@ exports.notifyAdminsNewRequest = (db, requestId) => {
           typesLine,
           userMessage: row.user_message || '',
           dashboardUrl,
+          queueUrl,
+          emailApproveUrl,
         });
       },
     );

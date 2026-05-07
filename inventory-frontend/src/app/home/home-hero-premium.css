@@ -340,6 +340,110 @@
   }
 }
 
+/* User-management hero CTAs — stagger in + ambient motion (overrides home-floating “animation: none”) */
+@keyframes hero-um-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-um-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.25), 0 4px 24px rgba(34, 211, 238, 0.35), 0 12px 40px rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45), 0 6px 28px rgba(34, 211, 238, 0.55), 0 18px 52px rgba(6, 182, 212, 0.35);
+  }
+}
+
+@keyframes hero-um-icon-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes hero-um-ring {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.primary.hero-btn--um-primary {
+  animation: hero-um-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards, hero-um-glow-pulse 2.8s ease-in-out infinite 0.75s;
+  animation-fill-mode: backwards, none;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.secondary.hero-btn--um-secondary {
+  position: relative;
+  overflow: hidden;
+  animation: hero-um-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.secondary.hero-btn--um-secondary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.secondary.hero-btn--um-secondary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    rgba(34, 211, 238, 0.05),
+    rgba(34, 211, 238, 0.45),
+    rgba(165, 243, 252, 0.35),
+    rgba(34, 211, 238, 0.05)
+  );
+  background-size: 200% 100%;
+  animation: hero-um-ring 3.2s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-icon {
+  display: inline-flex;
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+  animation: hero-um-icon-nudge 2.4s ease-in-out infinite;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-icon--soft {
+  animation-delay: 0.35s;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-primary .hero-btn-um-icon {
+  color: #0f766e;
+}
+
+.home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-secondary .hero-btn-um-icon {
+  color: rgba(165, 243, 252, 0.95);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-network-path,
   .hero-pglyph,
@@ -351,5 +455,12 @@
   .hero-network-path {
     stroke-dasharray: none;
     stroke-dashoffset: 0;
+  }
+
+  .home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.primary.hero-btn--um-primary,
+  .home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.secondary.hero-btn--um-secondary,
+  .home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn--um-icon,
+  .home-public .hero .hero-actions.hero-actions--user-mgmt .hero-btn.secondary.hero-btn--um-secondary::before {
+    animation: none !important;
   }
 }

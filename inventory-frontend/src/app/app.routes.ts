@@ -21,6 +21,7 @@ import { RepairAuthorityGuard } from './repair-authority.guard';
 import { AssetDetails } from './asset-details/asset-details';
 import { MyWorkspace } from './my-workspace/my-workspace';
 import { AssignmentRequestsAdmin } from './assignment-requests-admin/assignment-requests-admin';
+import { AssignmentEmailFulfill } from './assignment-email-fulfill/assignment-email-fulfill';
 import { RepairRequestsAdmin } from './repair-requests-admin/repair-requests-admin';
 import { RepairAuthorityPanel } from './repair-authority-panel/repair-authority-panel';
 import { RagAdmin } from './rag-admin/rag-admin';
@@ -29,6 +30,8 @@ export const routes: Routes = [
   { path: 'login',  component: Login  },   // ✅ no sidebar/header
   { path: 'signup', component: Signup }, 
   {path:'not-authorized',component:NotAuthorized},  // ✅ no sidebar/header
+  /** Email “Approve & auto-assign” — no auth; calls email-fulfill API on load */
+  { path: 'assignment-email', component: AssignmentEmailFulfill },
   { path: 'asset-details',  component: AssetDetails  },
   {
     path: '',

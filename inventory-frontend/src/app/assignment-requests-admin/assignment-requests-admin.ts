@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { defer, EMPTY, fromEvent, merge, of } from 'rxjs';
 import { debounceTime, filter, tap } from 'rxjs/operators';
 import { apiUrl } from '../api-url';
@@ -20,6 +20,7 @@ export class AssignmentRequestsAdmin {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   rows: any[] = [];
@@ -28,6 +29,9 @@ export class AssignmentRequestsAdmin {
   fulfillingId: number | null = null;
   errorMsg = '';
   successMsg = '';
+
+  /** Deep-link highlight from ?requestId= (e.g. after login from email) */
+  highlightRequestId: number | null = null;
 
   constructor() {
     let hiddenAt = 0;
@@ -51,7 +55,16 @@ export class AssignmentRequestsAdmin {
       ),
     )
       .pipe(debounceTime(80), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.load());
+      .subscribe(() => {
+        this.readHighlightQuery();
+        this.load();
+      });
+  }
+
+  private readHighlightQuery(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const rid = Number(q.get('requestId'));
+    this.highlightRequestId = Number.isFinite(rid) && rid > 0 ? rid : null;
   }
 
   private isAssignmentRequestsUrl(raw: string): boolean {
@@ -67,6 +80,7 @@ export class AssignmentRequestsAdmin {
         this.rows = Array.isArray(data) ? data : [];
         this.loading = false;
         this.cdr.detectChanges();
+        this.scrollToHighlight();
       },
       error: (err) => {
         this.loading = false;
@@ -76,14 +90,22 @@ export class AssignmentRequestsAdmin {
     });
   }
 
-  /** Mark ticket fulfilled only (no stock check; POST /admin/:id/fulfill-manual). */
+  private scrollToHighlight(): void {
+    const id = this.highlightRequestId;
+    if (!id) return;
+    queueMicrotask(() => {
+      document.getElementById(`assign-req-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  /** Auto-match stock, assign to requester, mark Fulfilled (POST /admin/:id/fulfill). */
   markAssigned(row: any) {
     const id = Number(row?.id);
     if (!Number.isFinite(id)) return;
     this.errorMsg = '';
     this.successMsg = '';
     this.fulfillingId = id;
-    this.http.post<any>(`${this.api}/admin/${id}/fulfill-manual`, {}).subscribe({
+    this.http.post<any>(`${this.api}/admin/${id}/fulfill`, {}).subscribe({
       next: (res) => {
         this.fulfillingId = null;
         this.successMsg = res?.message || 'Assigned';

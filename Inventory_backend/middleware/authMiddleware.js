@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = 'inventtrack_secret_key_2024';
+const getJwtSecret = require('../config/jwtSecret');
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -10,7 +10,7 @@ module.exports = (req, res, next) => {
 
   const token = authHeader.split(' ')[1]; // Bearer <token>
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, getJwtSecret(), (err, decoded) => {
     if (err) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }

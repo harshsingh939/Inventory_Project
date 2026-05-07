@@ -464,30 +464,6 @@
 .status-badge.under-repair { background: rgba(168,85,247,0.15); color: #c084fc; }
 .status-badge.cannot   { background: rgba(248,113,113,0.12); color: #f87171; }
 
-.auth-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: stretch;
-  min-width: 140px;
-}
-
-.auth-select {
-  font-size: 0.75rem;
-  padding: 6px 8px;
-}
-
-.assign-auth-btn {
-  background: rgba(168,85,247,0.15);
-  border: 1px solid rgba(168,85,247,0.35);
-  color: #d8b4fe;
-}
-
-.muted-sm {
-  font-size: 0.72rem;
-  color: #64748b;
-}
-
 /* Action buttons */
 .action-btns {
   display: flex;

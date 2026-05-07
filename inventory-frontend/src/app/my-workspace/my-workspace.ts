@@ -110,7 +110,7 @@ export class MyWorkspace implements OnInit {
 
   submitRequest() {
     if (!this.linked) {
-      this.errorMsg = 'Save your profile under Users (sidebar) first: name, Employee ID, department.';
+      this.errorMsg = 'Save your profile under Register (sidebar) first: name, Employee ID, department.';
       this.cdr.detectChanges();
       return;
     }

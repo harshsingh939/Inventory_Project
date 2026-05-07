@@ -1,4 +1,7 @@
+const jwt = require('jsonwebtoken');
 const db = require('../db');
+const getJwtSecret = require('../config/jwtSecret');
+const { extractHintsFromNote } = require('../services/assignmentNoteHints');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 
 function isMissingTable(err) {
@@ -20,74 +23,212 @@ const pickAvailableSql = `
   LIMIT 1
 `;
 
-const pickByTypeSql = `
-  SELECT a.id FROM assets a
-  LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
-  WHERE LOWER(TRIM(a.asset_type)) = LOWER(TRIM(?))
+/** Prefer asset_type + optional note hints (cpu/model/brand LIKE); else same type without hint filter. */
+function pickOneAssetByType(dbConn, assetType, noteHints, excludeIds, innerCb) {
+  const ex = excludeIds && excludeIds.length ? excludeIds : [-1];
+  const phEx = ex.map(() => '?').join(', ');
+  const baseTail = `
+    WHERE LOWER(TRIM(a.asset_type)) = LOWER(TRIM(?))
     AND x.id IS NULL
     AND COALESCE(LOWER(TRIM(a.status)), 'available') NOT IN ('assigned', 'under repair', 'disposed')
-  ORDER BY (a.inventory_id IS NULL) DESC, a.id ASC
-  LIMIT 1
-`;
+    AND a.id NOT IN (${phEx})
+  `;
+  const orderSql = `ORDER BY (a.inventory_id IS NULL) DESC, a.id ASC LIMIT 1`;
 
-/** Resolve concrete asset ids: legacy asset rows, else one unit per inventory + per requested asset_type */
+  const runBroad = (afterHintMiss) => {
+    const sql = `
+      SELECT a.id FROM assets a
+      LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
+      ${baseTail}
+      ${orderSql}`;
+    dbConn.query(sql, [assetType, ...ex], (e, rows) => {
+      if (e) return innerCb(e);
+      if (rows?.length) {
+        return innerCb(null, rows[0].id, !!afterHintMiss);
+      }
+      innerCb(null, null, false);
+    });
+  };
+
+  if (!noteHints || !noteHints.length) {
+    return runBroad(false);
+  }
+  const hintConds = noteHints.map(
+    () =>
+      `LOWER(CONCAT_WS(' ', IFNULL(a.cpu,''), IFNULL(a.model,''), IFNULL(a.brand,''))) LIKE ?`,
+  );
+  const likeVals = noteHints.map((h) => `%${String(h).replace(/[%_]/g, '').trim()}%`);
+  const sql = `
+    SELECT a.id FROM assets a
+    LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
+    ${baseTail}
+    AND (${hintConds.join(' AND ')})
+    ${orderSql}`;
+  dbConn.query(sql, [assetType, ...ex, ...likeVals], (e, rows) => {
+    if (e) return innerCb(e);
+    if (rows?.length) return innerCb(null, rows[0].id, false);
+    runBroad(true);
+  });
+}
+
+function assetRowMatchesHints(dbConn, assetId, noteHints, vcb) {
+  if (!noteHints || !noteHints.length) return vcb(true);
+  const hintConds = noteHints.map(
+    () =>
+      `LOWER(CONCAT_WS(' ', IFNULL(cpu,''), IFNULL(model,''), IFNULL(brand,''))) LIKE ?`,
+  );
+  const likeVals = noteHints.map((h) => `%${String(h).replace(/[%_]/g, '').trim()}%`);
+  const sql = `SELECT 1 AS ok FROM assets WHERE id=? AND (${hintConds.join(' AND ')}) LIMIT 1`;
+  dbConn.query(sql, [assetId, ...likeVals], (e, rows) => {
+    if (e) return vcb(false);
+    vcb(!!rows?.length);
+  });
+}
+
+/**
+ * Resolve concrete asset ids: legacy asset rows, else one unit per inventory + per requested asset_type.
+ * Callback: cb(err, { assetIds, noteWarnings }) — noteWarnings when note asked for e.g. i7 but stock fell back.
+ */
 function resolveRequestAssetIds(dbConn, requestId, cb) {
   dbConn.query(
-    'SELECT asset_id FROM assignment_request_items WHERE request_id = ?',
+    'SELECT user_message FROM assignment_requests WHERE id = ? LIMIT 1',
     [requestId],
-    (e3, lines) => {
-      if (e3) return cb(e3);
-      const fromItems = (lines || []).map((l) => l.asset_id);
-      if (fromItems.length) return cb(null, fromItems);
+    (eMsg, msgRows) => {
+      const userMessage = !eMsg && msgRows?.[0] ? String(msgRows[0].user_message || '') : '';
+      const noteHints = extractHintsFromNote(userMessage);
+      const noteWarnings = [];
 
       dbConn.query(
-        'SELECT inventory_id FROM assignment_request_inventories WHERE request_id = ?',
+        'SELECT asset_id FROM assignment_request_items WHERE request_id = ?',
         [requestId],
-        (e4, invLines) => {
-          if (e4 && !isMissingTable(e4)) return cb(e4);
-          const invIds =
-            e4 && isMissingTable(e4) ? [] : (invLines || []).map((r) => r.inventory_id);
+        (e3, lines) => {
+          if (e3) return cb(e3);
+          const fromItems = (lines || []).map((l) => l.asset_id);
+          if (fromItems.length) return cb(null, { assetIds: fromItems, noteWarnings: [] });
 
           dbConn.query(
-            'SELECT asset_type FROM assignment_request_asset_types WHERE request_id = ?',
+            'SELECT inventory_id FROM assignment_request_inventories WHERE request_id = ?',
             [requestId],
-            (e5, typeRows) => {
-              if (e5 && !isMissingTable(e5)) return cb(e5);
-              const types =
-                e5 && isMissingTable(e5) ? [] : (typeRows || []).map((r) => String(r.asset_type || '').trim()).filter(Boolean);
+            (e4, invLines) => {
+              if (e4 && !isMissingTable(e4)) return cb(e4);
+              const invIds =
+                e4 && isMissingTable(e4) ? [] : (invLines || []).map((r) => r.inventory_id);
 
-              if (!invIds.length && !types.length) {
-                return cb(new Error('No inventories or device types on this request'));
-              }
+              dbConn.query(
+                'SELECT asset_type FROM assignment_request_asset_types WHERE request_id = ?',
+                [requestId],
+                (e5, typeRows) => {
+                  if (e5 && !isMissingTable(e5)) return cb(e5);
+                  const types =
+                    e5 && isMissingTable(e5)
+                      ? []
+                      : (typeRows || []).map((r) => String(r.asset_type || '').trim()).filter(Boolean);
 
-              const acc = [];
-              let iIdx = 0;
-              const stepInv = () => {
-                if (iIdx >= invIds.length) return stepType(0);
-                const invId = invIds[iIdx];
-                dbConn.query(pickAvailableSql, [invId], (e6, pick) => {
-                  if (e6) return cb(e6);
-                  if (!pick || !pick.length) {
-                    return cb(new Error(`No available asset in inventory #${invId}`));
+                  if (!invIds.length && !types.length) {
+                    return cb(new Error('No inventories or device types on this request'));
                   }
-                  acc.push(pick[0].id);
-                  iIdx += 1;
+
+                  const acc = [];
+                  const typeQueue = types.slice();
+                  let iIdx = 0;
+
+                  const pushFallbackMsg = (ctx, tLabel) => {
+                    if (!noteHints.length) return;
+                    noteWarnings.push(
+                      `Your note mentioned ${noteHints.join(', ')}; nothing in ${ctx} matched that. We assigned another ${tLabel} for now — please use it until we can swap to a closer match.`,
+                    );
+                  };
+
+                  const stepTypeAll = () => {
+                    if (!typeQueue.length) return cb(null, { assetIds: acc, noteWarnings });
+                    const t = typeQueue[0];
+                    pickOneAssetByType(dbConn, t, noteHints, acc, (e7, id, fellBack) => {
+                      if (e7) return cb(e7);
+                      if (!id) {
+                        return cb(new Error(`No available "${t}" in stock`));
+                      }
+                      if (fellBack) pushFallbackMsg('global stock', t);
+                      acc.push(id);
+                      typeQueue.shift();
+                      stepTypeAll();
+                    });
+                  };
+
+                  const stepInv = () => {
+                    if (iIdx >= invIds.length) return stepTypeAll();
+                    const invId = invIds[iIdx];
+                    const advance = (assetRowId) => {
+                      acc.push(assetRowId);
+                      iIdx += 1;
+                      stepInv();
+                    };
+                    const failSlot = () =>
+                      cb(
+                        new Error(
+                          `No available asset in inventory #${invId} and no matching device type in global stock (add stock or adjust the request)`,
+                        ),
+                      );
+
+                    const tryHintInInv = (done) => {
+                      if (!noteHints.length) return done(null);
+                      const hintConds = noteHints.map(
+                        () =>
+                          `LOWER(CONCAT_WS(' ', IFNULL(a.cpu,''), IFNULL(a.model,''), IFNULL(a.brand,''))) LIKE ?`,
+                      );
+                      const likeVals = noteHints.map((h) => `%${String(h).replace(/[%_]/g, '').trim()}%`);
+                      const sql = `
+                        SELECT a.id FROM assets a
+                        LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
+                        WHERE a.inventory_id = ?
+                          AND x.id IS NULL
+                          AND COALESCE(LOWER(TRIM(a.status)), 'available') NOT IN ('assigned', 'under repair', 'disposed')
+                          AND (${hintConds.join(' AND ')})
+                        ORDER BY a.id ASC
+                        LIMIT 1`;
+                      dbConn.query(sql, [invId, ...likeVals], (eh, pH) => {
+                        if (eh) return cb(eh);
+                        done(pH?.length ? pH[0].id : null);
+                      });
+                    };
+
+                    tryHintInInv((hintId) => {
+                      if (hintId) return advance(hintId);
+                      dbConn.query(pickAvailableSql, [invId], (e6, pick) => {
+                        if (e6) return cb(e6);
+                        if (pick && pick.length) {
+                          const aid = pick[0].id;
+                          if (!noteHints.length) return advance(aid);
+                          assetRowMatchesHints(dbConn, aid, noteHints, (matches) => {
+                            if (!matches) {
+                              pushFallbackMsg(`inventory #${invId}`, 'unit');
+                            }
+                            advance(aid);
+                          });
+                          return;
+                        }
+                        const tryGlobalTypesForInvSlot = (qi, done) => {
+                          if (qi >= typeQueue.length) return done(null);
+                          const t = typeQueue[qi];
+                          pickOneAssetByType(dbConn, t, noteHints, acc, (e7, id, fellBack) => {
+                            if (e7) return cb(e7);
+                            if (id && !acc.includes(id)) {
+                              if (fellBack) pushFallbackMsg(`inventory #${invId} then global stock`, t);
+                              typeQueue.splice(qi, 1);
+                              return done(id);
+                            }
+                            return tryGlobalTypesForInvSlot(qi + 1, done);
+                          });
+                        };
+                        tryGlobalTypesForInvSlot(0, (fallbackId) => {
+                          if (fallbackId) return advance(fallbackId);
+                          return failSlot();
+                        });
+                      });
+                    });
+                  };
                   stepInv();
-                });
-              };
-              const stepType = (tIdx) => {
-                if (tIdx >= types.length) return cb(null, acc);
-                const t = types[tIdx];
-                dbConn.query(pickByTypeSql, [t], (e7, pick) => {
-                  if (e7) return cb(e7);
-                  if (!pick || !pick.length) {
-                    return cb(new Error(`No available "${t}" in stock`));
-                  }
-                  acc.push(pick[0].id);
-                  stepType(tIdx + 1);
-                });
-              };
-              stepInv();
+                },
+              );
             },
           );
         },
@@ -261,15 +402,31 @@ exports.createRequest = (req, res) => {
 exports.listMine = (req, res) => {
   const authId = req.user?.id;
   if (!authId) return res.status(401).json({ message: 'Unauthorized' });
-  const sql = `
+  const sqlFull = `
+    SELECT r.id, r.status, r.user_message, r.admin_note, r.fulfillment_notice, r.created_at, r.processed_at
+    FROM assignment_requests r
+    WHERE r.auth_user_id = ?
+    ORDER BY r.id DESC
+  `;
+  const sqlLegacy = `
     SELECT r.id, r.status, r.user_message, r.admin_note, r.created_at, r.processed_at
     FROM assignment_requests r
     WHERE r.auth_user_id = ?
     ORDER BY r.id DESC
   `;
-  db.query(sql, [authId], (err, rows) => {
+  db.query(sqlFull, [authId], (err, rows) => {
     if (err) {
       if (isMissingTable(err)) return res.json([]);
+      const missingCol =
+        err.code === 'ER_BAD_FIELD_ERROR' ||
+        err.errno === 1054 ||
+        String(err.message || '').includes('fulfillment_notice');
+      if (missingCol) {
+        return db.query(sqlLegacy, [authId], (e2, rows2) => {
+          if (e2) return res.status(500).json({ message: e2.message });
+          res.json(rows2 || []);
+        });
+      }
       return res.status(500).json({ message: err.message });
     }
     res.json(rows || []);
@@ -411,16 +568,21 @@ exports.fulfill = (req, res) => {
         });
       }
 
-      resolveRequestAssetIds(db, requestId, (e3, assetIds) => {
+      resolveRequestAssetIds(db, requestId, (e3, pack) => {
         if (e3) {
           return res.status(400).json({ message: e3.message || String(e3) });
         }
-        if (!assetIds || assetIds.length === 0) {
+        const assetIds = pack && Array.isArray(pack.assetIds) ? pack.assetIds : [];
+        const noteWarnings = (pack && Array.isArray(pack.noteWarnings) && pack.noteWarnings) || [];
+        if (!assetIds.length) {
           return res.status(400).json({ message: 'No assets resolved for this request' });
         }
 
           const phA = assetIds.map(() => '?').join(',');
-          db.query(`SELECT id, status FROM assets WHERE id IN (${phA})`, assetIds, (eA, astRows) => {
+          db.query(
+            `SELECT id, status, asset_type, brand, model, serial_number FROM assets WHERE id IN (${phA})`,
+            assetIds,
+            (eA, astRows) => {
             if (eA) return res.status(500).json({ message: eA.message });
             if (!astRows || astRows.length !== assetIds.length) {
               return res.status(400).json({ message: 'Some assets no longer exist' });
@@ -478,26 +640,45 @@ exports.fulfill = (req, res) => {
                       db.query('ROLLBACK', () => {});
                       return res.status(400).json({ message: eAssign.message || String(eAssign) });
                     }
-                    db.query(
-                      "UPDATE assignment_requests SET status='Fulfilled', processed_at=NOW() WHERE id=?",
-                      [requestId],
-                      (e7) => {
-                        if (e7) {
-                          db.query('ROLLBACK', () => {});
-                          return res.status(500).json({ message: e7.message });
-                        }
-                        db.query('COMMIT', (e8) => {
+                    const noticeText =
+                      noteWarnings.length > 0 ? noteWarnings.join('\n').slice(0, 4000) : null;
+                    const finishFulfillRow = (e7) => {
+                      if (e7) {
+                        db.query('ROLLBACK', () => {});
+                        return res.status(500).json({ message: e7.message });
+                      }
+                      db.query('COMMIT', (e8) => {
                           if (e8) return res.status(500).json({ message: e8.message });
                           notifyRagDebouncedReindex();
-                          res.json({ message: 'Assets assigned ✅' });
+                          res.json({
+                            message: 'Assets assigned ✅',
+                            fulfillment_notes: noteWarnings,
+                          });
                         });
+                    };
+                    db.query(
+                      "UPDATE assignment_requests SET status='Fulfilled', processed_at=NOW(), fulfillment_notice=? WHERE id=?",
+                      [noticeText, requestId],
+                      (e7) => {
+                        const unknownFulfillment =
+                          e7 &&
+                          (e7.errno === 1054 ||
+                            String(e7.message || '').toLowerCase().includes('fulfillment_notice'));
+                        if (unknownFulfillment) {
+                          return db.query(
+                            "UPDATE assignment_requests SET status='Fulfilled', processed_at=NOW() WHERE id=?",
+                            [requestId],
+                            finishFulfillRow,
+                          );
+                        }
+                        return finishFulfillRow(e7);
                       },
                     );
                   });
                 });
-              },
-            );
-        });
+              });
+          },
+        );
       });
     };
 
@@ -523,6 +704,43 @@ exports.fulfill = (req, res) => {
       });
     });
   });
+};
+
+/**
+ * POST /api/assignment-requests/email-fulfill
+ * Body: { token } — JWT from admin notify email (typ ar_fulfill). Same fulfillment as POST /admin/:id/fulfill without Bearer auth.
+ */
+exports.emailFulfill = (req, res) => {
+  const token = req.body?.token != null ? String(req.body.token).trim() : '';
+  if (!token) return res.status(400).json({ message: 'Missing token' });
+  let decoded;
+  try {
+    decoded = jwt.verify(token, getJwtSecret());
+  } catch (e) {
+    return res.status(401).json({
+      message: 'Invalid or expired link. Use a newer email or open the app and click Assigned on the request.',
+    });
+  }
+  const purposeOk =
+    decoded.purpose === 'ar_fulfill' ||
+    decoded.typ === 'ar_fulfill' ||
+    decoded.action === 'assignment_fulfill';
+  const rawRid = decoded.rid ?? decoded.requestId;
+  const requestId = Number(rawRid);
+  if (!purposeOk || !Number.isFinite(requestId) || requestId <= 0) {
+    return res.status(400).json({ message: 'Invalid or outdated email link' });
+  }
+  let code = 200;
+  const mockRes = {
+    status(c) {
+      code = Number(c) || 200;
+      return this;
+    },
+    json(obj) {
+      res.status(code).json(obj);
+    },
+  };
+  exports.fulfill({ params: { id: String(requestId) }, body: {} }, mockRes);
 };
 
 /**

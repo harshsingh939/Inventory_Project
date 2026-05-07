@@ -1,9 +1,26 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 
+/** GET /api/users — admin: full directory; others: only rows linked to this login (auth_user_id) */
 exports.getUsers = (req, res) => {
-  db.query("SELECT * FROM users", (err, result) => {
-    if (err) return res.status(500).json({ message: err.message });
+  if (!req.user || req.user.id == null) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  const role = String(req.user.role || '').toLowerCase();
+  if (role === 'admin') {
+    db.query('SELECT * FROM users', (err, result) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json(result);
+    });
+    return;
+  }
+  db.query('SELECT * FROM users WHERE auth_user_id = ?', [req.user.id], (err, result) => {
+    if (err) {
+      if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('auth_user_id')) {
+        return res.status(503).json({ message: 'Run migration 007: users.auth_user_id column missing' });
+      }
+      return res.status(500).json({ message: err.message });
+    }
     res.json(result);
   });
 };

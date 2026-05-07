@@ -1,8 +1,7 @@
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = 'inventtrack_secret_key_2024';
+const getJwtSecret = require('../config/jwtSecret');
 
 // SIGNUP
 exports.signup = (req, res) => {
@@ -69,7 +68,7 @@ exports.login = (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
 

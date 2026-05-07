@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const { requireAdmin } = require('../middleware/roleMiddleware');
 const assignmentRequestController = require('../controllers/assignmentRequestController');
 
+router.post('/email-fulfill', assignmentRequestController.emailFulfill);
 router.post('/', authMiddleware, assignmentRequestController.createRequest);
 router.get('/mine', authMiddleware, assignmentRequestController.listMine);
 router.get('/admin', authMiddleware, requireAdmin, assignmentRequestController.listAdmin);

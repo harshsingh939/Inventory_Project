@@ -58,18 +58,31 @@ export class Users implements OnInit {
       .pipe(catchError(() => of([])))
       .subscribe({
         next: (list) => {
-          this.users = Array.isArray(list) ? list : [];
+          const rows = Array.isArray(list) ? list : [];
+          this.users = this.scopeUsersForCurrentLogin(rows);
           this.rebuildLinkDraft();
           this.applyFilter();
           this.isLoading = false;
           this.cdr.detectChanges();
         },
         error: () => {
-          this.errorMsg = 'Failed to load users';
+          this.errorMsg = 'Failed to load your registration';
           this.isLoading = false;
           this.cdr.detectChanges();
         },
       });
+  }
+
+  /** Client-side safety: non-admin should only see rows linked to current auth login. */
+  private scopeUsersForCurrentLogin(rows: any[]): any[] {
+    if (this.isAdmin) {
+      return rows;
+    }
+    const authUserId = this.auth.getUserId();
+    if (!Number.isFinite(Number(authUserId))) {
+      return [];
+    }
+    return rows.filter((u: any) => Number(u?.auth_user_id) === Number(authUserId));
   }
 
   rebuildLinkDraft() {
@@ -165,7 +178,9 @@ export class Users implements OnInit {
           }, 3500);
           return;
         }
-        this.errorMsg = err.error?.message || 'Failed to add user';
+        this.errorMsg =
+          err.error?.message ||
+          (selfRegister ? 'Could not save registration' : 'Failed to add employee');
         this.cdr.detectChanges();
       },
     });

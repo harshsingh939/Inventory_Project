@@ -9,10 +9,10 @@
           <span class="users-badge__head users-badge__head--r"></span>
         </div>
         <div>
-          <h1 class="users-title">Users</h1>
+          <h1 class="users-title">{{ isAdmin ? 'Team registration' : 'Register' }}</h1>
           <p class="users-lead" *ngIf="isAdmin">Directory and login links</p>
           <p class="users-lead" *ngIf="!isAdmin">
-            Directory ·
+            Your profile for assignments ·
             <a routerLink="/my-workspace" class="users-lead__link">My workspace</a>
           </p>
         </div>
@@ -23,7 +23,7 @@
     <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 
     <section class="users-panel" *ngIf="isLoggedIn">
-      <h2 class="users-panel__title">{{ isAdmin ? 'Add employee' : 'Add yourself to the directory' }}</h2>
+      <h2 class="users-panel__title">{{ isAdmin ? 'Add employee' : 'Register' }}</h2>
       <p class="users-panel__hint" *ngIf="!isAdmin">
         Saves your employee row and links it to this login so My workspace works. If you already used this form, open My workspace again (or refresh).
       </p>
@@ -41,12 +41,12 @@
           <input [(ngModel)]="user.department" class="input" placeholder="e.g. IT" />
         </div>
         <button type="button" class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
-          {{ isAdding ? 'Adding…' : '+ Add user' }}
+          {{ isAdding ? 'Saving…' : (isAdmin ? '+ Add employee' : 'Register') }}
         </button>
       </div>
     </section>
 
-    <section class="users-panel users-panel--search">
+    <section class="users-panel users-panel--search" *ngIf="isAdmin">
       <div class="search-row">
         <div class="search-field">
           <input
@@ -69,13 +69,13 @@
         <button type="button" class="btn-clear" (click)="clearFilter()">Clear</button>
       </div>
       <p class="result-count">
-        Showing <strong>{{ filteredUsers.length }}</strong> of <strong>{{ users.length }}</strong> users
+        Showing <strong>{{ filteredUsers.length }}</strong> of <strong>{{ users.length }}</strong> in the directory
       </p>
     </section>
 
     <section class="users-panel users-panel--table">
       <div class="table-container">
-        <div class="loading" *ngIf="isLoading">Loading users…</div>
+        <div class="loading" *ngIf="isLoading">Loading directory…</div>
 
         <table *ngIf="!isLoading" class="users-table">
           <thead>
@@ -110,7 +110,13 @@
             </tr>
             <tr *ngIf="filteredUsers.length === 0">
               <td [attr.colspan]="isAdmin ? 5 : 4" class="empty-row">
-                {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
+                {{
+                  isAdmin
+                    ? searchName || searchDept
+                      ? 'No directory entries match your search'
+                      : 'No directory entries yet'
+                    : 'No registration yet — use the form above and click Register.'
+                }}
               </td>
             </tr>
           </tbody>

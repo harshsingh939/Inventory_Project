@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { ChangeDetectorRef } from '@angular/core';
 @Component({
@@ -19,7 +19,26 @@ export class Login {
   showSuccess = false;
   isLoading = false;
 
-  constructor(private router: Router, private auth: AuthService,  private cd: ChangeDetectorRef) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private auth: AuthService,
+    private cd: ChangeDetectorRef,
+  ) {}
+
+  /** Safe in-app path only (e.g. from assignment-request email “Open this request”). */
+  private safeReturnUrl(): string | null {
+    const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (!raw || !String(raw).trim()) return null;
+    let u = String(raw).trim();
+    try {
+      u = decodeURIComponent(u);
+    } catch {
+      return null;
+    }
+    if (!u.startsWith('/') || u.startsWith('//')) return null;
+    return u;
+  }
 
   onLogin() {
     this.loginError = '';
@@ -42,8 +61,8 @@ export class Login {
         this.showSuccess = true;      // ✅ show popup immediately
         setTimeout(() => {
           this.showSuccess = false;
-          // this.router.navigate(['/']);
-            window.location.href = '/';
+          const target = this.safeReturnUrl() || '/';
+          this.router.navigateByUrl(target);
         }, 2000);                     // ✅ 2 seconds then redirect
       },
      error: (err) => {

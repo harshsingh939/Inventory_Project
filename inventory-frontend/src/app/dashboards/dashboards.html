@@ -125,7 +125,7 @@
     <div class="recent-row">
       <div class="recent-card recent-card--enter">
         <div class="recent-header">
-          <h4>👤 Recent users</h4>
+          <h4>👤 Recent registrations</h4>
           <a routerLink="/users" class="view-all">View all →</a>
         </div>
         <table>
@@ -148,7 +148,7 @@
               <td><span class="badge-dept">{{ u.department }}</span></td>
             </tr>
             <tr *ngIf="recentUsers.length === 0">
-              <td colspan="3" class="empty">No users yet</td>
+              <td colspan="3" class="empty">No directory entries yet</td>
             </tr>
           </tbody>
         </table>

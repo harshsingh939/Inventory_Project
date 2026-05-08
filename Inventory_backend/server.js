@@ -28,7 +28,7 @@ const ragProxyRoutes = require('./routes/ragProxyRoutes');
 const ragExportRoutes = require('./routes/ragExportRoutes');
 const inventoryController = require('./controllers/inventoryController');
 const notificationController = require('./controllers/notificationController');
-
+const historyRoutes = require('./routes/historyRoutes');
 app.use('/api/auth',        authRoutes);
 app.use('/api/users',       userRoutes);
 app.use('/api/assets',      assetRoutes);
@@ -39,7 +39,7 @@ app.use('/api/assignment-requests', assignmentRequestRoutes);
 app.use('/api/me', myPortalRoutes);
 app.use('/api/rag', ragProxyRoutes);
 app.use('/api/rag-export', ragExportRoutes);
-
+app.use('/api/history', historyRoutes);
 // Inventories — register here so GET /api/inventories always resolves (avoids 404 if router file not loaded)
 app.get('/api/inventories', (req, res) => inventoryController.listInventories(req, res));
 app.get('/api/inventories/:id', (req, res) => inventoryController.getInventory(req, res));

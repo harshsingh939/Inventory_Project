@@ -1,5 +1,6 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+const { writeHistory } = require('../services/historyWriter');
 
 function isMissingTable(err) {
   return (
@@ -490,6 +491,26 @@ exports.fulfill = (req, res) => {
                           if (e8) return res.status(500).json({ message: e8.message });
                           notifyRagDebouncedReindex();
                           res.json({ message: 'Assets assigned ✅' });
+                          // Best-effort history writes after responding
+                          setImmediate(() => {
+                            try {
+                              const empName =
+                                u?.name != null && String(u.name).trim() !== ''
+                                  ? String(u.name).trim().slice(0, 255)
+                                  : String(u?.employee_id || employeeUserId);
+                              (assetIds || []).forEach((aid) => {
+                                writeHistory({
+                                  asset_id: aid,
+                                  employee_id: employeeUserId,
+                                  employee_name: empName,
+                                  action: 'Assigned',
+                                  status: 'Active',
+                                });
+                              });
+                            } catch (e) {
+                              console.warn('[history] fulfill insert failed:', e && e.message);
+                            }
+                          });
                         });
                       },
                     );

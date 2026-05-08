@@ -1,5 +1,6 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+const { writeHistory } = require('../services/historyWriter');
 
 function isMissingTable(err) {
   return (
@@ -161,6 +162,21 @@ exports.startSession = (req, res) => {
                   assignment_id: newId,
                   assignment,
                 });
+                // Best-effort history write after responding
+                setImmediate(() => {
+                  try {
+                    if (!assignment) return;
+                    writeHistory({
+                      asset_id: assignment.asset_id,
+                      employee_id: assignment.user_id,
+                      employee_name: assignment.user_name || String(assignment.employee_id || assignment.user_id),
+                      action: 'Assigned',
+                      status: 'Active',
+                    });
+                  } catch (e) {
+                    console.warn('[history] startSession insert failed:', e && e.message);
+                  }
+                });
               });
             };
 
@@ -267,6 +283,22 @@ exports.endSession = (req, res) => {
               const assignment = rows && rows[0] ? rows[0] : null;
               notifyRagDebouncedReindex();
               res.json({ message: 'Asset Unassigned ✅', assignment });
+              // Best-effort history write after responding
+              setImmediate(() => {
+                try {
+                  if (!assignment) return;
+                  writeHistory({
+                    asset_id: assignment.asset_id,
+                    employee_id: assignment.user_id,
+                    employee_name: assignment.user_name || String(assignment.employee_id || assignment.user_id),
+                    action: 'Returned',
+                    status: 'Completed',
+                    notes: condition_after ? `Condition: ${condition_after}` : null,
+                  });
+                } catch (e) {
+                  console.warn('[history] endSession insert failed:', e && e.message);
+                }
+              });
             });
           }
         );

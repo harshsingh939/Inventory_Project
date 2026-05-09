@@ -4,20 +4,17 @@
   <div class="assign-inner">
     <header class="assign-board-header">
       <div class="assign-board-title">
-        <span class="assign-ticket-stamp" aria-hidden="true">RX</span>
+        <span class="assign-ticket-stamp" aria-hidden="true">WRK</span>
         <div>
-          <h1 class="assign-title">Repair requests</h1>
+          <h1 class="assign-title">Work in progress</h1>
           <p class="assign-lead">
-            User-raised tickets for vendor approval ·
-            <a routerLink="/repair-work">Work in progress</a>
-            ·
-            <a routerLink="/repairs">Repairs</a>
+            Submit fix details and cost for admin review ·
+            <a routerLink="/repair-requests">Repair requests</a>
           </p>
         </div>
       </div>
       <div class="assign-toolbar">
-        <a routerLink="/repair-work" class="btn btn-ghost">Work in progress</a>
-        <a routerLink="/repairs" class="btn btn-ghost">Repairs</a>
+        <a routerLink="/repair-requests" class="btn btn-ghost">Repair requests</a>
         <button type="button" class="btn btn-solid" (click)="load()" [disabled]="loading">
           {{ loading ? 'Loading…' : 'Refresh' }}
         </button>
@@ -29,29 +26,20 @@
 
     <div class="assign-board">
       <div class="assign-loading" *ngIf="loading">Loading…</div>
-      <div class="assign-empty" *ngIf="!loading && !rows.length">No pending repair requests.</div>
+      <div class="assign-empty" *ngIf="!loading && !workRows.length">No active repair work assigned.</div>
 
-      <article class="req-ticket req-ticket--pending" *ngFor="let r of rows">
+      <article class="req-ticket req-ticket--pending" *ngFor="let r of workRows">
         <div class="req-ticket__rail" aria-hidden="true"></div>
         <div class="req-ticket__perforate" aria-hidden="true"></div>
 
         <header class="req-ticket__mast">
           <div class="req-ticket__mast-left">
             <span class="req-ticket__code">REP-{{ r.id }}</span>
-            <span class="status-pill status-pill--pending">Pending</span>
+            <span class="status-pill status-pill--pending">{{ r.status || 'Under repair' }}</span>
           </div>
-          <time class="req-ticket__opened">{{ r.created_at | date: 'medium' }}</time>
         </header>
 
         <div class="req-ticket__grid">
-          <div class="req-field">
-            <span class="req-field__label">Employee id</span>
-            <span class="req-field__value req-field__mono">{{ r.reporter_employee_id || '—' }}</span>
-          </div>
-          <div class="req-field">
-            <span class="req-field__label">Employee</span>
-            <span class="req-field__value">{{ r.reporter_name || '—' }}</span>
-          </div>
           <div class="req-field req-field--span2">
             <span class="req-field__label">Asset</span>
             <span class="req-field__value">{{ r.asset_type || 'Asset' }} — {{ r.brand || '—' }} {{ r.model || '' }}</span>
@@ -61,8 +49,28 @@
             <span class="req-field__value req-field__mono">{{ r.serial_number }}</span>
           </div>
           <div class="req-field req-field--span2">
-            <span class="req-field__label">Issue</span>
-            <span class="req-field__value">{{ r.issue }}</span>
+            <span class="req-field__label">Issue raised</span>
+            <span class="req-field__value">{{ r.issue || '—' }}</span>
+          </div>
+          <div class="req-field req-field--span2">
+            <span class="req-field__label">Fix details (required)</span>
+            <textarea
+              rows="3"
+              class="input"
+              placeholder="What was wrong and what did you fix?"
+              [(ngModel)]="reviewNotesById[r.id]"
+            ></textarea>
+          </div>
+          <div class="req-field">
+            <span class="req-field__label">Repair cost (optional)</span>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              class="input"
+              placeholder="0.00"
+              [(ngModel)]="reviewCostById[r.id]"
+            />
           </div>
         </div>
 
@@ -72,10 +80,10 @@
             <button
               type="button"
               class="btn btn-primary"
-              (click)="approve(r)"
-              [disabled]="loading || approvingId === r.id"
+              (click)="submitForAdminReview(r)"
+              [disabled]="loading || submittingId === r.id"
             >
-              {{ approvingId === r.id ? 'Approving…' : 'Approve' }}
+              {{ submittingId === r.id ? 'Submitting…' : 'Send to admin review' }}
             </button>
           </div>
         </div>

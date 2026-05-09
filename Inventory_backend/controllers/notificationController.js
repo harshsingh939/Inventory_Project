@@ -13,7 +13,11 @@ function isMissingTable(err) {
  * GET /api/notifications — admin feed: recent repairs + pending assignment requests.
  */
 exports.getAdminNotifications = (req, res) => {
-  if (!req.user || req.user.role !== 'admin') {
+  const role = String(req.user?.role || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  if (!req.user || role !== 'admin') {
     return res.status(403).json({ message: 'Admin only' });
   }
 
@@ -21,12 +25,18 @@ exports.getAdminNotifications = (req, res) => {
     SELECT
       'repair' AS kind,
       r.id,
-      r.issue,
+      r.status AS repair_status,
+      CASE
+        WHEN r.status = 'ReviewPending'
+          THEN CONCAT('[Vendor review] ', COALESCE(r.issue, ''), IFNULL(CONCAT(' | ', r.repair_notes), ''))
+        ELSE r.issue
+      END AS issue,
       a.asset_type,
       a.brand,
       DATE_FORMAT(COALESCE(r.reported_at, r.created_at), '%Y-%m-%d %H:%i:%s') AS created_at
     FROM repairs r
     LEFT JOIN assets a ON a.id = r.asset_id
+    WHERE r.status IN ('Pending', 'ReviewPending')
     ORDER BY r.id DESC
     LIMIT 20
   `;
@@ -35,11 +45,17 @@ exports.getAdminNotifications = (req, res) => {
     SELECT
       'repair' AS kind,
       r.id,
-      r.issue,
+      r.status AS repair_status,
+      CASE
+        WHEN r.status = 'ReviewPending'
+          THEN CONCAT('[Vendor review] ', COALESCE(r.issue, ''), IFNULL(CONCAT(' | ', r.repair_notes), ''))
+        ELSE r.issue
+      END AS issue,
       NULL AS asset_type,
       NULL AS brand,
       DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s') AS created_at
     FROM repairs r
+    WHERE r.status IN ('Pending', 'ReviewPending')
     ORDER BY r.id DESC
     LIMIT 20
   `;
@@ -100,5 +116,6 @@ function normalizeRows(rows) {
     asset_type: r.asset_type ?? null,
     brand: r.brand ?? null,
     created_at: r.created_at || null,
+    repair_status: r.repair_status ?? null,
   }));
 }

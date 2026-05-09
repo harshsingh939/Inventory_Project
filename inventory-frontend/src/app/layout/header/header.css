@@ -650,6 +650,12 @@
   position: relative;
 }
 
+a.notif-item--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
 .notif-item:hover { 
   background: rgba(56,189,248,0.08);
   transform: translateX(2px);

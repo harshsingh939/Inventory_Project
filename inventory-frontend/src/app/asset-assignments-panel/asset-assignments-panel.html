@@ -2,10 +2,10 @@
   <div class="page-header">
     <h3>🔗 Asset assignments — {{ categoryTitle() }}</h3>
     <p *ngIf="scopeLabel">
-      Showing <strong>{{ scopeLabel }}</strong> for available assets and active assignments. Open <strong>History</strong> to search and pick an employee for their full record.
+      Showing <strong>{{ scopeLabel }}</strong> for available assets and active assignments. Open <strong>History</strong> to search by <strong>employee</strong> or <strong>asset</strong> (serial / model) for full checkout records.
     </p>
     <p *ngIf="!scopeLabel">
-      Only <strong>Available</strong> assets in <strong>{{ categoryTitle() }}</strong> appear below. Active assignments follow this filter; <strong>History</strong> is shown only after you search and select an employee.
+      Only <strong>Available</strong> assets in <strong>{{ categoryTitle() }}</strong> appear below. Active assignments follow this filter; <strong>History</strong> opens after you search and pick an employee or an asset.
     </p>
   </div>
 
@@ -109,9 +109,7 @@
         <div class="assignment-footer">
           <div class="assign-date">📅 {{ a.start_time | date : 'dd MMM yyyy, hh:mm a' }}</div>
           <div class="assignment-actions">
-            <button type="button" class="btn-unassign" (click)="unassignAsset(a.assignment_id)">
-              🔓 Return to stock
-            </button>
+            <button type="button" class="btn-unassign" (click)="unassignAsset(a.assignment_id)">Unassign</button>
             <button type="button" class="btn-dispose" (click)="openDisposeModal(a)">🗑️ Dispose</button>
           </div>
         </div>
@@ -126,75 +124,148 @@
   </div>
 
   <div class="card history-card" *ngIf="activeTab === 'history'">
-    <div class="history-toolbar">
-      <label class="history-search-label" for="history-employee-search">1. Search by name or employee ID</label>
-      <div class="history-search-row">
-        <input
-          id="history-employee-search"
-          type="search"
-          class="input history-search-input"
-          [(ngModel)]="historyPickerQuery"
-          [disabled]="historySelectedUserId != null"
-          placeholder="e.g. Harsh or EMP2611"
-          autocomplete="off" />
-        <button
-          type="button"
-          class="btn history-search-clear"
-          *ngIf="historySelectedUserId != null || historyPickerQuery.trim()"
-          (click)="clearHistoryEmployeeSelection()">
-          {{ historySelectedUserId != null ? 'Change employee' : 'Clear' }}
-        </button>
-      </div>
-      <p class="history-step-hint" *ngIf="historySelectedUserId == null">
-        2. Click an employee in the list below to load their full assignment history (every category).
-      </p>
+    <div class="history-kind-row" role="tablist" aria-label="History search mode">
+      <button
+        type="button"
+        class="history-kind-btn"
+        [class.active]="historyKind === 'employee'"
+        (click)="setHistoryKind('employee')"
+        role="tab"
+        [attr.aria-selected]="historyKind === 'employee'">
+        By employee
+      </button>
+      <button
+        type="button"
+        class="history-kind-btn"
+        [class.active]="historyKind === 'asset'"
+        (click)="setHistoryKind('asset')"
+        role="tab"
+        [attr.aria-selected]="historyKind === 'asset'">
+        By asset
+      </button>
     </div>
 
-    <div class="history-picker" *ngIf="historySelectedUserId == null">
-      <ul class="history-pick-list" *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length > 0">
-        <li *ngFor="let u of historyEmployeesMatching()">
-          <button type="button" class="history-pick-row" (click)="selectEmployeeForHistory(u)">
-            <span class="history-pick-avatar">{{ u.name?.charAt(0)?.toUpperCase() }}</span>
-            <span class="history-pick-text">
-              <span class="history-pick-name">{{ u.name }}</span>
-              <span class="history-pick-meta">{{ u.employee_id }} · {{ u.department }}</span>
-            </span>
+    <ng-container *ngIf="historyKind === 'employee'">
+      <div class="history-toolbar">
+        <label class="history-search-label" for="history-employee-search">1. Search by name or employee ID</label>
+        <div class="history-search-row">
+          <input
+            id="history-employee-search"
+            type="search"
+            class="input history-search-input"
+            [(ngModel)]="historyPickerQuery"
+            [disabled]="historySelectedUserId != null"
+            placeholder="e.g. Harsh or EMP2611"
+            autocomplete="off" />
+          <button
+            type="button"
+            class="btn history-search-clear"
+            *ngIf="historySelectedUserId != null || historyPickerQuery.trim()"
+            (click)="clearHistorySelection()">
+            {{ historySelectedUserId != null ? 'Change employee' : 'Clear' }}
           </button>
-        </li>
-      </ul>
-      <p
-        class="history-no-employees"
-        *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length === 0">
-        No employees match that search.
-      </p>
-      <div class="history-idle-hint" *ngIf="!historyPickerQuery.trim()">
-        Nothing listed yet — type in the search box to find someone, then select them.
+        </div>
+        <p class="history-step-hint" *ngIf="historySelectedUserId == null">
+          2. Click an employee in the list below to load their full assignment history (every category).
+        </p>
       </div>
-    </div>
 
+      <div class="history-picker" *ngIf="historySelectedUserId == null">
+        <ul class="history-pick-list" *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length > 0">
+          <li *ngFor="let u of historyEmployeesMatching()">
+            <button type="button" class="history-pick-row" (click)="selectEmployeeForHistory(u)">
+              <span class="history-pick-avatar">{{ u.name?.charAt(0)?.toUpperCase() }}</span>
+              <span class="history-pick-text">
+                <span class="history-pick-name">{{ u.name }}</span>
+                <span class="history-pick-meta">{{ u.employee_id }} · {{ u.department }}</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+        <p
+          class="history-no-employees"
+          *ngIf="historyPickerQuery.trim() && historyEmployeesMatching().length === 0">
+          No employees match that search.
+        </p>
+        <div class="history-idle-hint" *ngIf="!historyPickerQuery.trim()">
+          Nothing listed yet — type in the search box to find someone, then select them.
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="historyKind === 'asset'">
+      <div class="history-toolbar">
+        <label class="history-search-label" for="history-asset-search">1. Search by asset name, model, or serial</label>
+        <div class="history-search-row">
+          <input
+            id="history-asset-search"
+            type="search"
+            class="input history-search-input"
+            [(ngModel)]="historyAssetPickerQuery"
+            [disabled]="historySelectedAssetId != null"
+            placeholder="e.g. Dell or SN12345"
+            autocomplete="off" />
+          <button
+            type="button"
+            class="btn history-search-clear"
+            *ngIf="historySelectedAssetId != null || historyAssetPickerQuery.trim()"
+            (click)="clearHistorySelection()">
+            {{ historySelectedAssetId != null ? 'Change asset' : 'Clear' }}
+          </button>
+        </div>
+        <p class="history-step-hint" *ngIf="historySelectedAssetId == null">
+          2. Click an asset below to see every checkout for that item (all employees, every category).
+        </p>
+      </div>
+
+      <div class="history-picker" *ngIf="historySelectedAssetId == null">
+        <ul class="history-pick-list" *ngIf="historyAssetPickerQuery.trim() && historyAssetsMatching().length > 0">
+          <li *ngFor="let ast of historyAssetsMatching()">
+            <button type="button" class="history-pick-row" (click)="selectAssetForHistory(ast)">
+              <span class="history-pick-avatar history-pick-avatar-asset">📦</span>
+              <span class="history-pick-text">
+                <span class="history-pick-name">{{ ast.asset_type }} — {{ ast.brand }} {{ ast.model }}</span>
+                <span class="history-pick-meta">
+                  <ng-container *ngIf="ast.serial_number">SN {{ ast.serial_number }} · </ng-container>
+                  ID {{ ast.asset_id }}
+                </span>
+              </span>
+            </button>
+          </li>
+        </ul>
+        <p
+          class="history-no-employees"
+          *ngIf="historyAssetPickerQuery.trim() && historyAssetsMatching().length === 0">
+          No assets with assignment history match that search.
+        </p>
+        <div class="history-idle-hint" *ngIf="!historyAssetPickerQuery.trim()">
+          Type a model, brand, serial number, or asset ID — only items that have been checked out at least once appear here.
+        </div>
+      </div>
+    </ng-container>
   </div>
 
-  <!-- Full history card (modal) after picking an employee -->
+  <!-- Full history modal (employee or asset) -->
   <div
     class="history-detail-overlay"
-    *ngIf="activeTab === 'history' && historySelectedUserId != null"
+    *ngIf="activeTab === 'history' && (historySelectedUserId != null || historySelectedAssetId != null)"
     role="dialog"
     aria-modal="true"
     aria-labelledby="history-detail-title"
-    (click)="clearHistoryEmployeeSelection()">
+    (click)="clearHistorySelection()">
     <div class="history-detail-dialog" (click)="$event.stopPropagation()">
       <div class="history-detail-header">
         <h3 id="history-detail-title">Assignment history</h3>
         <button
           type="button"
           class="history-detail-close"
-          (click)="clearHistoryEmployeeSelection()"
+          (click)="clearHistorySelection()"
           aria-label="Close history">
           ✕
         </button>
       </div>
 
-      <div class="history-selected-bar history-cart-banner">
+      <div class="history-selected-bar history-cart-banner" *ngIf="historySelectedUserId != null">
         <div class="history-cart-banner-user">
           <span class="history-cart-banner-avatar">{{ historySelectedUserName.charAt(0) | uppercase }}</span>
           <div>
@@ -202,49 +273,132 @@
             <div><strong>{{ historySelectedUserName }}</strong> · all categories</div>
           </div>
         </div>
-        <span class="history-cart-banner-count" *ngIf="historyRowsForView.length > 0">
-          {{ historyRowsForView.length }}
-          checkout<ng-container *ngIf="historyRowsForView.length !== 1">s</ng-container>
+        <span class="history-cart-banner-count" *ngIf="historyModalRows.length > 0">
+          {{ historyModalRows.length }}
+          checkout<ng-container *ngIf="historyModalRows.length !== 1">s</ng-container>
         </span>
       </div>
 
-      <div class="history-cart">
-        <div class="history-cart-lines" *ngIf="historyRowsForView.length > 0">
-          <div class="history-cart-line" *ngFor="let a of historyRowsForView">
-            <div class="history-cart-line-thumb">📦</div>
-            <div class="history-cart-line-body">
-              <div class="history-cart-line-title">{{ a.asset_type }} — {{ a.brand }}</div>
-              <div class="history-cart-line-model">{{ a.model }}</div>
-              <div class="history-cart-line-sn" *ngIf="a.serial_number">SN: {{ a.serial_number }}</div>
-              <div class="history-cart-line-dates">
-                <span class="history-cart-pill">
-                  Assigned {{ a.start_time | date : 'dd MMM yy, hh:mm a' }}
-                </span>
-                <span class="history-cart-pill history-cart-pill-muted" *ngIf="a.end_time">
-                  Returned {{ a.end_time | date : 'dd MMM yy, hh:mm a' }}
-                </span>
-                <span class="history-cart-pill history-cart-pill-muted" *ngIf="!a.end_time">Still active — no return yet</span>
-              </div>
-            </div>
-            <div class="history-cart-line-side">
-              <span
-                class="status-badge"
-                [class.active]="a.status === 'Active'"
-                [class.done]="a.status === 'Completed'">
-                {{ a.status }}
-              </span>
-              <div class="history-cart-duration">{{ formatSessionDuration(a.working_minutes) }}</div>
-            </div>
+      <div class="history-selected-bar history-cart-banner" *ngIf="historySelectedAssetId != null">
+        <div class="history-cart-banner-user">
+          <span class="history-cart-banner-avatar history-cart-banner-asset">📦</span>
+          <div>
+            <div class="history-cart-banner-label">Asset</div>
+            <div><strong>{{ historySelectedAssetLabel }}</strong></div>
           </div>
         </div>
-        <div class="history-cart-empty" *ngIf="historyRowsForView.length === 0">
-          No assignments on file for this employee.
+        <span class="history-cart-banner-count" *ngIf="historyModalRows.length > 0 || assetHistoryLoading">
+          <ng-container *ngIf="assetHistoryLoading">…</ng-container>
+          <ng-container *ngIf="!assetHistoryLoading">
+            {{ historyModalRows.length }}
+            checkout<ng-container *ngIf="historyModalRows.length !== 1">s</ng-container>
+          </ng-container>
+        </span>
+      </div>
+
+      <p class="history-asset-loading field-note" *ngIf="historySelectedAssetId != null && assetHistoryLoading">
+        Loading full history (checkouts, repairs, disposal)…
+      </p>
+      <p class="msg-error history-asset-err" *ngIf="historySelectedAssetId != null && assetHistoryError">
+        {{ assetHistoryError }} Showing any rows already loaded in this page.
+      </p>
+
+      <div
+        class="history-disposed-callout"
+        *ngIf="historySelectedAssetId != null && historyDisposedView && !assetHistoryLoading">
+        <strong>Disposed</strong>
+        {{ historyDisposedView.disposed_at | date : 'dd MMM yyyy, hh:mm a' }}
+        <span *ngIf="historyDisposedView.notes"> — {{ historyDisposedView.notes }}</span>
+      </div>
+
+      <div
+        class="history-repairs-block"
+        *ngIf="historySelectedAssetId != null && historyRepairsView.length > 0 && !assetHistoryLoading">
+        <h4 class="history-repairs-title">Repairs on this unit</h4>
+        <ul class="history-repairs-list">
+          <li *ngFor="let r of historyRepairsView">
+            <span class="history-repair-status">{{ r.status }}</span>
+            {{ r.issue }}
+            <span class="history-repair-meta" *ngIf="r.occurred_at">
+              · reported {{ r.occurred_at | date : 'dd MMM yy' }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="history-cart">
+        <div class="history-cart-lines" *ngIf="historyModalRows.length > 0">
+          <ng-container *ngFor="let a of historyModalRows">
+            <div class="history-cart-line" *ngIf="historySelectedUserId != null">
+              <div class="history-cart-line-thumb">📦</div>
+              <div class="history-cart-line-body">
+                <div class="history-cart-line-title">{{ a.asset_type }} — {{ a.brand }}</div>
+                <div class="history-cart-line-model">{{ a.model }}</div>
+                <div class="history-cart-line-sn" *ngIf="a.serial_number">SN: {{ a.serial_number }}</div>
+                <div class="history-cart-line-dates">
+                  <span class="history-cart-pill">
+                    Assigned {{ a.start_time | date : 'dd MMM yy, hh:mm a' }}
+                  </span>
+                  <span class="history-cart-pill history-cart-pill-muted" *ngIf="a.end_time">
+                    Returned {{ a.end_time | date : 'dd MMM yy, hh:mm a' }}
+                  </span>
+                  <span class="history-cart-pill history-cart-pill-muted" *ngIf="!a.end_time">Still active — no return yet</span>
+                </div>
+              </div>
+              <div class="history-cart-line-side">
+                <span
+                  class="status-badge"
+                  [class.active]="a.status === 'Active'"
+                  [class.done]="a.status === 'Completed'">
+                  {{ a.status }}
+                </span>
+                <div class="history-cart-duration">{{ formatSessionDuration(a.working_minutes) }}</div>
+              </div>
+            </div>
+
+            <div class="history-cart-line" *ngIf="historySelectedAssetId != null">
+              <div class="history-cart-line-thumb">{{ a.user_name?.charAt(0)?.toUpperCase() || '·' }}</div>
+              <div class="history-cart-line-body">
+                <div class="history-cart-line-title">{{ a.user_name }}</div>
+                <div class="history-cart-line-model">{{ a.employee_id }} · {{ a.department }}</div>
+                <div class="history-cart-line-dates">
+                  <span class="history-cart-pill">
+                    Assigned {{ a.start_time | date : 'dd MMM yy, hh:mm a' }}
+                  </span>
+                  <span class="history-cart-pill history-cart-pill-muted" *ngIf="a.end_time">
+                    Returned {{ a.end_time | date : 'dd MMM yy, hh:mm a' }}
+                  </span>
+                  <span class="history-cart-pill history-cart-pill-muted" *ngIf="!a.end_time">Still active — no return yet</span>
+                </div>
+              </div>
+              <div class="history-cart-line-side">
+                <span
+                  class="status-badge"
+                  [class.active]="a.status === 'Active'"
+                  [class.done]="a.status === 'Completed'">
+                  {{ a.status }}
+                </span>
+                <div class="history-cart-duration">{{ formatSessionDuration(a.working_minutes) }}</div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+        <div class="history-cart-empty" *ngIf="historyModalRows.length === 0">
+          <ng-container *ngIf="historySelectedUserId != null">No assignments on file for this employee.</ng-container>
+          <ng-container *ngIf="historySelectedAssetId != null && !assetHistoryLoading">
+            No checkout rows in this view.
+            <span *ngIf="historyDisposedView" class="history-empty-disposed-note">
+              Disposal is recorded above.</span>
+          </ng-container>
+          <ng-container *ngIf="historySelectedAssetId != null && assetHistoryLoading">
+            …
+          </ng-container>
         </div>
       </div>
 
       <div class="history-detail-actions">
-        <button type="button" class="btn-cancel" (click)="clearHistoryEmployeeSelection()">
-          Pick another employee
+        <button type="button" class="btn-cancel" (click)="clearHistorySelection()">
+          <ng-container *ngIf="historySelectedUserId != null">Pick another employee</ng-container>
+          <ng-container *ngIf="historySelectedAssetId != null">Pick another asset</ng-container>
         </button>
       </div>
     </div>
@@ -255,7 +409,7 @@
       <h3>Dispose this item?</h3>
       <p class="dispose-lead">
         This ends the assignment and <strong>removes the asset from its inventory</strong>. Use only when the item
-        cannot go back to stock (damaged beyond use, lost consumable, etc.).
+        cannot be unassigned back to available stock (damaged beyond use, lost consumable, etc.).
       </p>
       <div class="dispose-summary" *ngIf="disposeModalAssignment as d">
         <div>{{ d.asset_type }} — {{ d.brand }} {{ d.model }}</div>

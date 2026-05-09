@@ -43,6 +43,9 @@ export class Repairs implements OnInit {
   @ViewChild('fixBillInput') private fixBillInput?: ElementRef<HTMLInputElement>;
   isSavingFix = false;
 
+  /** Admin dispose asset (active assignment required — same as assignments panel). */
+  disposingRepairId: number | null = null;
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
@@ -53,6 +56,18 @@ export class Repairs implements OnInit {
 
   get isAdmin(): boolean {
     return this.auth.isAdmin();
+  }
+
+  get isRepairAuthority(): boolean {
+    return this.auth.isRepairAuthority();
+  }
+
+  get canManageRepairs(): boolean {
+    return this.isAdmin || this.isRepairAuthority;
+  }
+
+  get canCreateRequest(): boolean {
+    return !this.isRepairAuthority;
   }
 
   /** Legacy DB value `WithAuthority` — display and logic use `Under repair`. */
@@ -73,6 +88,11 @@ export class Repairs implements OnInit {
 
   /** Admin: all assets. User: only equipment on an active assignment to them (same source as My workspace). */
   loadRepairAssetChoices() {
+    if (this.isRepairAuthority) {
+      this.assets = [];
+      this.cdr.detectChanges();
+      return;
+    }
     if (this.auth.isAdmin()) {
       this.http.get<any[]>(`${this.apiBase}/assets`).subscribe({
         next: (data) => {
@@ -106,6 +126,12 @@ export class Repairs implements OnInit {
   getAssetName(id: any): string {
     const asset = this.assets.find(a => a.id == id);
     return asset ? `${asset.asset_type} — ${asset.brand} ${asset.model}` : `Asset #${id}`;
+  }
+
+  /** Assigned repair vendor (auth_users username/email); em dash when unassigned. */
+  repairVendorLabel(row: { vendor?: string | null }): string {
+    const v = row?.vendor != null ? String(row.vendor).trim() : '';
+    return v ? v : '—';
   }
 
   assetIcon(assetId: any): string {
@@ -316,6 +342,66 @@ export class Repairs implements OnInit {
 
     const url = `${this.apiBase}/repairs/update/${repairId}`;
     this.http.put<any>(url, fd).subscribe(this.markFixedSubscribeHandlers(repairId, repairCost, repairNotes));
+  }
+
+  activeAssignmentId(row: any): number | null {
+    const raw = row?.active_assignment_id;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+
+  disposeFromRepairRow(row: any) {
+    if (!this.isAdmin) return;
+    const aid = this.activeAssignmentId(row);
+    if (aid == null) {
+      this.errorMsg =
+        'Dispose needs an active assignment on this asset. Use Assignments panel if the device is not on a user.';
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.errorMsg = '';
+        this.cdr.detectChanges();
+      }, 5000);
+      return;
+    }
+    const label = this.getAssetName(row?.asset_id);
+    if (
+      !confirm(
+        `Dispose this asset and remove it from inventory?\n\n${label}\n\nThis completes the user assignment and deletes the asset record (repairs cleared).`,
+      )
+    ) {
+      return;
+    }
+    const repairId = Number(row?.id);
+    this.errorMsg = '';
+    this.successMsg = '';
+    this.disposingRepairId = Number.isFinite(repairId) ? repairId : null;
+    this.cdr.detectChanges();
+    this.http
+      .post<any>(`${this.apiBase}/disposals`, {
+        assignment_id: aid,
+        condition_after: 'Not reusable / disposed (from repairs)',
+        notes: `Disposed from repair #${row?.id ?? '?'}`,
+      })
+      .subscribe({
+        next: () => {
+          this.disposingRepairId = null;
+          this.successMsg = '✅ Asset disposed and removed from inventory';
+          this.getRepairs();
+          this.loadRepairAssetChoices();
+          this.notifications.fetchNotifications();
+          this.repairCostLogRefresh.notify();
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.successMsg = '';
+            this.cdr.detectChanges();
+          }, 3500);
+        },
+        error: (err: any) => {
+          this.disposingRepairId = null;
+          this.errorMsg = err.error?.message || 'Dispose failed';
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   private markFixedSubscribeHandlers(

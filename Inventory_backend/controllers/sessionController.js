@@ -1,5 +1,6 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+const { logCheckout, logReturn } = require('../services/assetHistoryLog');
 
 function isMissingTable(err) {
   return (
@@ -155,6 +156,7 @@ exports.startSession = (req, res) => {
               db.query(SESSION_JOIN_SELECT, [newId], (e2, rows) => {
                 if (e2) return res.status(500).json({ message: e2.message });
                 const assignment = rows && rows[0] ? rows[0] : null;
+                logCheckout(db, assignment, () => {});
                 notifyRagDebouncedReindex();
                 res.json({
                   message: 'Asset Assigned ✅',
@@ -265,6 +267,7 @@ exports.endSession = (req, res) => {
             db.query(SESSION_JOIN_SELECT, [assignment_id], (e4, rows) => {
               if (e4) return res.status(500).json({ message: e4.message });
               const assignment = rows && rows[0] ? rows[0] : null;
+              logReturn(db, assignment, () => {});
               notifyRagDebouncedReindex();
               res.json({ message: 'Asset Unassigned ✅', assignment });
             });

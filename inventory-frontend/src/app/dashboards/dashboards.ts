@@ -71,6 +71,12 @@ export class Dashboards implements OnInit {
 
   /** Named inventories with asset counts for the breakdown table */
   inventoryBreakdown: { id: number | null; name: string; count: number }[] = [];
+  /** Inventories with at least one asset (sorted by count, high first) */
+  inventoryBreakdownActive: { id: number | null; name: string; count: number }[] = [];
+  /** Inventories with zero assets (de-emphasized by default) */
+  inventoryBreakdownEmpty: { id: number | null; name: string; count: number }[] = [];
+  /** Toggle: show zero-asset rows */
+  showEmptyInventories = false;
 
   recentUsers:  any[] = [];
   recentAssets: any[] = [];
@@ -282,9 +288,14 @@ export class Dashboards implements OnInit {
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
       if (unassigned > 0) {
-        rows.push({ id: null, name: 'Unassigned (no inventory)', count: unassigned });
+        rows.push({ id: null, name: 'Unassigned', count: unassigned });
       }
       this.inventoryBreakdown = rows;
+      this.inventoryBreakdownActive = rows
+        .filter((r) => r.count > 0)
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+      this.inventoryBreakdownEmpty = rows.filter((r) => r.count === 0);
+      this.showEmptyInventories = false;
 
       // ✅ Bar chart — assets per inventory (named rows only; unassigned omitted if empty chart)
       const invChartLabels: string[] = [];
@@ -377,6 +388,12 @@ export class Dashboards implements OnInit {
         { ...this.lineChartData.datasets[1], data: d1 },
       ],
     };
+  }
+
+  /** Share of total assets for breakdown row (0–100). */
+  invSharePct(count: number): number {
+    if (!this.totalAssets || count <= 0) return 0;
+    return Math.round((count / this.totalAssets) * 100);
   }
 
   private pollLiveMetrics() {

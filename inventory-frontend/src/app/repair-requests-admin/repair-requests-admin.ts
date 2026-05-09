@@ -63,6 +63,7 @@ export class RepairRequestsAdmin {
         this.cdr.detectChanges();
       },
       error: (err) => {
+        this.rows = [];
         this.loading = false;
         this.errorMsg = err.error?.message || 'Failed to load repair requests';
         this.cdr.detectChanges();

@@ -293,8 +293,9 @@ export class AssetsCategory implements OnInit, OnDestroy {
 
   private resetFormForCategory() {
     if (!this.cat) return;
+    const typeChoices = this.cat.formTypes ?? this.cat.types;
     if (this.isPc) {
-      const first = this.cat.types[0] || '';
+      const first = typeChoices[0] || '';
       this.asset = {
         asset_type: first,
         brand: '',
@@ -305,7 +306,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
         storage: '',
       };
     } else {
-      const first = this.cat.types[0] || '';
+      const first = typeChoices[0] || '';
       this.asset = {
         asset_type: first,
         brand: '',

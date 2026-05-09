@@ -30,14 +30,14 @@
             </div>
             <div class="vendor-home__panel">
               <div class="vendor-home__stat">
-                <span class="vendor-home__stat-label">Your queue</span>
+                <span class="vendor-home__stat-label">Pending requests</span>
                 @if (vendorQueueLoading()) {
                   <span class="vendor-home__stat-value">…</span>
                 } @else {
                   <span class="vendor-home__stat-value">{{ vendorQueueCount() === null ? '—' : vendorQueueCount() }}</span>
                 }
               </div>
-              <a routerLink="/repair-authority" class="vendor-home__cta">Start repairs</a>
+              <a routerLink="/repair-requests" class="vendor-home__cta">Review requests</a>
             </div>
           </div>
         </main>

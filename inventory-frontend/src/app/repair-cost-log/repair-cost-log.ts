@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { debounceTime, filter, merge, Subscription } from 'rxjs';
@@ -26,7 +27,7 @@ export interface RepairCostLogRow {
 @Component({
   selector: 'app-repair-cost-log',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './repair-cost-log.html',
   styleUrl: './repair-cost-log.css'
 })
@@ -34,6 +35,11 @@ export class RepairCostLog implements OnInit, OnDestroy {
   private readonly apiBase = apiUrl('');
 
   rows: RepairCostLogRow[] = [];
+  filteredRows: RepairCostLogRow[] = [];
+  searchDevice = '';
+  searchIssue = '';
+  dateFrom = '';
+  dateTo = '';
   isLoading = false;
   errorMsg = '';
   private navSub?: Subscription;
@@ -76,6 +82,7 @@ export class RepairCostLog implements OnInit, OnDestroy {
       .subscribe({
       next: (data) => {
         this.rows = data ?? [];
+        this.applyFilters();
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -132,5 +139,33 @@ export class RepairCostLog implements OnInit, OnDestroy {
 
   hasRepairCost(r: RepairCostLogRow): boolean {
     return this.repairCostAmount(r) !== null;
+  }
+
+  applyFilters(): void {
+    const device = this.searchDevice.toLowerCase().trim();
+    const issue = this.searchIssue.toLowerCase().trim();
+    const fromMs = this.dateFrom ? new Date(`${this.dateFrom}T00:00:00`).getTime() : null;
+    const toMs = this.dateTo ? new Date(`${this.dateTo}T23:59:59`).getTime() : null;
+
+    this.filteredRows = this.rows.filter((r) => {
+      const deviceText = this.deviceLabel(r).toLowerCase();
+      const issueText = String(r.issue || '').toLowerCase();
+      const ts = this.completedTimestamp(r);
+      const when = ts ? new Date(ts).getTime() : null;
+
+      const matchesDevice = device ? deviceText.includes(device) : true;
+      const matchesIssue = issue ? issueText.includes(issue) : true;
+      const matchesFrom = fromMs != null ? (when != null && when >= fromMs) : true;
+      const matchesTo = toMs != null ? (when != null && when <= toMs) : true;
+      return matchesDevice && matchesIssue && matchesFrom && matchesTo;
+    });
+  }
+
+  clearFilters(): void {
+    this.searchDevice = '';
+    this.searchIssue = '';
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.filteredRows = [...this.rows];
   }
 }

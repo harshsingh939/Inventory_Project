@@ -94,5 +94,68 @@ describe('AssetAssignmentsPanel', () => {
       component.historyPickerQuery = '999';
       expect(component.historyEmployeesMatching().length).toBe(1);
     });
+
+    it('historyAssetsMatching filters by serial or model', () => {
+      const c = component as unknown as PanelTest;
+      c.rawAllAssignments = [
+        {
+          asset_id: 10,
+          asset_type: 'Laptop',
+          brand: 'Dell',
+          model: 'Latitude 5420',
+          serial_number: 'SN-ABC-99',
+          user_id: 1,
+        },
+        {
+          asset_id: 11,
+          asset_type: 'Monitor',
+          brand: 'LG',
+          model: '24MP',
+          serial_number: 'X1',
+          user_id: 1,
+        },
+      ];
+      component.historyAssetPickerQuery = 'abc';
+      expect(component.historyAssetsMatching().length).toBe(1);
+      expect(component.historyAssetsMatching()[0].asset_id).toBe(10);
+      component.historyAssetPickerQuery = '24mp';
+      expect(component.historyAssetsMatching().length).toBe(1);
+      expect(component.historyAssetsMatching()[0].asset_id).toBe(11);
+    });
+
+    it('historyRowsForAssetView lists checkouts for selected asset', () => {
+      const c = component as unknown as PanelTest;
+      c.rawAllAssignments = [
+        { asset_id: 5, user_id: 1, user_name: 'A', start_time: '2021-01-01T00:00:00.000Z' },
+        { asset_id: 5, user_id: 2, user_name: 'B', start_time: '2022-01-01T00:00:00.000Z' },
+        { asset_id: 6, user_id: 1, user_name: 'A', start_time: '2020-01-01T00:00:00.000Z' },
+      ];
+      component.historySelectedAssetId = 5;
+      const view = component.historyRowsForAssetView;
+      expect(view.length).toBe(2);
+      expect(view[0].start_time).toBe('2022-01-01T00:00:00.000Z');
+    });
+
+    it('historyModalRows uses API assignments for By asset when history has loaded', () => {
+      const c = component as unknown as PanelTest & {
+        assetHistoryDetail: { assignments: unknown[] } | null;
+        assetHistoryLoading: boolean;
+      };
+      c.rawAllAssignments = [
+        { asset_id: 5, user_id: 1, user_name: 'Cached', start_time: '2021-01-01T00:00:00.000Z' },
+      ];
+      c.historySelectedAssetId = 5;
+      c.assetHistoryLoading = false;
+      c.assetHistoryDetail = {
+        assignments: [
+          {
+            user_name: 'From API',
+            start_time: '2023-06-01T00:00:00.000Z',
+          },
+        ],
+      };
+      expect(component.historyModalRows.length).toBe(1);
+      expect(component.historyModalRows[0].user_name).toBe('From API');
+    });
   });
 });

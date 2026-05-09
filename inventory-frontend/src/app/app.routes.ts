@@ -23,6 +23,8 @@ import { MyWorkspace } from './my-workspace/my-workspace';
 import { AssignmentRequestsAdmin } from './assignment-requests-admin/assignment-requests-admin';
 import { AssignmentEmailFulfill } from './assignment-email-fulfill/assignment-email-fulfill';
 import { RepairRequestsAdmin } from './repair-requests-admin/repair-requests-admin';
+import { RepairWorkVendor } from './repair-work-vendor/repair-work-vendor';
+import { RepairReviewDetail } from './repair-review-detail/repair-review-detail';
 import { RepairAuthorityPanel } from './repair-authority-panel/repair-authority-panel';
 import { RagAdmin } from './rag-admin/rag-admin';
 
@@ -50,10 +52,12 @@ export const routes: Routes = [
       },
       { path: 'disposed',   component: DisposedItems, canActivate: [AdminGuard] },
       { path: 'repairs',        component: Repairs,        canActivate: [AuthGuard] },
-      { path: 'repair-costs',   component: RepairCostLog,  canActivate: [AuthGuard] },
+      { path: 'repair-costs',   component: RepairCostLog,  canActivate: [AdminGuard] },
       { path: 'my-workspace', component: MyWorkspace, canActivate: [AuthGuard] },
       { path: 'assignment-requests', component: AssignmentRequestsAdmin, canActivate: [AdminGuard] },
-      { path: 'repair-requests', component: RepairRequestsAdmin, canActivate: [AdminGuard] },
+      { path: 'repair-requests', component: RepairRequestsAdmin, canActivate: [RepairAuthorityGuard] },
+      { path: 'repair-work', component: RepairWorkVendor, canActivate: [RepairAuthorityGuard] },
+      { path: 'repair-review/:id', component: RepairReviewDetail, canActivate: [AdminGuard] },
       { path: 'rag-admin', component: RagAdmin, canActivate: [AdminGuard] },
       { path: 'repair-authority', component: RepairAuthorityPanel, canActivate: [RepairAuthorityGuard] },
     ]

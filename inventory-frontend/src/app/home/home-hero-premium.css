@@ -5,14 +5,14 @@
 
 /* Softer depth-of-field on photo read-through */
 .hero-overlay {
-  background: radial-gradient(ellipse 90% 70% at 70% 45%, rgba(8, 12, 22, 0.35) 0%, transparent 55%),
+  background: radial-gradient(ellipse 90% 70% at 70% 45%, rgba(8, 12, 22, 0.28) 0%, transparent 55%),
     linear-gradient(
       115deg,
-      rgba(8, 12, 22, 0.94) 0%,
-      rgba(8, 12, 22, 0.88) 36%,
-      rgba(8, 12, 22, 0.62) 56%,
-      rgba(8, 12, 22, 0.32) 78%,
-      rgba(8, 12, 22, 0.2) 100%
+      rgba(8, 12, 22, 0.82) 0%,
+      rgba(8, 12, 22, 0.74) 36%,
+      rgba(8, 12, 22, 0.5) 56%,
+      rgba(8, 12, 22, 0.26) 78%,
+      rgba(8, 12, 22, 0.14) 100%
     );
 }
 

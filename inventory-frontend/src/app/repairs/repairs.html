@@ -8,14 +8,17 @@
         <div>
           <h1 class="repair-title">Repairs</h1>
           <p class="repair-lead" *ngIf="isAdmin">Repair queue · <a routerLink="/repair-costs" class="repair-lead__link">Cost history</a></p>
-          <p class="repair-lead" *ngIf="!isAdmin">Open tickets for your assigned gear</p>
+          <p class="repair-lead" *ngIf="isRepairAuthority">Vendor queue and assigned repairs</p>
+          <p class="repair-lead" *ngIf="!isAdmin && !isRepairAuthority">Open tickets for your assigned gear</p>
         </div>
       </div>
     </header>
 
-    <section class="repair-panel repair-panel--form">
+    <div class="msg-error repair-page-alert" *ngIf="errorMsg && !fixDialogRepair">⚠️ {{ errorMsg }}</div>
+
+    <section class="repair-panel repair-panel--form" *ngIf="canCreateRequest">
       <h2 class="repair-panel__title">New request</h2>
-      <p class="repair-hint" *ngIf="!isAdmin && assets.length === 0">
+      <p class="repair-hint" *ngIf="!canManageRepairs && assets.length === 0">
         Nothing assigned yet — <a routerLink="/my-workspace">My workspace</a> or ask admin.
       </p>
       <div class="form-row form-row-main">
@@ -39,7 +42,6 @@
           </button>
         </div>
       </div>
-      <div class="msg-error" *ngIf="errorMsg && !fixDialogRepair">⚠️ {{ errorMsg }}</div>
       <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
     </section>
 
@@ -80,7 +82,9 @@
               <th>Asset</th>
               <th>Issue</th>
               <th>Status</th>
+              <th *ngIf="isAdmin">Review</th>
               <th *ngIf="isAdmin">Action</th>
+              <th *ngIf="isAdmin">Dispose</th>
             </tr>
           </thead>
           <tbody>
@@ -102,26 +106,50 @@
                   [class.fixed]="r.status === 'Fixed'"
                   [class.progress]="r.status === 'In Progress'"
                   [class.under-repair]="r.status === 'Under repair'"
+                  [class.review-pending]="r.status === 'ReviewPending'"
                   [class.cannot]="r.status === 'CannotRepair'"
                   >{{ r.status }}</span>
               </td>
               <td *ngIf="isAdmin">
+                <a
+                  *ngIf="r.status === 'ReviewPending'"
+                  class="btn-action view-btn"
+                  [routerLink]="['/repair-review', r.id]"
+                  >View</a>
+                <span class="muted" *ngIf="r.status !== 'ReviewPending'">—</span>
+              </td>
+              <td *ngIf="isAdmin">
                 <div class="action-btns">
-                  <button type="button" class="btn-action progress-btn" *ngIf="r.status === 'Pending'" (click)="updateStatus(r.id, 'In Progress')">
+                  <button type="button" class="btn-action progress-btn" *ngIf="isAdmin && r.status === 'Pending'" (click)="updateStatus(r.id, 'In Progress')">
                     In progress
                   </button>
-                  <button type="button" class="btn-action fix-btn" *ngIf="r.status !== 'Fixed' && r.status !== 'Under repair'" (click)="openMarkFixedDialog(r)">
+                  <button type="button" class="btn-action fix-btn" *ngIf="isAdmin && r.status !== 'Fixed' && r.status !== 'Under repair'" (click)="openMarkFixedDialog(r)">
                     Mark fixed
                   </button>
-                  <button type="button" class="btn-action fix-btn" *ngIf="r.status === 'Under repair'" (click)="openMarkFixedDialog(r)">
+                  <button type="button" class="btn-action fix-btn" *ngIf="isAdmin && r.status === 'Under repair'" (click)="openMarkFixedDialog(r)">
                     Admin mark fixed
                   </button>
                   <span class="done-text" *ngIf="r.status === 'Fixed'">Completed</span>
                 </div>
               </td>
+              <td *ngIf="isAdmin">
+                <button
+                  type="button"
+                  class="btn-action dispose-btn"
+                  [disabled]="activeAssignmentId(r) == null || disposingRepairId === r.id"
+                  [attr.title]="
+                    activeAssignmentId(r) == null
+                      ? 'No active assignment — assign the asset or dispose from Assignments'
+                      : 'Remove asset from inventory (disposed_items log)'
+                  "
+                  (click)="disposeFromRepairRow(r)"
+                >
+                  {{ disposingRepairId === r.id ? '…' : 'Dispose' }}
+                </button>
+              </td>
             </tr>
             <tr *ngIf="filteredRepairs.length === 0">
-              <td [attr.colspan]="isAdmin ? 7 : 4" class="empty-row">
+              <td [attr.colspan]="isAdmin ? 9 : 4" class="empty-row">
                 {{ searchIssue || searchStatus ? 'No matches' : 'No repairs' }}
               </td>
             </tr>

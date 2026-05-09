@@ -44,7 +44,7 @@ export class MainLayout implements OnDestroy {
     const first = segments[0];
     const known: Record<string, string> = {
       dashboard: 'Dashboard',
-      users: 'Register',
+      users: 'Users',
       repairs: 'Repairs',
       'repair-requests': 'Repair requests',
       'repair-authority': 'Vendor repairs',

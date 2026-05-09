@@ -8,3 +8,18 @@
   background: linear-gradient(180deg, #c084fc, #7c3aed);
   box-shadow: 0 0 16px rgba(192, 132, 252, 0.24);
 }
+
+.repair-req-page .assign-board-header--sub {
+  margin-top: 18px;
+}
+
+.repair-req-page .input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.65);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  box-sizing: border-box;
+}

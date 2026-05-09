@@ -63,14 +63,78 @@
 
     <div class="inv-panel chart-card--enter" *ngIf="inventoryBreakdown.length">
       <div class="inv-panel-head">
-        <h3>Assets by inventory</h3>
+        <div class="inv-panel-head-text">
+          <h3>Assets by inventory</h3>
+          <p class="inv-panel-sub">
+            <span class="inv-panel-sub-strong">{{ inventoryBreakdownActive.length }}</span>
+            {{ inventoryBreakdownActive.length === 1 ? 'inventory holds' : 'inventories hold' }} assets
+            <ng-container *ngIf="inventoryBreakdownEmpty.length">
+              ·
+              <span class="inv-panel-sub-muted">{{ inventoryBreakdownEmpty.length }} empty</span>
+            </ng-container>
+          </p>
+        </div>
         <span class="inv-panel-meta">{{ totalAssets }} assets total</span>
       </div>
-      <div class="inv-panel-grid">
-        <div class="inv-tile" *ngFor="let row of inventoryBreakdown">
-          <span class="inv-tile-name">{{ row.name }}</span>
-          <span class="inv-tile-count">{{ row.count }}</span>
-          <span class="inv-tile-label">assets</span>
+
+      <div class="inv-active-block" *ngIf="inventoryBreakdownActive.length > 0">
+        <div class="inv-table-wrap">
+          <table class="inv-table">
+            <colgroup>
+              <col class="inv-col-name" />
+              <col class="inv-col-assets" />
+              <col class="inv-col-share" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Inventory</th>
+                <th scope="col" class="inv-th-num">Assets</th>
+                <th scope="col" class="inv-th-share">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of inventoryBreakdownActive">
+                <td class="inv-td-name">{{ row.name }}</td>
+                <td class="inv-td-num">{{ row.count }}</td>
+                <td class="inv-td-share">
+                  <span class="inv-share-track" aria-hidden="true">
+                    <span class="inv-share-fill" [style.width.%]="invSharePct(row.count)"></span>
+                  </span>
+                  <span class="inv-share-label">{{ invSharePct(row.count) }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="inv-zero-summary" *ngIf="inventoryBreakdownActive.length === 0 && totalAssets === 0">
+        No assets recorded yet. Counts will appear here once assets are added.
+      </p>
+      <p class="inv-zero-summary" *ngIf="inventoryBreakdownActive.length === 0 && totalAssets > 0">
+        Asset counts are not linked to these inventories. Verify each asset’s inventory assignment.
+      </p>
+
+      <div class="inv-empty-section" *ngIf="inventoryBreakdownEmpty.length">
+        <button
+          type="button"
+          class="inv-empty-toggle"
+          (click)="showEmptyInventories = !showEmptyInventories"
+          [attr.aria-expanded]="showEmptyInventories">
+          <span *ngIf="!showEmptyInventories">
+            Show {{ inventoryBreakdownEmpty.length }} empty
+            {{ inventoryBreakdownEmpty.length === 1 ? 'inventory' : 'inventories' }}
+          </span>
+          <span *ngIf="showEmptyInventories">Hide empty inventories</span>
+        </button>
+
+        <div class="inv-empty-list" *ngIf="showEmptyInventories">
+          <ul class="inv-empty-ul">
+            <li *ngFor="let row of inventoryBreakdownEmpty">
+              <span class="inv-empty-name">{{ row.name }}</span>
+              <span class="inv-empty-zero">0</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -125,7 +189,7 @@
     <div class="recent-row">
       <div class="recent-card recent-card--enter">
         <div class="recent-header">
-          <h4>👤 Recent registrations</h4>
+          <h4>👤 Recent users</h4>
           <a routerLink="/users" class="view-all">View all →</a>
         </div>
         <table>

@@ -7,5 +7,7 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 export const serverRoutes: ServerRoute[] = [
   { path: 'assets/inv/:invId', renderMode: RenderMode.Server },
   { path: 'assets/:category', renderMode: RenderMode.Server },
+  /** Admin repair detail — dynamic `:id`; prerender would require getPrerenderParams */
+  { path: 'repair-review/:id', renderMode: RenderMode.Server },
   { path: '**', renderMode: RenderMode.Prerender },
 ];

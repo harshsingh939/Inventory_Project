@@ -12,6 +12,8 @@ export interface Notification {
   asset_type: string | null;
   brand: string | null;
   created_at?: string | null;
+  /** Present for kind `repair` when API sends it */
+  repair_status?: string | null;
   read: boolean;
 }
 
@@ -84,6 +86,7 @@ export class NotificationService {
               asset_type: n.asset_type ?? null,
               brand: n.brand ?? null,
               created_at: n.created_at ?? null,
+              repair_status: n.repair_status ?? null,
               read: false,
             } as Notification;
           })

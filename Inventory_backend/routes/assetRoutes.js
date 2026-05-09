@@ -5,5 +5,6 @@ const assetController = require('../controllers/assetController');
 router.get('/',          assetController.getAssets);
 router.post('/add',      assetController.addAsset);
 router.get('/available', assetController.getAvailableAssets);
+router.get('/:id/history', assetController.getAssetHistory);
 
 module.exports = router;

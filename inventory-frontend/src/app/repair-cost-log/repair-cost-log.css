@@ -68,6 +68,39 @@
   margin-bottom: 12px;
 }
 
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.84rem;
+}
+
+.btn-clear {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fca5a5;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.result-line {
+  margin: 0 0 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
 .table-scroll-hint {
   margin: 0 0 8px;
   font-size: 0.75rem;

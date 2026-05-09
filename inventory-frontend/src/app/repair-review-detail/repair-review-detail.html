@@ -1,0 +1,86 @@
+<div class="review-page">
+  <div class="review-inner">
+    <div class="review-loading" *ngIf="loading">Loading…</div>
+
+    <ng-container *ngIf="!loading && row as r">
+      <header class="review-header">
+        <div>
+          <p class="review-kicker">Admin · Vendor repair review</p>
+          <h1 class="review-title">Repair #{{ r['id'] }}</h1>
+          <p class="review-status">
+            Status: <strong>{{ r['status'] }}</strong>
+          </p>
+        </div>
+        <div class="review-toolbar">
+          <a routerLink="/repairs" class="btn btn-ghost">← Repairs</a>
+          <button type="button" class="btn btn-solid" (click)="load(repairId())" [disabled]="loading">
+            Refresh
+          </button>
+        </div>
+      </header>
+
+      <div class="msg msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+      <div class="msg msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+
+      <div class="review-card">
+        <section class="review-section">
+          <h2>Device</h2>
+          <p class="review-line">
+            {{ r['asset_type'] || 'Asset' }} — {{ r['brand'] || '—' }} {{ r['model'] || '' }}
+          </p>
+          <p class="review-line muted" *ngIf="r['serial_number']">Serial: {{ r['serial_number'] }}</p>
+        </section>
+
+        <section class="review-section">
+          <h2>Reporter</h2>
+          <p class="review-line">{{ r['reporter_name'] || '—' }} · {{ r['reporter_employee_id'] || '—' }}</p>
+        </section>
+
+        <section class="review-section">
+          <h2>Vendor</h2>
+          <p class="review-line">{{ r['vendor'] || '—' }}</p>
+        </section>
+
+        <section class="review-section">
+          <h2>Original issue</h2>
+          <p class="review-block">{{ r['issue'] || '—' }}</p>
+        </section>
+
+        <section class="review-section" *ngIf="r['status'] === 'ReviewPending' || r['repair_notes']">
+          <h2>Vendor fix summary &amp; notes</h2>
+          <p class="review-block">{{ r['repair_notes'] || '—' }}</p>
+        </section>
+
+        <section class="review-section">
+          <h2>Repair cost (vendor)</h2>
+          <p class="review-line" *ngIf="r['repair_cost'] != null && r['repair_cost'] !== ''; else noCost">
+            ₹{{ r['repair_cost'] }}
+          </p>
+          <ng-template #noCost><p class="review-line muted">—</p></ng-template>
+        </section>
+
+        <section class="review-section" *ngIf="hasBill()">
+          <h2>Bill</h2>
+          <p class="review-line">
+            <a class="review-link" [href]="billUrl()" target="_blank" rel="noopener noreferrer">Open bill</a>
+          </p>
+        </section>
+
+        <section class="review-section" *ngIf="r['status'] === 'ReviewPending'">
+          <h2>Admin confirmation</h2>
+          <label class="review-label">Optional final notes (stored on repair)</label>
+          <textarea class="review-input" rows="3" [(ngModel)]="adminFinalNotes" placeholder="Optional…"></textarea>
+          <div class="review-actions">
+            <button type="button" class="btn btn-primary" (click)="markFixed()" [disabled]="savingFixed">
+              {{ savingFixed ? 'Saving…' : 'Mark as Fixed' }}
+            </button>
+          </div>
+        </section>
+
+        <section class="review-section muted" *ngIf="r['status'] !== 'ReviewPending'">
+          <p>This repair is not awaiting vendor-review confirmation. Use <a routerLink="/repairs">Repairs</a> for other actions.</p>
+        </section>
+      </div>
+    </ng-container>
+  </div>
+</div>

@@ -65,7 +65,7 @@
     <div class="form-field">
       <label>Asset type</label>
       <select [(ngModel)]="asset.asset_type" class="input select-input" title="asset type">
-        <option *ngFor="let t of cat.types" [value]="t">{{ t }}</option>
+        <option *ngFor="let t of cat.formTypes ?? cat.types" [value]="t">{{ t }}</option>
       </select>
     </div>
     <div class="form-field">
@@ -112,7 +112,7 @@
     <div class="form-field" *ngIf="slug !== 'other'">
       <label>Type</label>
       <select [(ngModel)]="asset.asset_type" class="input select-input" title="type">
-        <option *ngFor="let t of cat.types" [value]="t">{{ t }}</option>
+        <option *ngFor="let t of cat.formTypes ?? cat.types" [value]="t">{{ t }}</option>
       </select>
     </div>
     <div class="form-field" *ngIf="slug === 'other'">

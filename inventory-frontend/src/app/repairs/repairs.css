@@ -52,6 +52,10 @@
   box-sizing: border-box;
 }
 
+.repair-page-alert {
+  margin: 0 0 12px;
+}
+
 .repair-header {
   display: flex;
   flex-wrap: wrap;
@@ -426,6 +430,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.col-vendor {
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
 /* my add */
 .table-container {
   overflow-x: auto;
@@ -462,6 +475,7 @@
 .status-badge.progress { background: rgba(56,189,248,0.15); color: #38bdf8; }
 .status-badge.fixed    { background: rgba(34,197,94,0.15);  color: #22c55e; }
 .status-badge.under-repair { background: rgba(168,85,247,0.15); color: #c084fc; }
+.status-badge.review-pending { background: rgba(59,130,246,0.16); color: #93c5fd; }
 .status-badge.cannot   { background: rgba(248,113,113,0.12); color: #f87171; }
 
 /* Action buttons */
@@ -496,6 +510,40 @@
 }
 
 .fix-btn:hover { background: rgba(34,197,94,0.2); }
+
+.dispose-btn {
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.25);
+}
+
+.dispose-btn:hover:not(:disabled) {
+  background: rgba(185, 28, 28, 0.35);
+}
+
+.dispose-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #93c5fd;
+}
+
+.view-btn:hover {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.repair-table .muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}
 
 .done-text {
   color: #22c55e;

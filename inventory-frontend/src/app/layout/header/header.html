@@ -28,15 +28,15 @@
     <a routerLink="/dashboard" routerLinkActive="header-admin-nav__link--active" [routerLinkActiveOptions]="{ exact: true }"
       class="header-admin-nav__link" (click)="closeNotificationsForNav()">Dashboard</a>
     <a routerLink="/users" routerLinkActive="header-admin-nav__link--active"
-      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Register</a>
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Users</a>
     <a routerLink="/assignment-requests" routerLinkActive="header-admin-nav__link--active"
       class="header-admin-nav__link" (click)="closeNotificationsForNav()">Assign requests</a>
-    <a routerLink="/repair-requests" routerLinkActive="header-admin-nav__link--active"
-      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Repair requests</a>
     <a routerLink="/assets" routerLinkActive="header-admin-nav__link--active"
       class="header-admin-nav__link" (click)="closeNotificationsForNav()">Assets</a>
     <a routerLink="/repairs" routerLinkActive="header-admin-nav__link--active"
       class="header-admin-nav__link" (click)="closeNotificationsForNav()">Repairs</a>
+    <a routerLink="/repair-costs" routerLinkActive="header-admin-nav__link--active"
+      class="header-admin-nav__link" (click)="closeNotificationsForNav()">Repair history</a>
     <a routerLink="/disposed" routerLinkActive="header-admin-nav__link--active"
       class="header-admin-nav__link" (click)="closeNotificationsForNav()">Disposed</a>
   </nav>
@@ -57,22 +57,24 @@
       <span class="vendor-nav-btn__sr">Home</span>
     </a>
     <a
-      routerLink="/repairs"
+      routerLink="/repair-requests"
       routerLinkActive="vendor-nav-btn--active"
+      [routerLinkActiveOptions]="{ exact: true }"
       class="vendor-nav-btn"
-      title="Repairs"
+      title="Repair requests"
       (click)="closeSidebar()">
-      <span aria-hidden="true">🔧</span>
-      <span class="vendor-nav-btn__sr">Repairs</span>
+      <span aria-hidden="true">📥</span>
+      <span class="vendor-nav-btn__sr">Repair requests</span>
     </a>
     <a
-      routerLink="/repair-authority"
+      routerLink="/repair-work"
       routerLinkActive="vendor-nav-btn--active"
+      [routerLinkActiveOptions]="{ exact: true }"
       class="vendor-nav-btn"
-      title="Vendor repairs"
+      title="Work in progress"
       (click)="closeSidebar()">
-      <span aria-hidden="true">🛠️</span>
-      <span class="vendor-nav-btn__sr">Vendor repairs</span>
+      <span aria-hidden="true">🔧</span>
+      <span class="vendor-nav-btn__sr">Work in progress</span>
     </a>
   </nav>
 
@@ -106,7 +108,13 @@
         </div>
 
         <div class="notif-list">
-          <div *ngFor="let n of notifService.notifications()" class="notif-item" [class.notif-item--request]="n.kind === 'assignment_request'">
+          <a
+            *ngFor="let n of notifService.notifications()"
+            class="notif-item notif-item--link"
+            [class.notif-item--request]="n.kind === 'assignment_request'"
+            [routerLink]="notifLink(n)"
+            (click)="closeNotificationsForNav()"
+          >
             <div class="notif-icon" *ngIf="n.kind !== 'assignment_request'">🔧</div>
             <div class="notif-icon notif-icon--inbox" *ngIf="n.kind === 'assignment_request'">📥</div>
             <div class="notif-body">
@@ -123,7 +131,7 @@
               </ng-container>
               <div class="notif-time">{{ timeAgo(n.created_at || undefined) }}</div>
             </div>
-          </div>
+          </a>
 
           <div class="notif-empty" *ngIf="notifService.notifications().length === 0">
             <div class="notif-empty-icon">✓</div>

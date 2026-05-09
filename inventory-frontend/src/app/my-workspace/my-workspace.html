@@ -1,144 +1,238 @@
 <div class="mw-page">
   <div class="mw-orbit" aria-hidden="true"></div>
-  <header class="mw-hero">
-    <div>
-      <h1 class="mw-title">My Workspace</h1>
-      <p class="mw-subtitle">Assigned equipment and new requests</p>
-    </div>
-    <div class="mw-hero-meta" *ngIf="!loading">
-      <span class="mw-chip"><strong>{{ active.length }}</strong> Active</span>
-      <span class="mw-chip"><strong>{{ history.length }}</strong> Returns</span>
-      <span class="mw-chip"><strong>{{ openRequestCount }}</strong> Open requests</span>
-    </div>
-  </header>
 
-  <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
-  <div class="msg-warn" *ngIf="meError">{{ meError }}</div>
-  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
-
-  <section class="mw-section card" *ngIf="!loading && linked; else notLinkedAssign">
-    <h2 class="mw-section-title">Assigned to me</h2>
-    <div class="empty mw-empty" *ngIf="active.length === 0">Nothing assigned yet.</div>
-    <div class="assign-grid" *ngIf="active.length > 0">
-      <article class="assign-card" *ngFor="let a of active">
-        <div class="ac-title-row">
-          <span class="ac-glyph" aria-hidden="true">{{ a.asset_type?.slice(0, 1) || 'A' }}</span>
-          <div class="ac-title">{{ a.asset_type }} — {{ a.brand }} {{ a.model }}</div>
+  <div class="mw-shell">
+    <header class="mw-hero">
+      <div class="mw-hero-top">
+        <div class="mw-hero-text">
+          <p class="mw-kicker">Employee workspace</p>
+          <h1 class="mw-title">My Workspace</h1>
+          <p class="mw-subtitle">Assigned equipment, return history, and assignment requests in one place.</p>
         </div>
-        <div class="ac-meta" *ngIf="a.serial_number">
-          <span class="ac-meta-label">Serial</span> {{ a.serial_number }}
+        <div class="mw-hero-stats" *ngIf="!loading" role="group" aria-label="Summary counts">
+          <div class="mw-stat mw-stat--active">
+            <span class="mw-stat-value">{{ active.length }}</span>
+            <span class="mw-stat-label">Active</span>
+          </div>
+          <div class="mw-stat mw-stat--history">
+            <span class="mw-stat-value">{{ history.length }}</span>
+            <span class="mw-stat-label">Returns</span>
+          </div>
+          <div class="mw-stat mw-stat--req">
+            <span class="mw-stat-value">{{ openRequestCount }}</span>
+            <span class="mw-stat-label">Open requests</span>
+          </div>
         </div>
-        <div class="ac-date">Since {{ a.start_time | date: 'dd MMM yyyy, HH:mm' }}</div>
-      </article>
-    </div>
-  </section>
-
-  <ng-template #notLinkedAssign>
-    <section class="mw-section card" *ngIf="!loading">
-      <h2 class="mw-section-title">Assigned to me</h2>
-      <p class="mw-muted">{{ hint || 'Complete your profile on the Register page first.' }}</p>
-      <a routerLink="/users" class="mw-link">Go to Register</a>
-    </section>
-  </ng-template>
-
-  <section class="mw-section card" *ngIf="!loading && linked && history.length">
-    <h2 class="mw-section-title">Return history</h2>
-    <div class="mw-table-wrap">
-      <table class="hist-table">
-        <thead>
-          <tr>
-            <th>Asset</th>
-            <th>Returned</th>
-            <th>Duration (min)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let h of history">
-            <td>{{ h.asset_type }} — {{ h.brand }} {{ h.model }}</td>
-            <td>{{ h.end_time | date: 'dd MMM yyyy' }}</td>
-            <td>{{ h.working_minutes ?? '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="mw-section card mw-section--request request-card" [class.card-blocked]="!loading && !linked">
-    <div class="request-card-head">
-      <h2 class="mw-section-title mw-section-title--inline">New request</h2>
-      <span class="request-badge" *ngIf="!loading && linked">Ready</span>
-      <span class="request-badge request-badge-warn" *ngIf="!loading && !linked">Profile required</span>
-    </div>
-    <div class="gate-box" *ngIf="!loading && !linked">
-      <p class="gate-text">
-        Add your details under <a routerLink="/users" class="gate-link">Register</a>, then you can submit a request here.
-      </p>
-    </div>
-    <div class="loading mw-loading" *ngIf="loading">Loading…</div>
-
-    <div class="request-devices" *ngIf="!loading">
-      <p class="mw-field-label">Equipment type</p>
-      <div class="asset-pick asset-pick-static" role="group" aria-label="Equipment type">
-        <label class="pick-row" *ngFor="let t of requestDeviceTypes">
-          <input type="checkbox" [checked]="isTypeSelected(t)" (change)="toggleAssetType(t)" [disabled]="!linked" />
-          <span class="inv-name">{{ t }}</span>
-        </label>
+        <div class="mw-hero-stats mw-hero-stats--skeleton" *ngIf="loading" aria-hidden="true">
+          <div class="mw-stat mw-stat--skeleton"></div>
+          <div class="mw-stat mw-stat--skeleton"></div>
+          <div class="mw-stat mw-stat--skeleton"></div>
+        </div>
       </div>
-    </div>
+    </header>
 
-    <label class="mw-field-label" *ngIf="!loading">Note <span class="mw-optional">(optional)</span></label>
-    <textarea
-      *ngIf="!loading"
-      class="input ta"
-      rows="2"
-      [(ngModel)]="requestMessage"
-      placeholder="e.g. need i7 for builds — we match cpu/model/brand when stock allows"
-      [disabled]="!linked"
-    ></textarea>
-    <p class="mw-muted" *ngIf="!loading" style="margin-top: 6px; font-size: 0.8125rem">
-      Notes mentioning <strong>i3 / i5 / i7 / i9</strong> or <strong>Ryzen 3–9</strong> are used to prefer a matching unit; if none is free, we assign the next available device of the type you selected and tell you by email and here.
-    </p>
-    <button type="button" class="btn btn-primary" (click)="submitRequest()" [disabled]="submitting || (!loading && !linked)">
-      {{ submitting ? 'Sending…' : 'Send request' }}
-    </button>
-  </section>
+    <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+    <div class="msg-warn" *ngIf="meError">{{ meError }}</div>
+    <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 
-  <section class="mw-section card">
-    <h2 class="mw-section-title">My requests</h2>
-    <div class="mw-table-wrap" *ngIf="myRequests.length">
-      <table class="hist-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Status</th>
-            <th>Submitted</th>
-            <th>Your note</th>
-            <th>From team</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let q of myRequests">
-            <td>{{ q.id }}</td>
-            <td>
-              <span
-                class="rq-badge"
-                [class.rq-badge--pending]="q.status === 'Pending'"
-                [class.rq-badge--fulfilled]="q.status === 'Fulfilled'"
-                [class.rq-badge--rejected]="q.status === 'Rejected'"
-                >{{ q.status }}</span
-              >
-            </td>
-            <td>{{ q.created_at | date: 'short' }}</td>
-            <td>{{ q.user_message || '—' }}</td>
-            <td>
-              <span *ngIf="q.fulfillment_notice">{{ q.fulfillment_notice }}</span>
-              <span *ngIf="!q.fulfillment_notice && q.admin_note">{{ q.admin_note }}</span>
-              <span *ngIf="!q.fulfillment_notice && !q.admin_note">—</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="mw-dashboard">
+      <!-- 1 · Assigned -->
+      <section class="mw-panel mw-panel--assign mw-dash-assign" [class.mw-panel--warn]="!loading && !linked">
+        <div class="mw-panel-head">
+          <span class="mw-panel-eyebrow">01</span>
+          <span class="mw-panel-icon" aria-hidden="true">{{ !loading && !linked ? '👤' : '📌' }}</span>
+          <div class="mw-panel-head-copy">
+            <h2 class="mw-panel-title">Assigned to me</h2>
+            <p class="mw-panel-desc" *ngIf="loading">Loading your assignments…</p>
+            <p class="mw-panel-desc" *ngIf="!loading && !linked">Link your employee profile first</p>
+            <p class="mw-panel-desc" *ngIf="!loading && linked">Currently checked out to your name</p>
+          </div>
+        </div>
+        <div class="mw-panel-body">
+          <div class="loading mw-loading" *ngIf="loading">Loading…</div>
+          <ng-container *ngIf="!loading && !linked">
+            <p class="mw-muted">{{ hint || 'Complete your profile on the Register page first.' }}</p>
+            <a routerLink="/users" class="mw-link">Go to Register →</a>
+          </ng-container>
+          <ng-container *ngIf="!loading && linked">
+            <div class="mw-empty-state" *ngIf="active.length === 0">
+              <span class="mw-empty-icon" aria-hidden="true">📭</span>
+              <p class="mw-empty-title">Nothing assigned yet</p>
+              <p class="mw-empty-hint">When your team assigns a device, it will show up here.</p>
+            </div>
+            <div class="assign-grid" *ngIf="active.length > 0">
+              <article class="assign-card" *ngFor="let a of active">
+                <div class="ac-title-row">
+                  <span class="ac-glyph" aria-hidden="true">{{ a.asset_type?.slice(0, 1) || 'A' }}</span>
+                  <div class="ac-title">{{ a.asset_type }} — {{ a.brand }} {{ a.model }}</div>
+                </div>
+                <div class="ac-meta" *ngIf="a.serial_number">
+                  <span class="ac-meta-label">Serial</span> {{ a.serial_number }}
+                </div>
+                <div class="ac-date">Since {{ a.start_time | date: 'dd MMM yyyy, HH:mm' }}</div>
+              </article>
+            </div>
+          </ng-container>
+        </div>
+      </section>
+
+      <!-- 2 · Return history -->
+      <section class="mw-panel mw-panel--history mw-dash-history" *ngIf="!loading && linked">
+        <div class="mw-panel-head">
+          <span class="mw-panel-eyebrow">02</span>
+          <span class="mw-panel-icon" aria-hidden="true">📋</span>
+          <div class="mw-panel-head-copy">
+            <h2 class="mw-panel-title">Return history</h2>
+            <p class="mw-panel-desc">Past checkouts you have returned</p>
+          </div>
+        </div>
+        <div class="mw-panel-body">
+          <div class="mw-table-shell" *ngIf="history.length">
+            <div class="mw-table-scroll">
+              <table class="hist-table">
+                <thead>
+                  <tr>
+                    <th>Asset</th>
+                    <th>Returned</th>
+                    <th>Duration (min)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let h of history">
+                    <td class="hist-cell-asset">{{ h.asset_type }} — {{ h.brand }} {{ h.model }}</td>
+                    <td>{{ h.end_time | date: 'dd MMM yyyy' }}</td>
+                    <td>
+                      <span class="hist-duration">{{ h.working_minutes != null ? h.working_minutes + ' min' : '—' }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="mw-empty-state mw-empty-state--inline" *ngIf="!history.length">
+            <span class="mw-empty-icon" aria-hidden="true">↩️</span>
+            <p class="mw-empty-title">No returns yet</p>
+            <p class="mw-empty-hint">Returned equipment will appear in this table with date and duration.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="mw-dash-history-placeholder mw-panel mw-panel--muted" *ngIf="!loading && !linked">
+        <div class="mw-panel-head">
+          <span class="mw-panel-eyebrow">02</span>
+          <span class="mw-panel-icon" aria-hidden="true">📋</span>
+          <div class="mw-panel-head-copy">
+            <h2 class="mw-panel-title">Return history</h2>
+            <p class="mw-panel-desc">Available after your profile is linked</p>
+          </div>
+        </div>
+        <div class="mw-panel-body">
+          <p class="mw-muted mw-muted--tight">Complete <a routerLink="/users" class="mw-link mw-link--inline">Register</a> to see your return history here.</p>
+        </div>
+      </div>
+
+      <!-- 3 · New request -->
+      <section class="mw-panel mw-panel--request mw-dash-request" [class.mw-panel--blocked]="!loading && !linked">
+        <div class="mw-panel-head mw-panel-head--row">
+          <span class="mw-panel-eyebrow">03</span>
+          <span class="mw-panel-icon" aria-hidden="true">✉️</span>
+          <div class="mw-panel-head-text">
+            <h2 class="mw-panel-title">New request</h2>
+            <p class="mw-panel-desc">Request laptop or desktop from IT</p>
+          </div>
+          <span class="request-badge" *ngIf="!loading && linked">Ready</span>
+          <span class="request-badge request-badge-warn" *ngIf="!loading && !linked">Profile required</span>
+        </div>
+
+        <div class="mw-panel-body">
+          <div class="gate-box" *ngIf="!loading && !linked">
+            <p class="gate-text">
+              Add your details under <a routerLink="/users" class="gate-link">Register</a>, then you can submit a request here.
+            </p>
+          </div>
+          <div class="loading mw-loading" *ngIf="loading">Loading…</div>
+
+          <div class="request-body" *ngIf="!loading">
+            <p class="mw-field-label">Equipment type</p>
+            <div class="type-chips" role="group" aria-label="Equipment type">
+              <label class="type-chip" *ngFor="let t of requestDeviceTypes">
+                <input type="checkbox" [checked]="isTypeSelected(t)" (change)="toggleAssetType(t)" [disabled]="!linked" />
+                <span class="type-chip-ui">{{ t }}</span>
+              </label>
+            </div>
+
+            <label class="mw-field-label">Note <span class="mw-optional">(optional)</span></label>
+            <textarea
+              class="input ta mw-ta"
+              rows="4"
+              [(ngModel)]="requestMessage"
+              placeholder="e.g. need i7 for builds — we match CPU when stock allows"
+              [disabled]="!linked"
+            ></textarea>
+            <p class="mw-hint">
+              Notes mentioning <strong>i3 / i5 / i7 / i9</strong> or <strong>Ryzen 3–9</strong> help match a unit when possible.
+            </p>
+            <button type="button" class="btn btn-primary mw-submit" (click)="submitRequest()" [disabled]="submitting || (!loading && !linked)">
+              {{ submitting ? 'Sending…' : 'Send request' }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 · My requests (full width) -->
+      <section class="mw-panel mw-panel--mine mw-dash-mine">
+        <div class="mw-panel-head">
+          <span class="mw-panel-eyebrow">04</span>
+          <span class="mw-panel-icon" aria-hidden="true">📥</span>
+          <div class="mw-panel-head-copy">
+            <h2 class="mw-panel-title">My requests</h2>
+            <p class="mw-panel-desc">Tickets you have submitted and their status</p>
+          </div>
+        </div>
+        <div class="mw-panel-body">
+          <div class="mw-table-shell" *ngIf="myRequests.length">
+            <div class="mw-table-scroll">
+              <table class="hist-table hist-table--wide">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Your note</th>
+                    <th>From team</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let q of myRequests">
+                    <td><span class="hist-id">#{{ q.id }}</span></td>
+                    <td>
+                      <span
+                        class="rq-badge"
+                        [class.rq-badge--pending]="q.status === 'Pending'"
+                        [class.rq-badge--fulfilled]="q.status === 'Fulfilled'"
+                        [class.rq-badge--rejected]="q.status === 'Rejected'"
+                        >{{ q.status }}</span
+                      >
+                    </td>
+                    <td>{{ q.created_at | date: 'short' }}</td>
+                    <td class="hist-cell-note">{{ q.user_message || '—' }}</td>
+                    <td class="hist-cell-note">
+                      <span *ngIf="q.fulfillment_notice">{{ q.fulfillment_notice }}</span>
+                      <span *ngIf="!q.fulfillment_notice && q.admin_note">{{ q.admin_note }}</span>
+                      <span *ngIf="!q.fulfillment_notice && !q.admin_note">—</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="mw-empty-state mw-empty-state--soft" *ngIf="!myRequests.length">
+            <span class="mw-empty-icon" aria-hidden="true">🗒️</span>
+            <p class="mw-empty-title">No requests yet</p>
+            <p class="mw-empty-hint">Use <strong>New request</strong> (section 03) to ask for equipment.</p>
+          </div>
+        </div>
+      </section>
     </div>
-    <div class="empty mw-empty" *ngIf="!myRequests.length">No requests submitted yet.</div>
-  </section>
+  </div>
 </div>

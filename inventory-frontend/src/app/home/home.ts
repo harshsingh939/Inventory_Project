@@ -25,7 +25,7 @@ export class Home implements OnInit, OnDestroy {
   /** Vendor home — typewriter (repair lane aside) */
   readonly vendorTypedText = signal('');
 
-  /** repair_authority: jobs currently in Under repair (vendor queue) for this login */
+  /** repair_authority: pending requests to review */
   readonly vendorQueueCount = signal<number | null>(null);
   readonly vendorQueueLoading = signal(false);
 
@@ -153,7 +153,7 @@ export class Home implements OnInit, OnDestroy {
 
   private loadVendorQueueCount(): void {
     this.vendorQueueLoading.set(true);
-    this.http.get<unknown[]>(apiUrl('repairs/authority-queue')).subscribe({
+    this.http.get<unknown[]>(apiUrl('repairs/admin/requests')).subscribe({
       next: (rows) => {
         this.vendorQueueCount.set(Array.isArray(rows) ? rows.length : 0);
         this.vendorQueueLoading.set(false);

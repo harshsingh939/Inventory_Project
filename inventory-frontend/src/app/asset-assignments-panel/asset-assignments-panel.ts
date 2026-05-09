@@ -17,6 +17,39 @@ import {
 } from '../assets/asset-category.config';
 import { apiUrl } from '../api-url';
 
+/** One row per asset for the history asset picker (deduped from assignment rows). */
+export interface HistoryAssetPickRow {
+  asset_id: number;
+  asset_type?: string;
+  brand?: string;
+  model?: string;
+  serial_number?: string;
+}
+
+/** Disposal snapshot from GET /api/assets/:id/history */
+export interface AssetHistoryDisposedSnapshot {
+  disposed_at?: string | Date | null;
+  notes?: string | null;
+  condition_after?: string | null;
+}
+
+/** One repair row from GET /api/assets/:id/history */
+export interface AssetHistoryRepairRow {
+  status?: string | null;
+  issue?: string | null;
+  occurred_at?: string | Date | null;
+}
+
+/** Response from GET /api/assets/:id/history */
+export interface AssetHistoryResponse {
+  asset_id: number;
+  asset: Record<string, unknown> | null;
+  disposed: AssetHistoryDisposedSnapshot | null;
+  assignments: any[];
+  repairs: AssetHistoryRepairRow[];
+  events: any[];
+}
+
 /** Row from GET /sessions/active */
 export interface ActiveAssignmentRow {
   assignment_id: number;
@@ -86,10 +119,31 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
   disposeNotes = '';
   disposing = false;
 
+  /** History tab: search employees vs search assets (same UX in every category/inventory). */
+  historyKind: 'employee' | 'asset' = 'employee';
   /** Filters the roster for history employee picker */
   historyPickerQuery = '';
   /** When set, history table shows rawAllAssignments rows for this user only (full org, any category). */
   historySelectedUserId: number | null = null;
+  /** Search serial / model / brand / type for asset history picker */
+  historyAssetPickerQuery = '';
+  /** When set, modal lists every checkout of this asset (full org). */
+  historySelectedAssetId: number | null = null;
+
+  /** Loaded from GET /api/assets/:id/history when viewing By asset (includes post-dispose assignment rows). */
+  assetHistoryDetail: AssetHistoryResponse | null = null;
+  assetHistoryLoading = false;
+  assetHistoryError = '';
+
+  /** Narrowed disposal row for strict template typing. */
+  get historyDisposedView(): AssetHistoryDisposedSnapshot | null {
+    return this.assetHistoryDetail?.disposed ?? null;
+  }
+
+  /** Repairs list for *ngFor (never null). */
+  get historyRepairsView(): AssetHistoryRepairRow[] {
+    return this.assetHistoryDetail?.repairs ?? [];
+  }
 
   constructor(
     private readonly http: HttpClient,
@@ -104,6 +158,19 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
   setAssignmentsTab(tab: 'active' | 'history'): void {
     this.activeTab = tab;
     this.historyTabActive.emit(tab === 'history');
+  }
+
+  setHistoryKind(kind: 'employee' | 'asset'): void {
+    if (this.historyKind === kind) {
+      return;
+    }
+    this.historyKind = kind;
+    this.historySelectedUserId = null;
+    this.historySelectedAssetId = null;
+    this.historyPickerQuery = '';
+    this.historyAssetPickerQuery = '';
+    this.resetAssetHistoryFetch();
+    this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -266,14 +333,75 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
     if (!Number.isFinite(id)) {
       return;
     }
+    this.historyKind = 'employee';
+    this.historySelectedAssetId = null;
+    this.historyAssetPickerQuery = '';
+    this.resetAssetHistoryFetch();
     this.historySelectedUserId = id;
     this.cdr.detectChanges();
   }
 
-  clearHistoryEmployeeSelection(): void {
+  selectAssetForHistory(row: HistoryAssetPickRow): void {
+    const id = Number(row?.asset_id);
+    if (!Number.isFinite(id)) {
+      return;
+    }
+    this.historyKind = 'asset';
     this.historySelectedUserId = null;
     this.historyPickerQuery = '';
+    this.historySelectedAssetId = id;
+    this.fetchAssetHistory(id);
     this.cdr.detectChanges();
+  }
+
+  /** Close modal / clear picker for the active history kind. */
+  clearHistorySelection(): void {
+    this.historySelectedUserId = null;
+    this.historySelectedAssetId = null;
+    this.historyPickerQuery = '';
+    this.historyAssetPickerQuery = '';
+    this.resetAssetHistoryFetch();
+    this.cdr.detectChanges();
+  }
+
+  private resetAssetHistoryFetch(): void {
+    this.assetHistoryDetail = null;
+    this.assetHistoryLoading = false;
+    this.assetHistoryError = '';
+  }
+
+  private fetchAssetHistory(assetId: number): void {
+    this.assetHistoryLoading = true;
+    this.assetHistoryError = '';
+    this.assetHistoryDetail = null;
+    this.http
+      .get<AssetHistoryResponse>(`${this.apiBase}/assets/${assetId}/history`)
+      .subscribe({
+        next: (data) => {
+          if (Number(this.historySelectedAssetId) !== assetId) {
+            return;
+          }
+          this.assetHistoryDetail = data;
+          this.assetHistoryLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          if (Number(this.historySelectedAssetId) !== assetId) {
+            return;
+          }
+          this.assetHistoryLoading = false;
+          this.assetHistoryDetail = null;
+          this.assetHistoryError =
+            err.error?.message ||
+            (typeof err.error === 'string' ? err.error : null) ||
+            'Could not load asset history.';
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  clearHistoryEmployeeSelection(): void {
+    this.clearHistorySelection();
   }
 
   get historyRowsForView(): any[] {
@@ -291,12 +419,93 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
     });
   }
 
+  get historyRowsForAssetView(): any[] {
+    const aid = this.historySelectedAssetId;
+    if (aid == null || !Number.isFinite(Number(aid))) {
+      return [];
+    }
+    const rows = this.rawAllAssignments.filter(
+      (row) => Number(row.asset_id) === Number(aid),
+    );
+    return rows.slice().sort((a, b) => {
+      const ta = new Date(a.start_time ?? 0).getTime();
+      const tb = new Date(b.start_time ?? 0).getTime();
+      return tb - ta;
+    });
+  }
+
+  private sortHistoryAssignmentRows(rows: any[]): any[] {
+    return rows.slice().sort((a, b) => {
+      const ta = new Date(a.start_time ?? 0).getTime();
+      const tb = new Date(b.start_time ?? 0).getTime();
+      return tb - ta;
+    });
+  }
+
+  /** Rows shown in the history modal (employee or asset mode). */
+  get historyModalRows(): any[] {
+    if (this.historySelectedAssetId != null) {
+      if (this.assetHistoryDetail && !this.assetHistoryLoading) {
+        return this.sortHistoryAssignmentRows(
+          this.assetHistoryDetail.assignments || [],
+        );
+      }
+      return this.historyRowsForAssetView;
+    }
+    if (this.historySelectedUserId != null) {
+      return this.historyRowsForView;
+    }
+    return [];
+  }
+
+  /** Deduped assets that appear anywhere in assignment history (org-wide). */
+  distinctHistoryAssets(): HistoryAssetPickRow[] {
+    const map = new Map<number, HistoryAssetPickRow>();
+    for (const row of this.rawAllAssignments || []) {
+      const aid = Number(row.asset_id);
+      if (!Number.isFinite(aid)) {
+        continue;
+      }
+      if (!map.has(aid)) {
+        map.set(aid, {
+          asset_id: aid,
+          asset_type: row.asset_type,
+          brand: row.brand,
+          model: row.model,
+          serial_number: row.serial_number,
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.asset_id - a.asset_id);
+  }
+
+  /** Assets matching history search (type, brand, model, serial, id). */
+  historyAssetsMatching(): HistoryAssetPickRow[] {
+    const q = String(this.historyAssetPickerQuery || '').trim().toLowerCase();
+    if (!q) {
+      return [];
+    }
+    return this.distinctHistoryAssets()
+      .filter((row) => {
+        const idStr = String(row.asset_id);
+        const parts = [
+          String(row.asset_type ?? '').toLowerCase(),
+          String(row.brand ?? '').toLowerCase(),
+          String(row.model ?? '').toLowerCase(),
+          String(row.serial_number ?? '').toLowerCase(),
+          idStr,
+        ];
+        return parts.some((p) => p.includes(q));
+      })
+      .slice(0, 40);
+  }
+
   /** Tab label suffix, e.g. " (12)" once an employee is selected. */
   get historyTabCountLabel(): string {
-    if (this.historySelectedUserId == null) {
+    if (this.historySelectedUserId == null && this.historySelectedAssetId == null) {
       return '';
     }
-    return ` (${this.historyRowsForView.length})`;
+    return ` (${this.historyModalRows.length})`;
   }
 
   get historySelectedUserName(): string {
@@ -313,6 +522,55 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
       return `${row.user_name} (${row.employee_id})`;
     }
     return `User #${id}`;
+  }
+
+  get historySelectedAssetLabel(): string {
+    const id = this.historySelectedAssetId;
+    if (id == null) {
+      return '';
+    }
+    const d = this.assetHistoryDetail;
+    const fromAsset = d?.asset as
+      | { asset_type?: string; brand?: string; model?: string; serial_number?: string }
+      | null
+      | undefined;
+    if (fromAsset && (fromAsset.asset_type || fromAsset.brand || fromAsset.model)) {
+      const type = String(fromAsset.asset_type ?? 'Asset');
+      const brand = fromAsset.brand ? String(fromAsset.brand) : '';
+      const model = fromAsset.model ? String(fromAsset.model) : '';
+      const sn = fromAsset.serial_number ? ` · SN ${fromAsset.serial_number}` : '';
+      const head = [type, brand, model].filter(Boolean).join(' — ');
+      return `${head || `Asset #${id}`}${sn}`;
+    }
+    const disp = d?.disposed as
+      | {
+          asset_type?: string;
+          brand?: string;
+          model?: string;
+          serial_number?: string;
+        }
+      | null
+      | undefined;
+    if (disp && (disp.asset_type || disp.brand || disp.model)) {
+      const type = String(disp.asset_type ?? 'Asset');
+      const brand = disp.brand ? String(disp.brand) : '';
+      const model = disp.model ? String(disp.model) : '';
+      const sn = disp.serial_number ? ` · SN ${disp.serial_number}` : '';
+      const head = [type, brand, model].filter(Boolean).join(' — ');
+      return `${head} (disposed)${sn}`;
+    }
+    const row = this.historyRowsForAssetView[0] ||
+      this.rawAllAssignments.find((r) => Number(r.asset_id) === Number(id)) ||
+      (d?.assignments && d.assignments[0]);
+    if (row) {
+      const type = row.asset_type ?? 'Asset';
+      const brand = row.brand ? String(row.brand) : '';
+      const model = row.model ? String(row.model) : '';
+      const sn = row.serial_number ? ` · SN ${row.serial_number}` : '';
+      const head = [type, brand, model].filter(Boolean).join(' — ');
+      return `${head || `Asset #${id}`}${sn}`;
+    }
+    return `Asset #${id}`;
   }
 
   assignAsset() {
@@ -374,7 +632,7 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
       })
       .subscribe({
         next: () => {
-          this.successMsg = '✅ Asset returned to stock';
+          this.successMsg = '✅ Asset unassigned — back in available stock';
           this.loadAll();
           this.cdr.detectChanges();
           setTimeout(() => {

@@ -9,6 +9,8 @@ export interface AssetCategoryDefinition {
   ui: AssetUiVariant;
   /** Stored `asset_type` values — matched case-insensitively */
   types: readonly string[];
+  /** Narrower add-form dropdown; defaults to `types` when omitted */
+  formTypes?: readonly string[];
 }
 
 /** Normalize DB/catalog asset_type for comparisons (spacing, slashes) */
@@ -30,6 +32,7 @@ export const ASSET_CATEGORY_MAP: Record<string, AssetCategoryDefinition> = {
     icon: '💻',
     ui: 'pc',
     types: ['System', 'Laptop', 'Desktop', 'Workstation', 'Tablet'],
+    formTypes: ['Laptop', 'Desktop'],
   },
   cameras: {
     slug: 'cameras',

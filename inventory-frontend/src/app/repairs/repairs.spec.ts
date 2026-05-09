@@ -38,4 +38,13 @@ describe('Repairs', () => {
     component.assets = [{ id: 1, asset_type: 'Laptop', brand: 'Dell', model: 'X', status: 'Assigned' }];
     expect(component.assetIcon(1)).toBe('💻');
   });
+
+  it('repairVendorLabel shows em dash when empty', () => {
+    expect(component.repairVendorLabel({})).toBe('—');
+    expect(component.repairVendorLabel({ vendor: '  ' })).toBe('—');
+  });
+
+  it('repairVendorLabel shows trimmed vendor string', () => {
+    expect(component.repairVendorLabel({ vendor: ' acme ' })).toBe('acme');
+  });
 });

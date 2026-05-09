@@ -23,12 +23,12 @@
 }
 
 /*
- * Hero: public/images/inventory.jpg — Unsplash fallback if local file missing.
+ * Hero background — warehouse / logistics (Unsplash, free to use).
+ * To use your own photo: add public/images/inventory.jpg and set:
+ *   --hero-warehouse-img: url('/images/inventory.jpg');
  */
 :root {
-  --hero-warehouse-img:
-    url('/images/inventory.jpg'),
-    url('https://images.unsplash.com/photo-1553413077-190dd305871c?w=1920&q=85');
+  --hero-warehouse-img: url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2400&q=88');
 }
 
 .hero {
@@ -44,9 +44,9 @@
   box-sizing: border-box;
   background-color: #0a0f18;
   background-image: var(--hero-warehouse-img);
-  background-size: cover, cover;
-  background-position: center center, center center;
-  background-repeat: no-repeat, no-repeat;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 .hero-bg-motion {
@@ -67,9 +67,9 @@
   min-height: 100%;
   margin: auto;
   background-image: var(--hero-warehouse-img);
-  background-size: cover, cover;
-  background-position: center center, center center;
-  background-repeat: no-repeat, no-repeat;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   background-color: #0a0f18;
   transform: translate(-50%, -50%) scale(1.06);
   transform-origin: center center;
@@ -83,9 +83,9 @@
   z-index: 1;
   pointer-events: none;
   background-image: var(--hero-warehouse-img);
-  background-size: cover, cover;
-  background-position: 50% 88%, 50% 88%;
-  background-repeat: no-repeat, no-repeat;
+  background-size: cover;
+  background-position: 50% 88%;
+  background-repeat: no-repeat;
   mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.35) 32%, #000 48%, #000 100%);
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -195,13 +195,14 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  /* Slightly lighter so the hero photo reads clearly while text stays readable */
   background: linear-gradient(
     115deg,
-    rgba(8, 12, 22, 0.92) 0%,
-    rgba(8, 12, 22, 0.82) 38%,
-    rgba(8, 12, 22, 0.55) 58%,
-    rgba(8, 12, 22, 0.28) 82%,
-    rgba(8, 12, 22, 0.18) 100%
+    rgba(8, 12, 22, 0.82) 0%,
+    rgba(8, 12, 22, 0.72) 38%,
+    rgba(8, 12, 22, 0.48) 58%,
+    rgba(8, 12, 22, 0.22) 82%,
+    rgba(8, 12, 22, 0.12) 100%
   );
 }
 

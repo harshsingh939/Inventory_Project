@@ -2,6 +2,7 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+const { logRepair } = require('../services/assetHistoryLog');
 
 const JWT_SECRET = 'inventtrack_secret_key_2024';
 
@@ -89,9 +90,62 @@ exports.addRepair = (req, res) => {
         if (err) {
           return res.status(500).json({ message: err.message });
         }
+        const newRepairId = result.insertId;
         db.query("UPDATE assets SET status='Under Repair' WHERE id=?", [asset_id]);
-        notifyRagDebouncedReindex();
-        res.json({ message: 'Repair Added ✅', id: result.insertId });
+        const repairDetailSql = `
+          SELECT r.id AS repair_id, r.asset_id, r.issue, r.status,
+            COALESCE(r.reported_at, r.created_at) AS occurred_at,
+            r.fixed_at, r.cost,
+            a.asset_type, a.brand, a.model, a.serial_number
+          FROM repairs r
+          LEFT JOIN assets a ON a.id = r.asset_id
+          WHERE r.id = ?
+        `;
+        const repairDetailSqlLite = `
+          SELECT r.id AS repair_id, r.asset_id, r.issue, r.status,
+            COALESCE(r.reported_at, r.created_at) AS occurred_at,
+            a.asset_type, a.brand, a.model, a.serial_number
+          FROM repairs r
+          LEFT JOIN assets a ON a.id = r.asset_id
+          WHERE r.id = ?
+        `;
+        const finishRepairResponse = (e2, rrows) => {
+          const rr = !e2 && rrows && rrows[0] ? rrows[0] : null;
+          if (rr) {
+            let costVal = rr.cost;
+            if (costVal != null && costVal !== '') {
+              const n = Number(costVal);
+              costVal = Number.isFinite(n) ? n : null;
+            } else {
+              costVal = null;
+            }
+            logRepair(
+              db,
+              {
+                repair_id: rr.repair_id,
+                asset_id: rr.asset_id,
+                issue: rr.issue,
+                status: rr.status,
+                occurred_at: rr.occurred_at,
+                fixed_at: rr.fixed_at ?? null,
+                cost: costVal,
+                asset_type: rr.asset_type,
+                brand: rr.brand,
+                model: rr.model,
+                serial_number: rr.serial_number,
+              },
+              () => {},
+            );
+          }
+          notifyRagDebouncedReindex();
+          res.json({ message: 'Repair Added ✅', id: newRepairId });
+        };
+        db.query(repairDetailSql, [newRepairId], (e2, rrows) => {
+          if (e2 && e2.code === 'ER_BAD_FIELD_ERROR') {
+            return db.query(repairDetailSqlLite, [newRepairId], finishRepairResponse);
+          }
+          return finishRepairResponse(e2, rrows);
+        });
       });
     };
     runAttempt(0);
@@ -197,24 +251,140 @@ exports.listAdminRequests = (req, res) => {
   run(0);
 };
 
-/** POST /api/repairs/admin/:id/approve — admin approves repair request into In Progress */
+/** GET /api/repairs/admin/detail/:id — single repair for admin review (full row + asset + reporter + vendor) */
+exports.getRepairAdminDetail = (req, res) => {
+  const repairId = Number(req.params.id);
+  if (!Number.isFinite(repairId) || repairId <= 0) {
+    return res.status(400).json({ message: 'Invalid repair id' });
+  }
+  const vendorExpr = `COALESCE(NULLIF(TRIM(ven.username), ''), ven.email) AS vendor`;
+  const vendorJoin = `LEFT JOIN auth_users ven ON ven.id = r.assigned_authority_auth_user_id`;
+  const queries = [
+    `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id,
+        ${vendorExpr}
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      ${vendorJoin}
+      WHERE r.id = ?
+      LIMIT 1
+    `,
+    `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.id = ?
+      LIMIT 1
+    `,
+    `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        ub.name AS reporter_name,
+        ub.employee_id AS reporter_employee_id,
+        ${vendorExpr}
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      ${vendorJoin}
+      WHERE r.id = ?
+      LIMIT 1
+    `,
+    `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        ub.name AS reporter_name,
+        ub.employee_id AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.id = ?
+      LIMIT 1
+    `,
+  ];
+  const run = (i) => {
+    if (i >= queries.length) {
+      return res.status(404).json({ message: 'Repair not found' });
+    }
+    db.query(queries[i], [repairId], (err, rows) => {
+      if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+        return run(i + 1);
+      }
+      if (err) return res.status(500).json({ message: err.message });
+      if (!rows || !rows[0]) {
+        return res.status(404).json({ message: 'Repair not found' });
+      }
+      res.json(rows[0]);
+    });
+  };
+  run(0);
+};
+
+/** POST /api/repairs/admin/:id/approve — admin/vendor approves pending repair request */
 exports.approveRepairRequest = (req, res) => {
   const repairId = Number(req.params.id);
   if (!Number.isFinite(repairId) || repairId <= 0) {
     return res.status(400).json({ message: 'Invalid repair id' });
   }
-  db.query(
-    "UPDATE repairs SET status='In Progress' WHERE id = ? AND status = 'Pending'",
-    [repairId],
-    (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-      if (!result?.affectedRows) {
-        return res.status(404).json({ message: 'Pending repair request not found' });
-      }
-      notifyRagDebouncedReindex();
-      res.json({ message: 'Repair request approved ✅' });
-    },
-  );
+  const actor = req.user || tryActor(req);
+  const role = String(actor?.role || '').toLowerCase();
+
+  if (role === 'repair_authority') {
+    db.query(
+      `
+      UPDATE repairs
+      SET status = 'Under repair',
+          assigned_authority_auth_user_id = ?,
+          authority_updated_at = NOW()
+      WHERE id = ?
+        AND status = 'Pending'
+      `,
+      [Number(actor.id), repairId],
+      (err, result) => {
+        if (err) return res.status(500).json({ message: err.message });
+        if (!result?.affectedRows) {
+          return res.status(404).json({ message: 'Pending repair request not found' });
+        }
+        notifyRagDebouncedReindex();
+        res.json({ message: 'Repair request approved and assigned ✅' });
+      },
+    );
+    return;
+  }
+
+  db.query("UPDATE repairs SET status='In Progress' WHERE id = ? AND status = 'Pending'", [repairId], (err, result) => {
+    if (err) return res.status(500).json({ message: err.message });
+    if (!result?.affectedRows) {
+      return res.status(404).json({ message: 'Pending repair request not found' });
+    }
+    notifyRagDebouncedReindex();
+    res.json({ message: 'Repair request approved ✅' });
+  });
 };
 
 exports.getRepairs = (req, res) => {
@@ -224,8 +394,26 @@ exports.getRepairs = (req, res) => {
   const role = String(req.user.role || '').toLowerCase();
 
   if (role === 'admin') {
-    const sqlWithReporter = `
+    /** Prefer repair-authority login as human-readable vendor label (migration 007). */
+    const vendorExpr = `COALESCE(NULLIF(TRIM(ven.username), ''), ven.email) AS vendor`;
+    const vendorJoin = `LEFT JOIN auth_users ven ON ven.id = r.assigned_authority_auth_user_id`;
+    const adminQueries = [
+      `
       SELECT r.*,
+        act.id AS active_assignment_id,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id,
+        ${vendorExpr}
+      FROM repairs r
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      ${vendorJoin}
+      ORDER BY r.id DESC
+    `,
+      `
+      SELECT r.*,
+        act.id AS active_assignment_id,
         COALESCE(ua.name, ub.name) AS reporter_name,
         COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id
       FROM repairs r
@@ -233,29 +421,111 @@ exports.getRepairs = (req, res) => {
       LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
       LEFT JOIN users ub ON ub.id = act.user_id
       ORDER BY r.id DESC
-    `;
-    const sqlNoAddedBy = `
-      SELECT r.*, ub.name AS reporter_name, ub.employee_id AS reporter_employee_id
+    `,
+      `
+      SELECT r.*,
+        act.id AS active_assignment_id,
+        ub.name AS reporter_name, ub.employee_id AS reporter_employee_id,
+        ${vendorExpr}
+      FROM repairs r
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      ${vendorJoin}
+      ORDER BY r.id DESC
+    `,
+      `
+      SELECT r.*,
+        act.id AS active_assignment_id,
+        ub.name AS reporter_name, ub.employee_id AS reporter_employee_id
       FROM repairs r
       LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
       LEFT JOIN users ub ON ub.id = act.user_id
       ORDER BY r.id DESC
-    `;
-    const runAdmin = (useRich) => {
-      const q = useRich ? sqlWithReporter : sqlNoAddedBy;
-      db.query(q, (err, result) => {
-        if (err && err.code === 'ER_BAD_FIELD_ERROR' && useRich) {
-          return runAdmin(false);
+    `,
+    ];
+    const runAdmin = (qi) => {
+      if (qi >= adminQueries.length) {
+        return res.status(500).json({ message: 'Could not load repairs for this database schema' });
+      }
+      db.query(adminQueries[qi], (err, result) => {
+        if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+          return runAdmin(qi + 1);
         }
         if (err) return res.status(500).json({ message: err.message });
         res.json(result || []);
       });
     };
-    return runAdmin(true);
+    return runAdmin(0);
   }
 
   if (role === 'repair_authority') {
-    return res.json([]);
+    const authorityId = Number(req.user.id);
+    const authorityQueries = [
+      `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        act.id AS active_assignment_id,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id,
+        COALESCE(NULLIF(TRIM(ven.username), ''), ven.email) AS vendor
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      LEFT JOIN auth_users ven ON ven.id = r.assigned_authority_auth_user_id
+      WHERE r.assigned_authority_auth_user_id = ?
+      ORDER BY r.id DESC
+      `,
+      `
+      SELECT r.*,
+        a.asset_type,
+        a.brand,
+        a.model,
+        a.serial_number,
+        act.id AS active_assignment_id,
+        COALESCE(ua.name, ub.name) AS reporter_name,
+        COALESCE(ua.employee_id, ub.employee_id) AS reporter_employee_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN users ua ON ua.id = r.added_by
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      LEFT JOIN users ub ON ub.id = act.user_id
+      WHERE r.assigned_authority_auth_user_id = ?
+      ORDER BY r.id DESC
+      `,
+      `
+      SELECT r.*, a.asset_type, a.brand, a.model, a.serial_number, act.id AS active_assignment_id
+      FROM repairs r
+      LEFT JOIN assets a ON a.id = r.asset_id
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      WHERE r.assigned_authority_auth_user_id = ?
+      ORDER BY r.id DESC
+      `,
+      `
+      SELECT r.*, act.id AS active_assignment_id
+      FROM repairs r
+      LEFT JOIN assignments act ON act.asset_id = r.asset_id AND act.status = 'Active'
+      WHERE r.assigned_authority_auth_user_id = ?
+      ORDER BY r.id DESC
+      `,
+    ];
+    const runAuthority = (qi) => {
+      if (qi >= authorityQueries.length) {
+        return res.json([]);
+      }
+      db.query(authorityQueries[qi], [authorityId], (err, result) => {
+        if (err && err.code === 'ER_BAD_FIELD_ERROR') {
+          return runAuthority(qi + 1);
+        }
+        if (err) return res.status(500).json({ message: err.message });
+        res.json(result || []);
+      });
+    };
+    return runAuthority(0);
   }
 
   const authId = Number(req.user.id);
@@ -269,13 +539,35 @@ exports.getRepairs = (req, res) => {
      * or legacy rows with no added_by but reported/created on or after this active assignment started.
      * Hides full asset history from previous assignees on the same machine.
      */
+    const vendorSel = `COALESCE(NULLIF(TRIM(ven.username), ''), ven.email) AS vendor`;
+    const vendorJoinUser = `LEFT JOIN auth_users ven ON ven.id = r.assigned_authority_auth_user_id`;
     const userRepairQueries = [
+      {
+        sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
+      WHERE (r.added_by = ? OR (r.added_by IS NULL AND COALESCE(r.reported_at, r.created_at) >= asn.start_time))
+      ORDER BY r.id DESC`,
+        params: [userId, userId],
+      },
       {
         sql: `
       SELECT r.* FROM repairs r
       INNER JOIN assignments asn
         ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
       WHERE (r.added_by = ? OR (r.added_by IS NULL AND COALESCE(r.reported_at, r.created_at) >= asn.start_time))
+      ORDER BY r.id DESC`,
+        params: [userId, userId],
+      },
+      {
+        sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
+      WHERE (r.added_by = ? OR (r.added_by IS NULL AND r.reported_at >= asn.start_time))
       ORDER BY r.id DESC`,
         params: [userId, userId],
       },
@@ -290,10 +582,30 @@ exports.getRepairs = (req, res) => {
       },
       {
         sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
+      WHERE (r.added_by = ? OR (r.added_by IS NULL AND r.created_at >= asn.start_time))
+      ORDER BY r.id DESC`,
+        params: [userId, userId],
+      },
+      {
+        sql: `
       SELECT r.* FROM repairs r
       INNER JOIN assignments asn
         ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
       WHERE (r.added_by = ? OR (r.added_by IS NULL AND r.created_at >= asn.start_time))
+      ORDER BY r.id DESC`,
+        params: [userId, userId],
+      },
+      {
+        sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
+      WHERE r.added_by = ?
       ORDER BY r.id DESC`,
         params: [userId, userId],
       },
@@ -308,9 +620,10 @@ exports.getRepairs = (req, res) => {
       },
       {
         sql: `
-      SELECT r.* FROM repairs r
+      SELECT r.*, ${vendorSel} FROM repairs r
       INNER JOIN assignments asn
         ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
       WHERE COALESCE(r.reported_at, r.created_at) >= asn.start_time
       ORDER BY r.id DESC`,
         params: [userId],
@@ -320,7 +633,36 @@ exports.getRepairs = (req, res) => {
       SELECT r.* FROM repairs r
       INNER JOIN assignments asn
         ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      WHERE COALESCE(r.reported_at, r.created_at) >= asn.start_time
+      ORDER BY r.id DESC`,
+        params: [userId],
+      },
+      {
+        sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
       WHERE r.reported_at >= asn.start_time
+      ORDER BY r.id DESC`,
+        params: [userId],
+      },
+      {
+        sql: `
+      SELECT r.* FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      WHERE r.reported_at >= asn.start_time
+      ORDER BY r.id DESC`,
+        params: [userId],
+      },
+      {
+        sql: `
+      SELECT r.*, ${vendorSel} FROM repairs r
+      INNER JOIN assignments asn
+        ON asn.asset_id = r.asset_id AND asn.status = 'Active' AND asn.user_id = ?
+      ${vendorJoinUser}
+      WHERE r.created_at >= asn.start_time
       ORDER BY r.id DESC`,
         params: [userId],
       },
@@ -362,56 +704,87 @@ exports.getRepairs = (req, res) => {
  * Schema: reported_at (your table) + optional repair_cost, repair_notes, fixed_at after migration 003.
  */
 exports.getRepairCostLog = (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  const role = String(req.user.role || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  const isVendor = role === 'repair_authority' || role === 'vendor';
+  const whereFilter = isVendor
+    ? 'r.status = \'Fixed\' AND r.assigned_authority_auth_user_id = ?'
+    : 'r.status = \'Fixed\'';
+  const params = isVendor ? [Number(req.user.id)] : [];
   const queries = [
-    `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.repair_bill, r.reported_at, r.fixed_at,
-            a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY COALESCE(r.fixed_at, r.reported_at) DESC, r.id DESC`,
-    `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at, r.repair_bill,
-            NULL AS fixed_at, a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY r.reported_at DESC, r.id DESC`,
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.repair_bill, r.reported_at, r.fixed_at,
+              a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY COALESCE(r.fixed_at, r.reported_at) DESC, r.id DESC`,
+      params,
+    },
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at, r.repair_bill,
+              NULL AS fixed_at, a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY r.reported_at DESC, r.id DESC`,
+      params,
+    },
     /* repair_bill column missing — still return real cost/notes/fixed_at */
-    `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at, r.fixed_at,
-            NULL AS repair_bill, a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY COALESCE(r.fixed_at, r.reported_at) DESC, r.id DESC`,
-    `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at,
-            NULL AS fixed_at, NULL AS repair_bill, a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY r.reported_at DESC, r.id DESC`,
-    `SELECT r.id, r.asset_id, r.issue,
-            NULL AS repair_cost, NULL AS repair_notes, NULL AS repair_bill, r.reported_at,
-            NULL AS fixed_at, a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY r.reported_at DESC, r.id DESC`,
-    `SELECT r.id, r.asset_id, r.issue,
-            NULL AS repair_cost, NULL AS repair_notes, NULL AS repair_bill, r.created_at AS reported_at,
-            NULL AS fixed_at, a.asset_type, a.brand, a.model
-     FROM repairs r
-     LEFT JOIN assets a ON a.id = r.asset_id
-     WHERE r.status = 'Fixed'
-     ORDER BY r.created_at DESC, r.id DESC`
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at, r.fixed_at,
+              NULL AS repair_bill, a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY COALESCE(r.fixed_at, r.reported_at) DESC, r.id DESC`,
+      params,
+    },
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue, r.repair_cost, r.repair_notes, r.reported_at,
+              NULL AS fixed_at, NULL AS repair_bill, a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY r.reported_at DESC, r.id DESC`,
+      params,
+    },
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue,
+              NULL AS repair_cost, NULL AS repair_notes, NULL AS repair_bill, r.reported_at,
+              NULL AS fixed_at, a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY r.reported_at DESC, r.id DESC`,
+      params,
+    },
+    {
+      sql: `SELECT r.id, r.asset_id, r.issue,
+              NULL AS repair_cost, NULL AS repair_notes, NULL AS repair_bill, r.created_at AS reported_at,
+              NULL AS fixed_at, a.asset_type, a.brand, a.model
+       FROM repairs r
+       LEFT JOIN assets a ON a.id = r.asset_id
+       WHERE ${whereFilter}
+       ORDER BY r.created_at DESC, r.id DESC`,
+      params,
+    },
   ];
 
   const run = (i) => {
     if (i >= queries.length) {
       return res.json([]);
     }
-    db.query(queries[i], (err, rows) => {
+    const q = queries[i];
+    db.query(q.sql, q.params, (err, rows) => {
       if (err && err.code === 'ER_BAD_FIELD_ERROR') {
         return run(i + 1);
       }
@@ -591,6 +964,50 @@ exports.updateRepairStatus = (req, res) => {
         });
       };
       runAttempt(0);
+    } else if (status === 'ReviewPending') {
+      const notesElse = normalizeNotes();
+      const costElse = normalizeCost();
+      if (!notesElse) {
+        unlinkUploadedBill();
+        return res.status(400).json({
+          message: 'Repair details are required before sending to admin review.',
+        });
+      }
+      const attempts = [
+        {
+          sql: 'UPDATE repairs SET status = ?, repair_cost = ?, repair_notes = ? WHERE id = ?',
+          params: [status, costElse, notesElse, repair_id],
+        },
+        {
+          sql: 'UPDATE repairs SET status = ?, repair_notes = ? WHERE id = ?',
+          params: [status, notesElse, repair_id],
+        },
+        {
+          sql: 'UPDATE repairs SET status = ?, repair_cost = ? WHERE id = ?',
+          params: [status, costElse, repair_id],
+        },
+        {
+          sql: 'UPDATE repairs SET status = ? WHERE id = ?',
+          params: [status, repair_id],
+        },
+      ];
+      const runAttempt = (i) => {
+        if (i >= attempts.length) {
+          unlinkUploadedBill();
+          return res.status(500).json({ message: 'Could not update repair' });
+        }
+        db.query(attempts[i].sql, attempts[i].params, (err2) => {
+          if (err2 && err2.code === 'ER_BAD_FIELD_ERROR') {
+            return runAttempt(i + 1);
+          }
+          if (err2) {
+            unlinkUploadedBill();
+            return res.status(500).json({ message: err2.message });
+          }
+          finish(null);
+        });
+      };
+      runAttempt(0);
     } else {
       const notesElse = normalizeNotes();
       if (notesElse && status === 'CannotRepair') {
@@ -616,6 +1033,12 @@ exports.updateRepairStatus = (req, res) => {
       if (aid == null || Number(aid) !== Number(actor.id)) {
         unlinkUploadedBill();
         return res.status(403).json({ message: 'This repair is not assigned to your authority account' });
+      }
+      if (status === 'Fixed') {
+        unlinkUploadedBill();
+        return res.status(403).json({
+          message: 'Vendor can submit repair details; only admin can mark it as Fixed.',
+        });
       }
       return proceedWithUpdate();
     }

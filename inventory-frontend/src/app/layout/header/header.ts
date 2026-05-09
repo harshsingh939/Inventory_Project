@@ -13,7 +13,7 @@ import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
-import { NotificationService } from '../../notification.service';
+import { NotificationService, type Notification } from '../../notification.service';
 
 @Component({
   selector: 'app-header',
@@ -135,6 +135,18 @@ export class Header implements OnInit, OnDestroy {
   get isLoggedIn(): boolean { return this.auth.isLoggedIn(); }
   get isAdmin(): boolean    { return this.auth.isAdmin(); }
   get isRepairAuthority(): boolean { return this.auth.isRepairAuthority(); }
+
+  /** Route when user clicks an admin notification row */
+  notifLink(n: Notification): (string | number)[] {
+    if (n.kind === 'assignment_request') {
+      return ['/assignment-requests'];
+    }
+    const st = String(n.repair_status || '').trim();
+    if (n.kind === 'repair' && st === 'ReviewPending') {
+      return ['/repair-review', n.id];
+    }
+    return ['/repairs'];
+  }
 
   timeAgo(dateStr: string | undefined): string {
     if (!dateStr) return 'Recently';

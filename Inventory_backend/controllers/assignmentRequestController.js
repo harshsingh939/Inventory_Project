@@ -71,6 +71,116 @@ function pickOneAssetByType(dbConn, assetType, noteHints, excludeIds, innerCb) {
   });
 }
 
+/**
+ * "Other" requests: pick one available asset whose type/brand/model/serial/cpu matches words in user_message.
+ * Tries AND of all tokens first, then OR, then whole-message LIKE — same callback shape as pickOneAssetByType.
+ */
+function pickOneAssetForOtherRequest(dbConn, userMessage, excludeIds, innerCb) {
+  const msg = String(userMessage || '').trim();
+  if (!msg) return innerCb(null, null, false);
+
+  const ex = excludeIds && excludeIds.length ? excludeIds : [-1];
+  const phEx = ex.map(() => '?').join(', ');
+  const baseFrom = `
+    FROM assets a
+    LEFT JOIN assignments x ON x.asset_id = a.id AND x.status = 'Active'
+    WHERE x.id IS NULL
+    AND COALESCE(LOWER(TRIM(a.status)), 'available') NOT IN ('assigned', 'under repair', 'disposed')
+    AND a.id NOT IN (${phEx})
+  `;
+  const haystack = `LOWER(CONCAT_WS(' ', IFNULL(a.asset_type,''), IFNULL(a.brand,''), IFNULL(a.model,''), IFNULL(a.serial_number,''), IFNULL(a.cpu,'')))`;
+  const tail = `ORDER BY (a.inventory_id IS NULL) DESC, a.id ASC LIMIT 1`;
+
+  const stop = new Set([
+    'need',
+    'wants',
+    'want',
+    'the',
+    'and',
+    'for',
+    'one',
+    'two',
+    'any',
+    'some',
+    'pls',
+    'please',
+    'a',
+    'an',
+    'to',
+    'of',
+    'in',
+    'i',
+    'we',
+    'me',
+    'my',
+    'you',
+    'with',
+    'from',
+    'this',
+    'that',
+    'sir',
+    'kindly',
+    'urgent',
+    'okay',
+    'ok',
+    'yes',
+    'no',
+    'hi',
+  ]);
+  const rawTokens = msg
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const tokens = [
+    ...new Set(rawTokens.filter((w) => w.length >= 2 && !stop.has(w))),
+  ]
+    .sort((a, b) => b.length - a.length)
+    .slice(0, 8);
+
+  const runWhere = (whereSql, params, fellBack, onMiss) => {
+    const sql = `SELECT a.id ${baseFrom} AND (${whereSql}) ${tail}`;
+    dbConn.query(sql, [...ex, ...params], (e, rows) => {
+      if (e) return innerCb(e);
+      if (rows?.length) return innerCb(null, rows[0].id, fellBack);
+      onMiss();
+    });
+  };
+
+  const tryWhole = () => {
+    const lump = msg
+      .toLowerCase()
+      .replace(/[%_]/g, '')
+      .replace(/\s+/g, '%');
+    if (!lump || lump.length < 2) return innerCb(null, null, false);
+    runWhere(`${haystack} LIKE ?`, [`%${lump}%`], true, () => innerCb(null, null, false));
+  };
+
+  const tryOr = () => {
+    if (!tokens.length) return tryWhole();
+    const parts = tokens.map(() => `${haystack} LIKE ?`);
+    const vals = tokens.map((t) => `%${String(t).replace(/[%_]/g, '')}%`);
+    runWhere(parts.join(' OR '), vals, true, tryWhole);
+  };
+
+  const tryAnd = () => {
+    if (!tokens.length) return tryOr();
+    const slice = tokens.slice(0, 6);
+    const parts = slice.map(() => `${haystack} LIKE ?`);
+    const vals = slice.map((t) => `%${String(t).replace(/[%_]/g, '')}%`);
+    runWhere(parts.join(' AND '), vals, false, tryOr);
+  };
+
+  tryAnd();
+}
+
+function pickOneAssetForRequestType(dbConn, t, userMessage, noteHints, excludeIds, innerCb) {
+  if (String(t || '').trim().toLowerCase() === 'other') {
+    return pickOneAssetForOtherRequest(dbConn, userMessage, excludeIds, innerCb);
+  }
+  return pickOneAssetByType(dbConn, t, noteHints, excludeIds, innerCb);
+}
+
 function assetRowMatchesHints(dbConn, assetId, noteHints, vcb) {
   if (!noteHints || !noteHints.length) return vcb(true);
   const hintConds = noteHints.map(
@@ -142,10 +252,17 @@ function resolveRequestAssetIds(dbConn, requestId, cb) {
                   const stepTypeAll = () => {
                     if (!typeQueue.length) return cb(null, { assetIds: acc, noteWarnings });
                     const t = typeQueue[0];
-                    pickOneAssetByType(dbConn, t, noteHints, acc, (e7, id, fellBack) => {
+                    pickOneAssetForRequestType(dbConn, t, userMessage, noteHints, acc, (e7, id, fellBack) => {
                       if (e7) return cb(e7);
                       if (!id) {
-                        return cb(new Error(`No available "${t}" in stock`));
+                        const isOther = String(t || '').trim().toLowerCase() === 'other';
+                        return cb(
+                          new Error(
+                            isOther
+                              ? 'No available asset matched your note for this “Other” request. Add stock with matching name/model or use manual fulfill.'
+                              : `No available "${t}" in stock`,
+                          ),
+                        );
                       }
                       if (fellBack) pushFallbackMsg('global stock', t);
                       acc.push(id);
@@ -209,7 +326,7 @@ function resolveRequestAssetIds(dbConn, requestId, cb) {
                         const tryGlobalTypesForInvSlot = (qi, done) => {
                           if (qi >= typeQueue.length) return done(null);
                           const t = typeQueue[qi];
-                          pickOneAssetByType(dbConn, t, noteHints, acc, (e7, id, fellBack) => {
+                          pickOneAssetForRequestType(dbConn, t, userMessage, noteHints, acc, (e7, id, fellBack) => {
                             if (e7) return cb(e7);
                             if (id && !acc.includes(id)) {
                               if (fellBack) pushFallbackMsg(`inventory #${invId} then global stock`, t);

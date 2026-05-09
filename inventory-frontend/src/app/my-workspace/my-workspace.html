@@ -138,7 +138,7 @@
           <span class="mw-panel-icon" aria-hidden="true">✉️</span>
           <div class="mw-panel-head-text">
             <h2 class="mw-panel-title">New request</h2>
-            <p class="mw-panel-desc">Request laptop or desktop from IT</p>
+            <p class="mw-panel-desc">Request laptop, desktop, or describe another item (Other)</p>
           </div>
           <span class="request-badge" *ngIf="!loading && linked">Ready</span>
           <span class="request-badge request-badge-warn" *ngIf="!loading && !linked">Profile required</span>
@@ -161,16 +161,27 @@
               </label>
             </div>
 
-            <label class="mw-field-label">Note <span class="mw-optional">(optional)</span></label>
+            <label class="mw-field-label">
+              Note
+              <span class="mw-optional" *ngIf="!isOtherSelected">(optional)</span>
+              <span class="mw-required" *ngIf="isOtherSelected">(required for Other)</span>
+            </label>
             <textarea
               class="input ta mw-ta"
               rows="4"
               [(ngModel)]="requestMessage"
-              placeholder="e.g. need i7 for builds — we match CPU when stock allows"
+              [attr.placeholder]="
+                isOtherSelected
+                  ? 'e.g. mouse, HDMI cable, USB hub — what you need goes in this note'
+                  : 'e.g. need i7 for builds — we match CPU when stock allows'
+              "
               [disabled]="!linked"
             ></textarea>
-            <p class="mw-hint">
+            <p class="mw-hint" *ngIf="!isOtherSelected">
               Notes mentioning <strong>i3 / i5 / i7 / i9</strong> or <strong>Ryzen 3–9</strong> help match a unit when possible.
+            </p>
+            <p class="mw-hint mw-hint--other" *ngIf="isOtherSelected">
+              <strong>Other</strong> is for accessories or gear that isn’t Desktop/Laptop. Your note is sent to IT as the request (e.g. mouse, cable).
             </p>
             <button type="button" class="btn btn-primary mw-submit" (click)="submitRequest()" [disabled]="submitting || (!loading && !linked)">
               {{ submitting ? 'Sending…' : 'Send request' }}

@@ -25,9 +25,15 @@ export class MyWorkspace implements OnInit {
   /** Only when /me/assignments fails (e.g. token) */
   meError = '';
 
-  /** Fixed device categories on this screen (not driven by catalog) */
-  readonly requestDeviceTypes: readonly string[] = ['Desktop', 'Laptop'];
+  /** Fixed device categories on this screen (not driven by catalog). "Other" is exclusive — note describes the item. */
+  readonly requestDeviceTypes: readonly string[] = ['Desktop', 'Laptop', 'Other'];
   selectedAssetTypes = new Set<string>();
+
+  private static readonly OTHER = 'Other';
+
+  get isOtherSelected(): boolean {
+    return this.selectedAssetTypes.has(MyWorkspace.OTHER);
+  }
 
   requestMessage = '';
   submitting = false;
@@ -95,10 +101,18 @@ export class MyWorkspace implements OnInit {
   toggleAssetType(t: string) {
     const key = String(t).trim();
     if (!key) return;
-    if (this.selectedAssetTypes.has(key)) {
-      this.selectedAssetTypes.delete(key);
+    if (key === MyWorkspace.OTHER) {
+      if (this.selectedAssetTypes.has(MyWorkspace.OTHER)) {
+        this.selectedAssetTypes.delete(MyWorkspace.OTHER);
+      } else {
+        this.selectedAssetTypes = new Set([MyWorkspace.OTHER]);
+      }
     } else {
-      this.selectedAssetTypes.add(key);
+      const next = new Set(this.selectedAssetTypes);
+      next.delete(MyWorkspace.OTHER);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      this.selectedAssetTypes = next;
     }
     this.selectedAssetTypes = new Set(this.selectedAssetTypes);
     this.cdr.detectChanges();
@@ -117,16 +131,25 @@ export class MyWorkspace implements OnInit {
     const allowedTypes = new Set(this.requestDeviceTypes);
     const asset_types = [...this.selectedAssetTypes].filter((t) => allowedTypes.has(String(t).trim()));
     if (asset_types.length === 0) {
-      this.errorMsg = 'Select Desktop and/or Laptop';
+      this.errorMsg = 'Select Desktop, Laptop, or Other';
       this.cdr.detectChanges();
       return;
+    }
+    const note = this.requestMessage.trim();
+    if (asset_types.includes(MyWorkspace.OTHER)) {
+      if (note.length < 2) {
+        this.errorMsg =
+          'For “Other”, describe what you need in the note (e.g. mouse, HDMI cable, keyboard).';
+        this.cdr.detectChanges();
+        return;
+      }
     }
     this.submitting = true;
     this.errorMsg = '';
     this.successMsg = '';
     const body: { asset_types: string[]; user_message?: string } = {
       asset_types,
-      user_message: this.requestMessage.trim() || undefined,
+      user_message: note || undefined,
     };
 
     this.http.post<any>(`${this.api}/assignment-requests`, body).subscribe({
@@ -134,7 +157,9 @@ export class MyWorkspace implements OnInit {
         this.submitting = false;
         this.selectedAssetTypes.clear();
         this.requestMessage = '';
-        this.successMsg = 'Request sent. Admin will assign one available unit per selection.';
+        this.successMsg = asset_types.includes(MyWorkspace.OTHER)
+          ? 'Request sent. IT will review your “Other” item from your note.'
+          : 'Request sent. Admin will assign one available unit per selection.';
         this.refreshAll();
         this.cdr.detectChanges();
         setTimeout(() => {

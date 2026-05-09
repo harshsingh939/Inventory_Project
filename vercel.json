@@ -3,5 +3,5 @@
   "installCommand": "npm install --prefix inventory-frontend",
   "buildCommand": "npm run build --prefix inventory-frontend",
   "outputDirectory": "inventory-frontend/dist/inventory-frontend/browser",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }

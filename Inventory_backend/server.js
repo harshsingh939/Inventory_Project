@@ -51,4 +51,9 @@ app.get('/', (req, res) => res.send('Server Running ✅'));
 // Admin header feed: repairs + pending assignment requests
 app.get('/api/notifications', authMiddleware, notificationController.getAdminNotifications);
 
-app.listen(3000, () => console.log('Server running on port 3000 🚀'));
+const port = Number(process.env.PORT) || 3000;
+if (require.main === module) {
+  app.listen(port, () => console.log(`Server running on port ${port} 🚀`));
+}
+
+module.exports = app;

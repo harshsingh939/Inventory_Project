@@ -1,0 +1,76 @@
+/**
+ * Global mobile / small-viewport layer (loaded after styles.css).
+ * Safe areas, overflow, forms, media, touch scrolling.
+ */
+
+app-root {
+  display: block;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.layout,
+.content {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+@media (max-width: 768px) {
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Chart containers: avoid canvas wider than viewport */
+  .chart-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-body canvas {
+    max-width: 100% !important;
+  }
+
+  /* Horizontal scroll regions */
+  .table-responsive,
+  [class*='table-scroll'],
+  [class*='table-wrap'],
+  .inv-table-wrap,
+  .mw-table-scroll,
+  .history-table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Stacked forms: full-width selects and text fields */
+  select.select-input,
+  .select-input:not([multiple]),
+  textarea.ta,
+  textarea.input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Global .input is 220px on desktop — widen on small screens */
+  .input:not([type='checkbox']):not([type='radio']) {
+    max-width: 100%;
+  }
+
+  /* Prefer comfortable tap targets for primary actions */
+  .btn-primary,
+  .btn.btn-primary,
+  button.btn-primary {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* Notch / home indicator: extra bottom padding where layout uses fixed chrome */

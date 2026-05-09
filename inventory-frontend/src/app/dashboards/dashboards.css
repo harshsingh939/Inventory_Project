@@ -307,11 +307,13 @@
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.84rem;
+  /* On narrow viewports, scroll horizontally instead of crushing the name column */
+  min-width: 520px;
 }
 
 .inv-col-name {
   width: auto;
-  min-width: 0;
+  min-width: 9rem;
 }
 
 .inv-col-assets {
@@ -362,8 +364,8 @@
 .inv-td-name {
   color: #e2e8f0;
   font-weight: 500;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .inv-td-num {
@@ -746,7 +748,11 @@ tr:hover td { background: rgba(30,41,59,0.4); }
 
 @media (max-width: 600px) {
   .stats-grid { grid-template-columns: 1fr; }
-  .dashboard-container { padding: 12px; }
+  .dashboard-container {
+    padding: 12px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
 
   .dash-header {
     flex-direction: column;
@@ -762,6 +768,22 @@ tr:hover td { background: rgba(30,41,59,0.4); }
   .refresh-btn {
     flex: 1;
     min-height: 44px;
+  }
+
+  .chart-body {
+    height: 200px;
+  }
+
+  .chart-body canvas {
+    max-height: 200px !important;
+  }
+
+  .chart-body--live {
+    height: 220px;
+  }
+
+  .chart-body--live canvas {
+    max-height: 220px !important;
   }
 }
 

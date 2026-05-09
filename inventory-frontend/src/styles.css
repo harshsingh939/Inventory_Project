@@ -221,12 +221,13 @@ tr:hover {
 /* 📱 Responsive */
 @media (max-width: 768px) {
   .container {
-    padding: 16px 12px;
+    padding: 16px max(12px, env(safe-area-inset-left)) 16px max(12px, env(safe-area-inset-right));
   }
 
   .card {
     padding: 16px;
     margin: 12px 0;
+    max-width: 100%;
   }
 
   th,

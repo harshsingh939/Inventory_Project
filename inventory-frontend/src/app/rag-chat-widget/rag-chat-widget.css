@@ -232,13 +232,15 @@
 
 @media (max-width: 600px) {
   .rag-widget__panel {
-    right: 14px;
-    bottom: 82px;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: min(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right), 380px);
+    max-height: min(70vh, 480px);
   }
 
   .rag-widget__fab {
-    right: 14px;
-    bottom: 14px;
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
     width: 52px;
     height: 52px;
   }

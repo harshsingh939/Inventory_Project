@@ -1107,6 +1107,10 @@ a.notif-item--link {
   .header-admin-nav__link {
     padding: 6px 8px;
     font-size: 0.72rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
   }
 
   .header-vendor-nav {

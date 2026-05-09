@@ -391,7 +391,18 @@ tr:hover td { background: rgba(30,41,59,0.4); }
 }
 
 @media (max-width: 600px) {
-  .assign-form { grid-template-columns: 1fr; }
+  .assign-form {
+    grid-template-columns: 1fr;
+  }
+
+  .assign-form .btn-field {
+    grid-column: 1 / -1;
+  }
+
+  .assign-form .assign-btn {
+    width: 100%;
+    min-height: 44px;
+  }
 }
 
 .history-table-wrap {
@@ -419,6 +430,31 @@ tr:hover td { background: rgba(30,41,59,0.4); }
   .assignment-grid {
     grid-template-columns: 1fr;
   }
+
+  .btn-unassign,
+  .btn-dispose {
+    min-height: 44px;
+    padding: 8px 14px;
+  }
+
+  .assignment-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .assignment-actions .btn-unassign,
+  .assignment-actions .btn-dispose {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .assignment-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
 }
 
 /* Dispose modal */
@@ -430,7 +466,8 @@ tr:hover td { background: rgba(30,41,59,0.4); }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
 }
 

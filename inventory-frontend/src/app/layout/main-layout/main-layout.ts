@@ -5,6 +5,8 @@ import { Subscription, filter } from 'rxjs';
 
 import { Header } from '../header/header';
 import { RagChatWidget } from '../../rag-chat-widget/rag-chat-widget';
+import { AuthService } from '../../auth.service';
+import { EmployeeProfileStatusService } from '../../employee-profile-status.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -15,6 +17,8 @@ import { RagChatWidget } from '../../rag-chat-widget/rag-chat-widget';
 })
 export class MainLayout implements OnDestroy {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly employeeProfile = inject(EmployeeProfileStatusService);
   private readonly navSub: Subscription;
 
   /** Hide “back to home” on `/` (home) */
@@ -23,7 +27,9 @@ export class MainLayout implements OnDestroy {
   constructor() {
     const sync = () => {
       const path = this.router.url.split('?')[0] || '/';
-      this.showBackHome.set(path !== '/');
+      /** Hide strip on marketing home and on employee profile “home” */
+      const hide = path === '/' || path === '/my-profile';
+      this.showBackHome.set(!hide);
     };
     sync();
     this.navSub = this.router.events
@@ -33,6 +39,19 @@ export class MainLayout implements OnDestroy {
 
   ngOnDestroy(): void {
     this.navSub.unsubscribe();
+  }
+
+  /** Breadcrumb “Home” — same target as header logo for linked employees. */
+  contextHomeLink(): (string | number)[] {
+    if (
+      this.auth.isLoggedIn() &&
+      !this.auth.isAdmin() &&
+      !this.auth.isRepairAuthority() &&
+      this.employeeProfile.hasLinkedProfile() === true
+    ) {
+      return ['/my-profile'];
+    }
+    return ['/'];
   }
 
   /** Breadcrumb text for current route (e.g. Repairs, Assets › Cameras) */
@@ -54,6 +73,8 @@ export class MainLayout implements OnDestroy {
       'assignment-requests': 'Assignment requests',
       disposed: 'Disposed items',
       'rag-admin': 'Search index',
+      'my-profile': 'Home',
+      'my-workspace': 'My workspace',
     };
     const titleCase = (s: string) =>
       s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());

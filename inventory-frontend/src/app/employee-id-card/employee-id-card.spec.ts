@@ -1,34 +1,34 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Router } from '@angular/router';
-import { Home } from './home';
+import { RouterTestingModule } from '@angular/router/testing';
+
+import { EmployeeIdCard } from './employee-id-card';
 import { AuthService } from '../auth.service';
 import { EmployeeProfileStatusService } from '../employee-profile-status.service';
 
-describe('Home', () => {
-  let component: Home;
-  let fixture: ComponentFixture<Home>;
+describe('EmployeeIdCard', () => {
+  let component: EmployeeIdCard;
+  let fixture: ComponentFixture<EmployeeIdCard>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Home, HttpClientTestingModule],
+      imports: [EmployeeIdCard, HttpClientTestingModule, RouterTestingModule],
       providers: [
         EmployeeProfileStatusService,
-        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
         {
           provide: AuthService,
           useValue: {
-            isLoggedIn: () => false,
             isAdmin: () => false,
             isRepairAuthority: () => false,
+            isLoggedIn: () => true,
+            getProfile: () => ({ id: 1, username: 'tester', email: '', mobile: '', role: 'user' }),
           },
         },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Home);
+    fixture = TestBed.createComponent(EmployeeIdCard);
     component = fixture.componentInstance;
-    await fixture.whenStable();
   });
 
   it('should create', () => {

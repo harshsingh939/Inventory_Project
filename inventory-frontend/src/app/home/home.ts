@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { apiUrl } from '../api-url';
+import { EmployeeProfileStatusService } from '../employee-profile-status.service';
 
 @Component({
   selector: 'app-home',
@@ -41,6 +42,7 @@ export class Home implements OnInit, OnDestroy {
     private readonly router: Router,
     private readonly auth: AuthService,
     private readonly http: HttpClient,
+    private readonly employeeProfile: EmployeeProfileStatusService,
   ) {}
 
   /** Logged-in repair vendor — dedicated home layout */
@@ -90,6 +92,23 @@ export class Home implements OnInit, OnDestroy {
       this.startTypewriter(this.vendorPhrases, this.vendorTypedText);
       return;
     }
+    if (this.auth.isLoggedIn()) {
+      this.employeeProfile.refresh().subscribe({
+        next: (has) => {
+          if (!has) {
+            void this.router.navigate(['/my-profile'], { replaceUrl: true });
+            return;
+          }
+          void this.router.navigate(['/my-profile'], { replaceUrl: true });
+        },
+        error: () => this.initPublicHome(),
+      });
+      return;
+    }
+    this.initPublicHome();
+  }
+
+  private initPublicHome(): void {
     this.startTypewriter(this.publicPhrases, this.typedText);
     this.startLiveHeroWidgets();
   }

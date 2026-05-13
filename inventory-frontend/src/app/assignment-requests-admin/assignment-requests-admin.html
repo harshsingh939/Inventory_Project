@@ -7,11 +7,11 @@
         <span class="assign-ticket-stamp" aria-hidden="true">IT</span>
         <div>
           <h1 class="assign-title">Request queue</h1>
-          <p class="assign-lead">Assignment tickets · <a routerLink="/users">Register</a></p>
+          <p class="assign-lead">Assignment tickets · <a routerLink="/users">Team registration</a></p>
         </div>
       </div>
       <div class="assign-toolbar">
-        <a routerLink="/users" class="btn btn-ghost">Register</a>
+        <a routerLink="/users" class="btn btn-ghost">Team registration</a>
         <button type="button" class="btn btn-solid" (click)="load()" [disabled]="loading">
           {{ loading ? 'Loading…' : 'Refresh' }}
         </button>

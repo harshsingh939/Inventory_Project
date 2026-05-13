@@ -973,36 +973,61 @@ exports.updateRepairStatus = (req, res) => {
           message: 'Repair details are required before sending to admin review.',
         });
       }
-      const attempts = [
+      const attemptsNoBill = [
         {
+          usesBillCol: false,
           sql: 'UPDATE repairs SET status = ?, repair_cost = ?, repair_notes = ? WHERE id = ?',
           params: [status, costElse, notesElse, repair_id],
         },
         {
+          usesBillCol: false,
           sql: 'UPDATE repairs SET status = ?, repair_notes = ? WHERE id = ?',
           params: [status, notesElse, repair_id],
         },
         {
+          usesBillCol: false,
           sql: 'UPDATE repairs SET status = ?, repair_cost = ? WHERE id = ?',
           params: [status, costElse, repair_id],
         },
         {
+          usesBillCol: false,
           sql: 'UPDATE repairs SET status = ? WHERE id = ?',
           params: [status, repair_id],
         },
       ];
+      const attempts =
+        relativeBill != null
+          ? [
+              {
+                usesBillCol: true,
+                sql: 'UPDATE repairs SET status = ?, repair_cost = ?, repair_notes = ?, repair_bill = ? WHERE id = ?',
+                params: [status, costElse, notesElse, relativeBill, repair_id],
+              },
+              {
+                usesBillCol: true,
+                sql: 'UPDATE repairs SET status = ?, repair_notes = ?, repair_bill = ? WHERE id = ?',
+                params: [status, notesElse, relativeBill, repair_id],
+              },
+              ...attemptsNoBill,
+            ]
+          : attemptsNoBill;
+
       const runAttempt = (i) => {
         if (i >= attempts.length) {
           unlinkUploadedBill();
           return res.status(500).json({ message: 'Could not update repair' });
         }
-        db.query(attempts[i].sql, attempts[i].params, (err2) => {
+        const att = attempts[i];
+        db.query(att.sql, att.params, (err2) => {
           if (err2 && err2.code === 'ER_BAD_FIELD_ERROR') {
             return runAttempt(i + 1);
           }
           if (err2) {
             unlinkUploadedBill();
             return res.status(500).json({ message: err2.message });
+          }
+          if (req.file && !att.usesBillCol) {
+            fs.unlink(req.file.path, () => {});
           }
           finish(null);
         });

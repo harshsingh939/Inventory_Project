@@ -206,10 +206,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
+}
+
+.rag-widget__fab::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.45);
+  pointer-events: none;
+  animation: rag-fab-ring 2.2s ease-out infinite;
+}
+
+@keyframes rag-fab-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
 }
 
 .rag-widget__fab:hover {
@@ -225,9 +247,113 @@
   background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
 }
 
-.rag-widget__fab-icon {
-  font-size: 1.45rem;
-  line-height: 1;
+.rag-widget__fab--active::before {
+  animation-play-state: paused;
+  opacity: 0;
+}
+
+.rag-widget__fab-bot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rag-bot {
+  width: 32px;
+  height: 32px;
+  display: block;
+  overflow: visible;
+}
+
+.rag-bot__bob {
+  animation: rag-bot-bob 2.6s ease-in-out infinite;
+  transform-origin: 24px 28px;
+}
+
+@keyframes rag-bot-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.rag-bot__antenna-pivot {
+  transform-origin: 0 0;
+  animation: rag-bot-antenna 2s ease-in-out infinite alternate;
+}
+
+@keyframes rag-bot-antenna {
+  from {
+    transform: rotate(-11deg);
+  }
+  to {
+    transform: rotate(11deg);
+  }
+}
+
+.rag-bot__antenna-tip {
+  animation: rag-bot-glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes rag-bot-glow {
+  from {
+    filter: drop-shadow(0 0 2px rgba(56, 189, 248, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.95));
+  }
+}
+
+.rag-bot__screen {
+  animation: rag-bot-screen 3.5s ease-in-out infinite;
+}
+
+@keyframes rag-bot-screen {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+.rag-bot__eye {
+  animation: rag-bot-blink 4.8s ease-in infinite;
+}
+
+@keyframes rag-bot-blink {
+  0%,
+  44%,
+  48%,
+  100% {
+    opacity: 1;
+  }
+  45%,
+  47% {
+    opacity: 0.12;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rag-widget__fab::before,
+  .rag-bot__bob,
+  .rag-bot__antenna-pivot,
+  .rag-bot__antenna-tip,
+  .rag-bot__screen,
+  .rag-bot__eye {
+    animation: none !important;
+  }
+
+  .rag-widget__fab::before {
+    opacity: 0;
+  }
 }
 
 @media (max-width: 600px) {

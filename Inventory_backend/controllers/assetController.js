@@ -1,6 +1,7 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 const assetHistoryLog = require('../services/assetHistoryLog');
+const { rowWithEffectiveStatus } = require('../services/assetEffectiveStatus');
 
 function isMissingAssetHistoryTable(err) {
   if (!err) return false;
@@ -17,13 +18,25 @@ exports.getAssets = (req, res) => {
     String(raw).trim() !== '' &&
     String(raw).toLowerCase() !== 'all';
 
+  const mapRows = (rows) => (rows || []).map((r) => rowWithEffectiveStatus(r));
+
+  const activeAssignJoin = `
+    LEFT JOIN (
+      SELECT asset_id, MIN(id) AS active_assignment_join_id
+      FROM assignments
+      WHERE status = 'Active'
+      GROUP BY asset_id
+    ) x ON x.asset_id = a.id`;
+
   const runAll = () => {
     db.query(
-      `SELECT * FROM assets
-       WHERE LOWER(TRIM(COALESCE(status, ''))) <> 'disposed'`,
+      `SELECT a.*, x.active_assignment_join_id
+       FROM assets a
+       ${activeAssignJoin}
+       WHERE LOWER(TRIM(COALESCE(a.status, ''))) <> 'disposed'`,
       (err, result) => {
         if (err) return res.status(500).json({ message: err.message });
-        res.json(result);
+        res.json(mapRows(result));
       },
     );
   };
@@ -38,16 +51,18 @@ exports.getAssets = (req, res) => {
   }
 
   db.query(
-    `SELECT * FROM assets
-     WHERE inventory_id = ?
-       AND LOWER(TRIM(COALESCE(status, ''))) <> 'disposed'`,
+    `SELECT a.*, x.active_assignment_join_id
+     FROM assets a
+     ${activeAssignJoin}
+     WHERE a.inventory_id = ?
+       AND LOWER(TRIM(COALESCE(a.status, ''))) <> 'disposed'`,
     [n],
     (err, result) => {
     if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
       return runAll();
     }
       if (err) return res.status(500).json({ message: err.message });
-      res.json(result || []);
+      res.json(mapRows(result));
     },
   );
 };

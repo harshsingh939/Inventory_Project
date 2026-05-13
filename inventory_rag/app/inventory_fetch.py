@@ -179,8 +179,12 @@ def fetch_live_summary_sync(base_url: str, rag_internal_key: str) -> str:
         "assignment_request_items",
     ]
     lines = [
-        "Live database summary (aggregate counts only; for scale and freshness — pair with retrieved rows for facts).",
+        "Live database summary: use **Table counts** for scale, **Inventory catalog** for every list name + "
+        "how many assets per list + a short preview of asset lines, **Repairs by status** for ticket buckets "
+        "(Fixed / Pending / etc.). Pair with retrieved rows for serial-level or historical detail.",
         f"generated_at: {gen}",
+        "",
+        "## Table counts",
     ]
     for k in order:
         if k in counts:
@@ -188,7 +192,45 @@ def fetch_live_summary_sync(base_url: str, rag_internal_key: str) -> str:
     for k, v in sorted(counts.items()):
         if k not in order:
             lines.append(f"  {k}: {v}")
-    return "\n".join(lines)
+
+    inv_cat = data.get("inventory_catalog")
+    if isinstance(inv_cat, list) and inv_cat:
+        lines.append("")
+        lines.append("## Inventory catalog (authoritative for: how many lists, their names, what assets sit in each)")
+        lines.append(f"Total named inventories: {len(inv_cat)}")
+        max_lists = 48
+        max_preview = 520
+        for inv in inv_cat[:max_lists]:
+            if not isinstance(inv, dict):
+                continue
+            iid = inv.get("id")
+            name = str(inv.get("name") or "").strip() or f"id={iid}"
+            ac = int(inv.get("asset_count") or 0)
+            prev = str(inv.get("assets_preview") or "").strip()
+            if len(prev) > max_preview:
+                prev = prev[: max_preview - 1] + "…"
+            lines.append(f"- id={iid} name={name!r} asset_count={ac}")
+            if prev:
+                lines.append(f"    assets_preview: {prev}")
+        if len(inv_cat) > max_lists:
+            lines.append(f"  … plus {len(inv_cat) - max_lists} more inventories (truncated in this summary).")
+
+    rep_st = data.get("repairs_by_status")
+    if isinstance(rep_st, list) and rep_st:
+        lines.append("")
+        lines.append("## Repairs by status (ticket counts — use for under repair vs fixed vs pending, etc.)")
+        for row in rep_st:
+            if not isinstance(row, dict):
+                continue
+            st = str(row.get("status") or "").strip()
+            c = int(row.get("count") or 0)
+            lines.append(f"  {st}: {c}")
+
+    text = "\n".join(lines)
+    max_chars = 12000
+    if len(text) > max_chars:
+        return text[: max_chars - 40] + "\n…(live summary truncated for token safety)"
+    return text
 
 
 def _asset_by_id(data: dict[str, Any]) -> dict[Any, dict[str, Any]]:
@@ -278,11 +320,48 @@ def _repair_system_line(asset_by_id: dict[Any, dict[str, Any]], asset_id: Any) -
     )
 
 
+def _asset_usage_timeline_body(sessions_for_asset: list[dict[str, Any]], max_lines: int = 32) -> str:
+    """Human-readable checkout lines for one asset (newest first)."""
+    if not sessions_for_asset:
+        return "(no checkout rows for this asset in this export slice)"
+
+    def sort_key(s: dict[str, Any]) -> str:
+        return str(s.get("start_time") or "")
+
+    ordered = sorted(sessions_for_asset, key=sort_key, reverse=True)
+    lines: list[str] = []
+    for s in ordered[:max_lines]:
+        nm = str(s.get("user_name") or "").strip() or "?"
+        eid = str(s.get("employee_id") or "").strip()
+        dept = str(s.get("department") or "").strip()
+        who = nm
+        if eid:
+            who += f" (employee_id {eid})"
+        if dept:
+            who += f" — {dept}"
+        lines.append(
+            f"- assignment_id={s.get('assignment_id')} | who: {who} | "
+            f"from/start={s.get('start_time')} | to/end={s.get('end_time') or '(still active if status Active)'} | "
+            f"status={s.get('status')} | working_minutes={s.get('working_minutes')} | "
+            f"condition_before={s.get('condition_before')} | condition_after={s.get('condition_after')}"
+        )
+    return "\n".join(lines)
+
+
 def documents_from_snapshot(data: dict[str, Any]) -> list[tuple[str, dict[str, str]]]:
     """Build (page_content, metadata) rows for Pinecone from a snapshot dict."""
     rows: list[tuple[str, dict[str, str]]] = []
     asset_by_id = _asset_by_id(data)
     user_by_id = _user_by_id(data)
+
+    by_inv_assets: dict[Any, list[dict[str, Any]]] = {}
+    for a in data.get("assets") or []:
+        if not isinstance(a, dict):
+            continue
+        inv_id = a.get("inventory_id")
+        if inv_id is None:
+            continue
+        by_inv_assets.setdefault(inv_id, []).append(a)
 
     for inv in data.get("inventories") or []:
         if not isinstance(inv, dict):
@@ -298,12 +377,29 @@ def documents_from_snapshot(data: dict[str, Any]) -> list[tuple[str, dict[str, s
                 f" Linked assets in this list: count={ac if ac is not None else '?'}. "
                 f'Names: {an or "(none)"}.'
             )
+        manifest_lines: list[str] = []
+        for a in sorted(by_inv_assets.get(iid, []), key=lambda z: z.get("id") or 0)[:160]:
+            manifest_lines.append(
+                f"id={a.get('id')} type={a.get('asset_type')} brand={a.get('brand')} model={a.get('model')} "
+                f"serial={a.get('serial_number')} status={a.get('status')}"
+            )
+        manifest = (
+            "\n".join(manifest_lines)
+            if manifest_lines
+            else "(no assets linked to this inventory_id in this snapshot export)"
+        )
+        manifest_block = f"\nAsset manifest (one row per asset in this inventory):\n{manifest}"
+        if len(manifest_block) > 7800:
+            manifest_block = manifest_block[:7790] + "\n…(manifest truncated for embedding size)"
         text = (
             f"Inventory list id={iid} name={name}\n"
             f"Details: {details}\n"
             + extra
-            + " Use for questions about inventory lists, locations, or buckets."
+            + manifest_block
+            + "\nUse for questions about this inventory list: names of assets, counts, and which devices are in it."
         )
+        if len(text) > 9000:
+            text = text[:8990] + "\n…(truncated)"
         rows.append((text, {"kind": "inventory", "source_id": str(iid) if iid is not None else ""}))
 
     for a in data.get("assets") or []:
@@ -389,6 +485,42 @@ def documents_from_snapshot(data: dict[str, Any]) -> list[tuple[str, dict[str, s
                 {"kind": "session", "source_id": str(row.get("assignment_id") or "")},
             )
         )
+
+    sessions_all = [s for s in (data.get("sessions") or []) if isinstance(s, dict)]
+    by_asset_sessions: dict[Any, list[dict[str, Any]]] = {}
+    for s in sessions_all:
+        aid = s.get("asset_id")
+        if aid is None:
+            continue
+        by_asset_sessions.setdefault(aid, []).append(s)
+
+    max_timeline_assets = 2800
+    timeline_candidates: list[tuple[str, Any, list[dict[str, Any]]]] = []
+    for aid, slist in by_asset_sessions.items():
+        if not slist:
+            continue
+        last_start = max((str(x.get("start_time") or "") for x in slist), default="")
+        timeline_candidates.append((last_start, aid, slist))
+    timeline_candidates.sort(key=lambda x: x[0], reverse=True)
+
+    for _, aid, slist in timeline_candidates[:max_timeline_assets]:
+        a = asset_by_id.get(aid)
+        head = (
+            "ASSET USAGE HISTORY — checkout timeline for one device. "
+            "Answers: who used it, from which date/time, when returned, assignment id. "
+            f"asset_id={aid}.\n"
+        )
+        if isinstance(a, dict):
+            head += (
+                f"Device labels: type={a.get('asset_type')} brand={a.get('brand')} model={a.get('model')} "
+                f"serial={a.get('serial_number')} inventory_id={a.get('inventory_id')} "
+                f"current_row_status={a.get('status')}\n"
+            )
+        body = _asset_usage_timeline_body(slist, max_lines=34)
+        text = head + "Events (newest checkout first):\n" + body
+        if len(text) > 9600:
+            text = text[:9580] + "\n…(truncated)"
+        rows.append((text, {"kind": "asset_usage_history", "source_id": str(aid)}))
 
     for r in data.get("repairs") or []:
         if not isinstance(r, dict):

@@ -3,7 +3,7 @@
   <div class="content">
     <nav class="page-context-bar" *ngIf="showBackHome()" aria-label="Page context">
       <div class="page-context-inner">
-        <a routerLink="/" class="page-home-btn">
+        <a [routerLink]="contextHomeLink()" class="page-home-btn">
           <span class="page-home-icon" aria-hidden="true">⌂</span>
           <span>Home</span>
         </a>

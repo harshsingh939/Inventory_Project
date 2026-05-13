@@ -1,4 +1,4 @@
-<div class="assign-page repair-req-page">
+<div class="assign-page repair-req-page repair-work-vendor">
   <div class="assign-ambient" aria-hidden="true"></div>
 
   <div class="assign-inner">
@@ -40,11 +40,11 @@
         </header>
 
         <div class="req-ticket__grid">
-          <div class="req-field req-field--span2">
+          <div class="req-field" [class.req-field--span2]="!r.serial_number">
             <span class="req-field__label">Asset</span>
             <span class="req-field__value">{{ r.asset_type || 'Asset' }} — {{ r.brand || '—' }} {{ r.model || '' }}</span>
           </div>
-          <div class="req-field req-field--span2" *ngIf="r.serial_number">
+          <div class="req-field" *ngIf="r.serial_number">
             <span class="req-field__label">Serial</span>
             <span class="req-field__value req-field__mono">{{ r.serial_number }}</span>
           </div>
@@ -55,8 +55,8 @@
           <div class="req-field req-field--span2">
             <span class="req-field__label">Fix details (required)</span>
             <textarea
-              rows="3"
-              class="input"
+              rows="2"
+              class="input rw-fix-textarea"
               placeholder="What was wrong and what did you fix?"
               [(ngModel)]="reviewNotesById[r.id]"
             ></textarea>
@@ -71,6 +71,17 @@
               placeholder="0.00"
               [(ngModel)]="reviewCostById[r.id]"
             />
+          </div>
+          <div class="req-field">
+            <span class="req-field__label">Bill / invoice (optional)</span>
+            <input
+              type="file"
+              class="input rw-bill-input"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+              (change)="onBillSelected(r.id, $event)"
+            />
+            <p class="rw-bill-hint" *ngIf="billName(r.id)">Selected: {{ billName(r.id) }}</p>
+            <p class="rw-bill-hint rw-bill-hint--muted">PDF or image · max 10 MB</p>
           </div>
         </div>
 

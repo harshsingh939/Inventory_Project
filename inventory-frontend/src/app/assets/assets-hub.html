@@ -1,17 +1,7 @@
-<div class="page-header">
-  <div class="hub-header-row">
-    <div class="hub-header-text">
-      <h2>📦 Assets</h2>
-      <p>
-        <strong>Categories</strong> use rows from <code>/api/inventories</code> when they match migration 012.
-        <strong>Your inventories</strong> are extra lists you add — same card style; <strong>Open</strong> goes to the workspace
-        with category shortcuts (same as before).
-      </p>
-    </div>
-    <button type="button" class="btn btn-primary btn-sm hub-add-btn" (click)="openAddInventory()">
-      + Add inventory
-    </button>
-  </div>
+<div class="page-header hub-toolbar">
+  <button type="button" class="btn btn-primary btn-sm hub-add-btn" (click)="openAddInventory()">
+    + Add inventory
+  </button>
 </div>
 
 <div class="hub-loading card" *ngIf="hubLoading">⏳ Loading inventories…</div>

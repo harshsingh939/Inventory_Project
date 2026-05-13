@@ -9,12 +9,9 @@
           <span class="users-badge__head users-badge__head--r"></span>
         </div>
         <div>
-          <h1 class="users-title">{{ isAdmin ? 'Team registration' : 'Register' }}</h1>
-          <p class="users-lead" *ngIf="isAdmin">Directory and login links</p>
-          <p class="users-lead" *ngIf="!isAdmin">
-            Your profile for assignments ·
-            <a routerLink="/my-workspace" class="users-lead__link">My workspace</a>
-          </p>
+          <h1 class="users-title">{{ isAdmin ? 'Team registration' : 'Directory' }}</h1>
+          <p class="users-lead" *ngIf="isAdmin">Employee directory and login links</p>
+          <p class="users-lead" *ngIf="!isAdmin && isRepairAuthority">Rows linked to your account</p>
         </div>
       </div>
     </header>
@@ -22,10 +19,10 @@
     <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
     <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 
-    <section class="users-panel" *ngIf="isLoggedIn">
-      <h2 class="users-panel__title">{{ isAdmin ? 'Add employee' : 'Register' }}</h2>
-      <p class="users-panel__hint" *ngIf="!isAdmin">
-        Saves your employee row and links it to this login so My workspace works. If you already used this form, open My workspace again (or refresh).
+    <section class="users-panel" *ngIf="isLoggedIn && isAdmin">
+      <h2 class="users-panel__title">Add employee</h2>
+      <p class="users-panel__hint">
+        After signup, the new user’s <strong>auth id</strong> is in the admin email. Add their row here, then set <strong>Login user id</strong> in the table below to that number.
       </p>
       <div class="form-row">
         <div class="form-field">
@@ -38,10 +35,13 @@
         </div>
         <div class="form-field">
           <label>Department</label>
-          <input [(ngModel)]="user.department" class="input" placeholder="e.g. IT" />
+          <select [(ngModel)]="user.department" class="input">
+            <option value="">Choose department…</option>
+            <option *ngFor="let d of departmentOptions" [value]="d">{{ d }}</option>
+          </select>
         </div>
         <button type="button" class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
-          {{ isAdding ? 'Saving…' : (isAdmin ? '+ Add employee' : 'Register') }}
+          {{ isAdding ? 'Saving…' : '+ Add employee' }}
         </button>
       </div>
     </section>
@@ -73,7 +73,7 @@
       </p>
     </section>
 
-    <section class="users-panel users-panel--table">
+    <section class="users-panel users-panel--table" *ngIf="isAdmin || isRepairAuthority">
       <div class="table-container">
         <div class="loading" *ngIf="isLoading">Loading directory…</div>
 
@@ -101,7 +101,14 @@
               <td>{{ u.department }}</td>
               <td *ngIf="isAdmin" class="link-cell">
                 <div class="link-row">
-                  <input type="number" class="input link-input" [(ngModel)]="linkDraft[u.id]" placeholder="auth_users.id" />
+                  <input
+                    type="number"
+                    class="input link-input"
+                    [name]="'authLink' + u.id"
+                    [ngModelOptions]="{ standalone: true }"
+                    [(ngModel)]="linkDraft[u.id]"
+                    placeholder="auth_users.id"
+                  />
                   <button type="button" class="btn-link-save" [disabled]="savingLinkId === u.id" (click)="saveAuthLink(u)">
                     {{ savingLinkId === u.id ? '…' : 'Save' }}
                   </button>
@@ -115,7 +122,7 @@
                     ? searchName || searchDept
                       ? 'No directory entries match your search'
                       : 'No directory entries yet'
-                    : 'No registration yet — use the form above and click Register.'
+                    : 'No rows linked to this account.'
                 }}
               </td>
             </tr>

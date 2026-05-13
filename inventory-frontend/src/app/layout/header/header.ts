@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { NotificationService, type Notification } from '../../notification.service';
+import { EmployeeProfileStatusService } from '../../employee-profile-status.service';
 
 @Component({
   selector: 'app-header',
@@ -34,6 +35,7 @@ export class Header implements OnInit, OnDestroy {
   constructor(
     public auth: AuthService,
     public notifService: NotificationService,
+    public employeeProfile: EmployeeProfileStatusService,
     private router: Router,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
@@ -45,9 +47,13 @@ export class Header implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.syncAdminNotifications();
+    this.syncEmployeeProfileNav();
     this.navSub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe(() => this.syncAdminNotifications());
+      .subscribe(() => {
+        this.syncAdminNotifications();
+        this.syncEmployeeProfileNav();
+      });
   }
 
   /** Start repair alerts polling once session shows an admin (covers SSR/hydration timing). */
@@ -57,6 +63,16 @@ export class Header implements OnInit, OnDestroy {
       this.notifService.startPolling();
     } else {
       this.notifService.stopPolling();
+    }
+  }
+
+  /** Employee: refresh linked-profile flag (gates Home link + marketing home redirect). */
+  private syncEmployeeProfileNav() {
+    if (!this.isBrowser) return;
+    if (this.auth.isLoggedIn() && !this.auth.isAdmin() && !this.auth.isRepairAuthority()) {
+      this.employeeProfile.refresh().subscribe({ error: () => {} });
+    } else if (!this.auth.isLoggedIn()) {
+      this.employeeProfile.reset();
     }
   }
 
@@ -122,6 +138,7 @@ export class Header implements OnInit, OnDestroy {
     this.showDropdown = false;
     this.showLogoutPopup = true;
     setTimeout(() => {
+      this.employeeProfile.reset();
       this.auth.logout();
       this.notifService.stopPolling();
       this.notifService.resetDismissed();
@@ -138,6 +155,9 @@ export class Header implements OnInit, OnDestroy {
 
   /** Route when user clicks an admin notification row */
   notifLink(n: Notification): (string | number)[] {
+    if (n.kind === 'new_signup') {
+      return ['/users'];
+    }
     if (n.kind === 'assignment_request') {
       return ['/assignment-requests'];
     }
@@ -146,6 +166,21 @@ export class Header implements OnInit, OnDestroy {
       return ['/repair-review', n.id];
     }
     return ['/repairs'];
+  }
+
+  /** Logo click target — arrays satisfy `RouterLink` typing; linked employees “home” is profile. */
+  brandLink(): (string | number)[] {
+    if (this.isAdmin) {
+      return ['/dashboard'];
+    }
+    if (
+      this.isLoggedIn &&
+      !this.isRepairAuthority &&
+      this.employeeProfile.hasLinkedProfile() === true
+    ) {
+      return ['/my-profile'];
+    }
+    return ['/'];
   }
 
   timeAgo(dateStr: string | undefined): string {

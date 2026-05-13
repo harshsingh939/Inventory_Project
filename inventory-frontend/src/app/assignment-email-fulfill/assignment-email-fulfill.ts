@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { take } from 'rxjs/operators';
 import { apiUrl } from '../api-url';
 
 /**
@@ -99,7 +100,6 @@ export class AssignmentEmailFulfill implements OnInit {
   phase: 'loading' | 'ok' | 'err' = 'loading';
   message = '';
   loginQuery: Record<string, string> = {};
-
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -124,25 +124,38 @@ export class AssignmentEmailFulfill implements OnInit {
     }
 
     const url = `${apiUrl('assignment-requests')}/email-fulfill`;
-    this.http.post<{ message?: string }>(url, { token }).subscribe({
-      next: (res) => {
-        this.phase = 'ok';
-        this.message = res?.message || 'Assets assigned.';
-        this.cdr.detectChanges();
-      },
-      error: (err: unknown) => {
-        this.phase = 'err';
-        const he = err as HttpErrorResponse;
-        const body = he.error;
-        if (body && typeof body === 'object' && 'message' in body) {
-          this.message = String((body as { message?: string }).message || he.message);
-        } else if (typeof body === 'string' && body.trim()) {
-          this.message = body.trim();
-        } else {
-          this.message = he.message || 'Something went wrong.';
-        }
-        this.cdr.detectChanges();
-      },
-    });
+    this.http
+      .post<{ message?: string }>(url, { token })
+      .pipe(take(1))
+      .subscribe({
+        next: (res) => {
+          this.phase = 'ok';
+          this.message = res?.message || 'Assets assigned.';
+          this.cdr.detectChanges();
+        },
+        error: (err: unknown) => {
+          const he = err as HttpErrorResponse;
+          const body = he.error;
+          let msg = '';
+          if (body && typeof body === 'object' && 'message' in body) {
+            msg = String((body as { message?: string }).message || he.message);
+          } else if (typeof body === 'string' && body.trim()) {
+            msg = body.trim();
+          } else {
+            msg = he.message || 'Something went wrong.';
+          }
+          // Older API: second open of the same link returned 400 "not pending" after first success.
+          if (he.status === 400 && /not pending/i.test(msg)) {
+            this.phase = 'ok';
+            this.message =
+              'This request was already completed. The link had already been used — nothing more to do.';
+            this.cdr.detectChanges();
+            return;
+          }
+          this.phase = 'err';
+          this.message = msg;
+          this.cdr.detectChanges();
+        },
+      });
   }
 }

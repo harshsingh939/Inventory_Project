@@ -1,4 +1,4 @@
-const { assignmentRequestAdminEmailHtml } = require('./emailTemplates');
+const { assignmentRequestAdminEmailHtml, signupNotifyAdminEmailHtml } = require('./emailTemplates');
 
 function smtpConfigured() {
   return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
@@ -164,6 +164,66 @@ exports.sendAssignmentRequestEmailToAdmins = (db, payload, cb) => {
         text: assignmentRequestPlainText(payload),
       });
       done();
+    },
+  );
+};
+
+function signupNotifyPlainText(payload) {
+  const root = (process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
+  const teamUrl = payload.teamUrl || (root ? `${root}/users` : '');
+  const lines = [
+    `New InvenTrack signup: ${payload.username} <${payload.email}>, mobile ${payload.mobile}.`,
+    `Use auth_users.id = ${payload.authUserId} in Team registration → Login user id after you add their employee row.`,
+    '',
+    teamUrl ? `Open Team registration: ${teamUrl}` : 'Open Team registration in the app (Users in the admin bar).',
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * Email admins when a new auth account is created (public signup). Uses same SMTP / ADMIN_NOTIFY_EMAIL as assignment alerts.
+ */
+exports.sendNewSignupEmailToAdmins = (db, payload, cb) => {
+  const done = typeof cb === 'function' ? cb : () => {};
+  if (!smtpConfigured()) {
+    console.warn('[mailer] New signup admin email skipped: SMTP not configured.');
+    return done();
+  }
+  const root = (process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
+  const teamUrl = root ? `${root}/users` : '';
+  const enriched = { ...payload, teamUrl };
+
+  const explicit = process.env.ADMIN_NOTIFY_EMAIL
+    ? process.env.ADMIN_NOTIFY_EMAIL.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+    : null;
+
+  const sendTo = (to) => {
+    if (!to.length) {
+      console.warn('[mailer] New signup notify skipped: no admin recipient addresses.');
+      return done();
+    }
+    exports.sendMailSafe({
+      to,
+      subject: `[InvenTrack] New signup: ${payload.username} (${payload.email})`,
+      html: signupNotifyAdminEmailHtml(enriched),
+      text: signupNotifyPlainText(enriched),
+    });
+    done();
+  };
+
+  if (explicit && explicit.length) {
+    sendTo(explicit);
+    return;
+  }
+  db.query(
+    "SELECT email FROM auth_users WHERE role = 'admin' AND email IS NOT NULL AND TRIM(email) <> ''",
+    (err, rows) => {
+      if (err) {
+        console.error('[mailer] admin lookup (signup):', err.message);
+        return done();
+      }
+      const emails = (rows || []).map((r) => String(r.email).trim()).filter(Boolean);
+      sendTo(emails);
     },
   );
 };

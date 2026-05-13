@@ -92,6 +92,8 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
   @Input() prefillAuthUserId: number | null = null;
   /** Parent can hide inventory / add-asset UI while History tab is open */
   @Output() historyTabActive = new EventEmitter<boolean>();
+  /** After assign / unassign / dispose — parent should refetch GET /api/assets so status badges stay in sync */
+  @Output() inventoryAssetsChanged = new EventEmitter<void>();
 
   users: any[] = [];
   rawAvailableAssets: any[] = [];
@@ -609,6 +611,7 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
           this.selectedAssetId = '';
           this.conditionBefore = 'Good';
           this.loadAll();
+          this.inventoryAssetsChanged.emit();
           this.cdr.detectChanges();
           setTimeout(() => {
             this.successMsg = '';
@@ -634,6 +637,7 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
         next: () => {
           this.successMsg = '✅ Asset unassigned — back in available stock';
           this.loadAll();
+          this.inventoryAssetsChanged.emit();
           this.cdr.detectChanges();
           setTimeout(() => {
             this.successMsg = '';
@@ -689,6 +693,7 @@ export class AssetAssignmentsPanel implements OnInit, OnChanges {
           this.disposeNotes = '';
           this.successMsg = '✅ Item disposed and removed from inventory';
           this.loadAll();
+          this.inventoryAssetsChanged.emit();
           this.cdr.detectChanges();
           setTimeout(() => {
             this.successMsg = '';

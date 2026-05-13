@@ -2,40 +2,19 @@
   display: block;
 }
 
-.page-header {
-  margin-bottom: 8px;
-}
-
-.hub-header-row {
+.page-header.hub-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
+  justify-content: flex-end;
+  align-items: center;
   max-width: 960px;
-  margin: 0 auto;
-}
-
-.hub-header-text {
-  flex: 1 1 280px;
-  text-align: left;
-}
-
-.hub-header-text h2 {
-  margin-top: 0;
-}
-
-.hub-header-text p {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  max-width: 52rem;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 12px;
+  padding-top: 2px;
 }
 
 .hub-add-btn {
   flex-shrink: 0;
-  align-self: flex-start;
 }
 
 .hub-grid {

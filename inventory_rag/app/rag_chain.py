@@ -59,15 +59,22 @@ def _call_with_retries(fn: Callable[[], T], settings: Settings) -> T:
 SYSTEM = """You are the InvenTrack inventory assistant (internal ops / admin style). Answer in the same language as the question when it is clearly Hindi or Hinglish; otherwise use clear English.
 
 ## Inputs (in order of trust for factual detail)
-1. **Retrieved rows** — each block starts with `[kind=…] source_id=…`. These are slices from the last RAG re-index (Pinecone retrieval). They are your primary source for names, serials, repair ids, dates, and statuses.
-2. **Live summary** — aggregate table counts + `generated_at` from the same backend family as `/api/rag-export/snapshot`. Use it for fleet scale (“roughly how many assets”), freshness, and sanity checks. **Do not** invent per-row facts from counts alone.
+1. **Live summary** — starts with **Table counts**, then **Inventory catalog** (each named list: `id`, `name`, `asset_count`, optional `assets_preview` with `#id type brand model [status]` snippets), then **Repairs by status** (how many tickets per status: Fixed, Pending, etc.). **Use this block first** when the user asks for totals, inventory names, “what is under each inventory”, or repair volume by status. Do not invent lists or numbers not printed there.
+2. **Retrieved rows** — each block starts with `[kind=…] source_id=…` from Pinecone (last re-index). Use for deep detail: exact serials, one-off repairs, checkout history, disposed audits, assignment rows. If the user wants every asset in a large inventory and the preview is truncated, say so and suggest opening the Assets UI or re-indexing after export.
 
 ## How to analyze (follow mentally before writing)
 - Extract entities: serial fragments, employee name/id, repair id, department, inventory name, date words, status keywords.
+- Prefer **Live summary** for catalog / histogram questions; match **retrieved** rows for line-item questions (e.g. repair id 42, who had serial X).
 - Match against retrieved lines; prefer rows whose `kind` fits the question (e.g. repairs for cost/vendor, `session`/`assignment` for checkout history, `disposed` for retired gear).
 - If two rows conflict (e.g. brand vs model line), prefer explicit serial/model evidence and say there is a data inconsistency, citing source_id / asset id.
 
+## Asset history (“who used it”, “from when to when”, Hindi / English)
+- Prefer **`kind=asset_usage_history`** when present: one merged timeline per `asset_id` with **employee name**, **employee_id**, **department**, **start_time** (checkout from), **end_time** (returned until / blank if still out), **status** (`Active` = still assigned; `Completed` = ended), **working_minutes**, **assignment_id**, conditions.
+- Also use **`session`** and **`assignment`** rows for the same asset or serial if the merged block is missing.
+- Answer with a clear time order (say “newest first” or sort oldest→newest in bullets). Never invent users or dates not in the rows.
+
 ## Domain map (kinds)
+- `asset_usage_history` — **best** for full checkout timeline of one asset (who / when / return).
 - `inventory` — buckets / locations / lists in the DB.
 - `asset` — live hardware row (not disposed).
 - `user` — employee directory fields.
@@ -127,8 +134,29 @@ def answer_with_rag(question: str, settings: Settings) -> dict:
         embedding=embeddings,
         namespace=pinecone_namespace_effective(settings.pinecone_namespace),
     )
-    # Slightly higher k so repairs + sessions + assets can co-exist in one answer.
-    docs = _call_with_retries(lambda: store.similarity_search(question, k=18), settings)
+    qlow = question.lower()
+    history_hint = any(
+        x in qlow
+        for x in (
+            "history",
+            "timeline",
+            "checkout",
+            "who used",
+            "who had",
+            "assigned to",
+            "return",
+            "usage",
+            "kab ",
+            "kab se",
+            "kisko",
+            "किसने",
+            "इतिहास",
+            "assignment",
+        )
+    )
+    # Higher k when user asks for checkout / timeline so asset_usage_history + sessions surface together.
+    k = 30 if history_hint else 22
+    docs = _call_with_retries(lambda: store.similarity_search(question, k=k), settings)
     context = "\n\n---\n\n".join(_format_retrieved_block(d) for d in docs)
 
     prompt = ChatPromptTemplate.from_messages(
@@ -179,4 +207,4 @@ def answer_with_rag(question: str, settings: Settings) -> dict:
                 "metadata": meta,
             }
         )
-    return {"answer": answer, "sources": sources, "live_summary_used": live_summary[:800]}
+    return {"answer": answer, "sources": sources, "live_summary_used": live_summary[:4000]}

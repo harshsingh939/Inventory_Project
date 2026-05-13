@@ -3,6 +3,25 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
+
+function postLoginPath(role: string): string {
+  const r = String(role || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+  if (
+    r === 'admin' ||
+    r === 'administrator' ||
+    r === 'super_admin' ||
+    r === 'superadmin'
+  ) {
+    return '/dashboard';
+  }
+  if (r === 'repair_authority') {
+    return '/repair-requests';
+  }
+  return '/my-profile';
+}
 import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-login',
@@ -61,7 +80,9 @@ export class Login {
         this.showSuccess = true;      // ✅ show popup immediately
         setTimeout(() => {
           this.showSuccess = false;
-          const target = this.safeReturnUrl() || '/';
+          const ret = this.safeReturnUrl();
+          const role = (res as { user?: { role?: string } })?.user?.role ?? '';
+          const target = ret || postLoginPath(role);
           this.router.navigateByUrl(target);
         }, 2000);                     // ✅ 2 seconds then redirect
       },

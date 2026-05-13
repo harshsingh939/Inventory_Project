@@ -5,7 +5,7 @@ const { requireAdmin } = require('../middleware/roleMiddleware');
 const userController = require('../controllers/userController');
 
 router.get('/', authMiddleware, userController.getUsers);
-router.post('/add', userController.addUser);
+router.post('/add', authMiddleware, requireAdmin, userController.addUser);
 router.put('/:id', authMiddleware, requireAdmin, userController.updateUser);
 
 module.exports = router;

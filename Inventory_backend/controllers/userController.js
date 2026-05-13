@@ -1,5 +1,17 @@
 const db = require('../db');
+const { ALLOWED_DEPARTMENTS } = require('../constants/departments');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+
+function assertAllowedDepartment(department, res) {
+  const d = String(department || '').trim();
+  if (!ALLOWED_DEPARTMENTS.includes(d)) {
+    res.status(400).json({
+      message: `Department must be one of: ${ALLOWED_DEPARTMENTS.join(', ')}`,
+    });
+    return false;
+  }
+  return true;
+}
 
 /** GET /api/users — admin: full directory; others: only rows linked to this login (auth_user_id) */
 exports.getUsers = (req, res) => {
@@ -31,6 +43,7 @@ exports.addUser = (req, res) => {
   if (!name || !employee_id || !department) {
     return res.status(400).json({ message: 'All fields are required' });
   }
+  if (!assertAllowedDepartment(department, res)) return;
 
   // ✅ duplicate employee_id check
   db.query('SELECT id FROM users WHERE employee_id = ?', [employee_id], (err, result) => {

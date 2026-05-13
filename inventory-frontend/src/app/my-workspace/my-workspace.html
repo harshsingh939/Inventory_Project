@@ -7,16 +7,12 @@
         <div class="mw-hero-text">
           <p class="mw-kicker">Employee workspace</p>
           <h1 class="mw-title">My Workspace</h1>
-          <p class="mw-subtitle">Assigned equipment, return history, and assignment requests in one place.</p>
+          <p class="mw-subtitle">Assigned equipment and assignment requests in one place.</p>
         </div>
         <div class="mw-hero-stats" *ngIf="!loading" role="group" aria-label="Summary counts">
           <div class="mw-stat mw-stat--active">
             <span class="mw-stat-value">{{ active.length }}</span>
             <span class="mw-stat-label">Active</span>
-          </div>
-          <div class="mw-stat mw-stat--history">
-            <span class="mw-stat-value">{{ history.length }}</span>
-            <span class="mw-stat-label">Returns</span>
           </div>
           <div class="mw-stat mw-stat--req">
             <span class="mw-stat-value">{{ openRequestCount }}</span>
@@ -24,7 +20,6 @@
           </div>
         </div>
         <div class="mw-hero-stats mw-hero-stats--skeleton" *ngIf="loading" aria-hidden="true">
-          <div class="mw-stat mw-stat--skeleton"></div>
           <div class="mw-stat mw-stat--skeleton"></div>
           <div class="mw-stat mw-stat--skeleton"></div>
         </div>
@@ -51,8 +46,8 @@
         <div class="mw-panel-body">
           <div class="loading mw-loading" *ngIf="loading">Loading…</div>
           <ng-container *ngIf="!loading && !linked">
-            <p class="mw-muted">{{ hint || 'Complete your profile on the Register page first.' }}</p>
-            <a routerLink="/users" class="mw-link">Go to Register →</a>
+            <p class="mw-muted">{{ hint || 'An administrator must add your employee row and link this login in Team registration.' }}</p>
+            <a routerLink="/my-profile" class="mw-link">View profile card →</a>
           </ng-container>
           <ng-container *ngIf="!loading && linked">
             <div class="mw-empty-state" *ngIf="active.length === 0">
@@ -76,65 +71,10 @@
         </div>
       </section>
 
-      <!-- 2 · Return history -->
-      <section class="mw-panel mw-panel--history mw-dash-history" *ngIf="!loading && linked">
-        <div class="mw-panel-head">
-          <span class="mw-panel-eyebrow">02</span>
-          <span class="mw-panel-icon" aria-hidden="true">📋</span>
-          <div class="mw-panel-head-copy">
-            <h2 class="mw-panel-title">Return history</h2>
-            <p class="mw-panel-desc">Past checkouts you have returned</p>
-          </div>
-        </div>
-        <div class="mw-panel-body">
-          <div class="mw-table-shell" *ngIf="history.length">
-            <div class="mw-table-scroll">
-              <table class="hist-table">
-                <thead>
-                  <tr>
-                    <th>Asset</th>
-                    <th>Returned</th>
-                    <th>Duration (min)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let h of history">
-                    <td class="hist-cell-asset">{{ h.asset_type }} — {{ h.brand }} {{ h.model }}</td>
-                    <td>{{ h.end_time | date: 'dd MMM yyyy' }}</td>
-                    <td>
-                      <span class="hist-duration">{{ h.working_minutes != null ? h.working_minutes + ' min' : '—' }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="mw-empty-state mw-empty-state--inline" *ngIf="!history.length">
-            <span class="mw-empty-icon" aria-hidden="true">↩️</span>
-            <p class="mw-empty-title">No returns yet</p>
-            <p class="mw-empty-hint">Returned equipment will appear in this table with date and duration.</p>
-          </div>
-        </div>
-      </section>
-
-      <div class="mw-dash-history-placeholder mw-panel mw-panel--muted" *ngIf="!loading && !linked">
-        <div class="mw-panel-head">
-          <span class="mw-panel-eyebrow">02</span>
-          <span class="mw-panel-icon" aria-hidden="true">📋</span>
-          <div class="mw-panel-head-copy">
-            <h2 class="mw-panel-title">Return history</h2>
-            <p class="mw-panel-desc">Available after your profile is linked</p>
-          </div>
-        </div>
-        <div class="mw-panel-body">
-          <p class="mw-muted mw-muted--tight">Complete <a routerLink="/users" class="mw-link mw-link--inline">Register</a> to see your return history here.</p>
-        </div>
-      </div>
-
-      <!-- 3 · New request -->
+      <!-- 2 · New request -->
       <section class="mw-panel mw-panel--request mw-dash-request" [class.mw-panel--blocked]="!loading && !linked">
         <div class="mw-panel-head mw-panel-head--row">
-          <span class="mw-panel-eyebrow">03</span>
+          <span class="mw-panel-eyebrow">02</span>
           <span class="mw-panel-icon" aria-hidden="true">✉️</span>
           <div class="mw-panel-head-text">
             <h2 class="mw-panel-title">New request</h2>
@@ -147,7 +87,7 @@
         <div class="mw-panel-body">
           <div class="gate-box" *ngIf="!loading && !linked">
             <p class="gate-text">
-              Add your details under <a routerLink="/users" class="gate-link">Register</a>, then you can submit a request here.
+              After an admin links your account in Team registration, open <a routerLink="/my-profile" class="gate-link">My profile</a> — then you can submit a request here.
             </p>
           </div>
           <div class="loading mw-loading" *ngIf="loading">Loading…</div>
@@ -172,7 +112,7 @@
               [(ngModel)]="requestMessage"
               [attr.placeholder]="
                 isOtherSelected
-                  ? 'e.g. mouse, HDMI cable, USB hub — what you need goes in this note'
+                  ? 'e.g. HDMI cable, keyboard, mouse — one item per comma or new line helps auto-match'
                   : 'e.g. need i7 for builds — we match CPU when stock allows'
               "
               [disabled]="!linked"
@@ -181,7 +121,8 @@
               Notes mentioning <strong>i3 / i5 / i7 / i9</strong> or <strong>Ryzen 3–9</strong> help match a unit when possible.
             </p>
             <p class="mw-hint mw-hint--other" *ngIf="isOtherSelected">
-              <strong>Other</strong> is for accessories or gear that isn’t Desktop/Laptop. Your note is sent to IT as the request (e.g. mouse, cable).
+              <strong>Other</strong> is for accessories or gear that isn’t Desktop/Laptop. List several items separated by
+              <strong> commas</strong>, <strong>new lines</strong>, or <strong>and</strong> — fulfillment tries to match each piece to inventory by name/model/serial (no random substitutes).
             </p>
             <button type="button" class="btn btn-primary mw-submit" (click)="submitRequest()" [disabled]="submitting || (!loading && !linked)">
               {{ submitting ? 'Sending…' : 'Send request' }}
@@ -190,10 +131,10 @@
         </div>
       </section>
 
-      <!-- 4 · My requests (full width) -->
+      <!-- 3 · My requests (full width) -->
       <section class="mw-panel mw-panel--mine mw-dash-mine">
         <div class="mw-panel-head">
-          <span class="mw-panel-eyebrow">04</span>
+          <span class="mw-panel-eyebrow">03</span>
           <span class="mw-panel-icon" aria-hidden="true">📥</span>
           <div class="mw-panel-head-copy">
             <h2 class="mw-panel-title">My requests</h2>
@@ -240,7 +181,7 @@
           <div class="mw-empty-state mw-empty-state--soft" *ngIf="!myRequests.length">
             <span class="mw-empty-icon" aria-hidden="true">🗒️</span>
             <p class="mw-empty-title">No requests yet</p>
-            <p class="mw-empty-hint">Use <strong>New request</strong> (section 03) to ask for equipment.</p>
+            <p class="mw-empty-hint">Use <strong>New request</strong> (section 02) to ask for equipment.</p>
           </div>
         </div>
       </section>

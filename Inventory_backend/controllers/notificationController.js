@@ -10,7 +10,7 @@ function isMissingTable(err) {
 }
 
 /**
- * GET /api/notifications — admin feed: recent repairs + pending assignment requests.
+ * GET /api/notifications — admin feed: recent repairs + pending assignment requests + new signups.
  */
 exports.getAdminNotifications = (req, res) => {
   const role = String(req.user?.role || '')
@@ -76,6 +76,40 @@ exports.getAdminNotifications = (req, res) => {
     LIMIT 20
   `;
 
+  const signupSql = `
+    SELECT
+      'new_signup' AS kind,
+      u.id,
+      u.email AS issue,
+      NULL AS asset_type,
+      u.username AS brand,
+      DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+      NULL AS repair_status
+    FROM auth_users u
+    LEFT JOIN users dir ON dir.auth_user_id = u.id
+    WHERE LOWER(TRIM(COALESCE(u.role, ''))) = 'user'
+      AND dir.id IS NULL
+    ORDER BY u.id DESC
+    LIMIT 15
+  `;
+
+  const signupSqlFallback = `
+    SELECT
+      'new_signup' AS kind,
+      u.id,
+      u.email AS issue,
+      NULL AS asset_type,
+      u.username AS brand,
+      NULL AS created_at,
+      NULL AS repair_status
+    FROM auth_users u
+    LEFT JOIN users dir ON dir.auth_user_id = u.id
+    WHERE LOWER(TRIM(COALESCE(u.role, ''))) = 'user'
+      AND dir.id IS NULL
+    ORDER BY u.id DESC
+    LIMIT 15
+  `;
+
   const runRepairs = (cb) => {
     db.query(repairSql, (err, rows) => {
       if (err && (err.code === 'ER_BAD_FIELD_ERROR' || err.errno === 1054)) {
@@ -93,24 +127,51 @@ exports.getAdminNotifications = (req, res) => {
     db.query(assignmentSql, (eA, assignRows) => {
       if (eA) {
         if (isMissingTable(eA)) {
-          return res.json(normalizeRows(repairRows));
+          return runSignups(repairRows, [], res);
         }
         return res.status(500).json({ message: eA.message });
       }
-      const merged = normalizeRows([...(repairRows || []), ...(assignRows || [])]);
-      merged.sort((a, b) => {
-        const ta = new Date(a.created_at || 0).getTime();
-        const tb = new Date(b.created_at || 0).getTime();
-        return tb - ta;
-      });
-      res.json(merged.slice(0, 25));
+      return runSignups(repairRows, assignRows || [], res);
     });
   });
+
+  function runSignups(repairRows, assignRows, res) {
+    db.query(signupSql, (eS, signupRows) => {
+      const rows =
+        eS && (eS.code === 'ER_BAD_FIELD_ERROR' || eS.errno === 1054)
+          ? null
+          : eS
+            ? []
+            : signupRows || [];
+
+      const finish = (sRows) => {
+        const merged = normalizeRows([...(repairRows || []), ...(assignRows || []), ...(sRows || [])]);
+        merged.sort((a, b) => {
+          const ta = new Date(a.created_at || 0).getTime();
+          const tb = new Date(b.created_at || 0).getTime();
+          if (tb !== ta) return tb - ta;
+          const ida = Number(a.id) || 0;
+          const idb = Number(b.id) || 0;
+          return idb - ida;
+        });
+        res.json(merged.slice(0, 30));
+      };
+
+      if (rows === null) {
+        return db.query(signupSqlFallback, (e2, s2) => {
+          if (e2) return finish([]);
+          finish(s2 || []);
+        });
+      }
+      if (eS) return finish([]);
+      finish(rows);
+    });
+  }
 };
 
 function normalizeRows(rows) {
   return (rows || []).map((r) => ({
-    kind: r.kind || 'repair',
+    kind: r.kind === 'assignment_request' ? 'assignment_request' : r.kind === 'new_signup' ? 'new_signup' : 'repair',
     id: typeof r.id === 'number' ? r.id : Number(r.id) || r.id,
     issue: r.issue ?? null,
     asset_type: r.asset_type ?? null,

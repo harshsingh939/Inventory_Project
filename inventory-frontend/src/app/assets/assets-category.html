@@ -33,7 +33,8 @@
   [scopeLabel]="assignmentScopeLabel"
   [assignmentRequestId]="assignmentRequestId"
   [prefillAuthUserId]="prefillAuthUserId"
-  (historyTabActive)="onAssignmentsHistoryTab($event)" />
+  (historyTabActive)="onAssignmentsHistoryTab($event)"
+  (inventoryAssetsChanged)="getAssets()" />
 
 <div class="card inv-panel" *ngIf="cat && categoryInventoryVisible">
   <h4 class="form-title">Inventory</h4>

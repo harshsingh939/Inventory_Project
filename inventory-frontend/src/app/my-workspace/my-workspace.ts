@@ -21,7 +21,6 @@ export class MyWorkspace implements OnInit {
   linked = false;
   hint = '';
   active: any[] = [];
-  history: any[] = [];
   /** Only when /me/assignments fails (e.g. token) */
   meError = '';
 
@@ -76,14 +75,12 @@ export class MyWorkspace implements OnInit {
           this.linked = false;
           this.hint = '';
           this.active = [];
-          this.history = [];
         } else {
           this.meError = '';
           const data = me as Record<string, unknown>;
           this.linked = !!data?.['linked'];
           this.hint = (data?.['hint'] as string) || '';
           this.active = (data?.['active'] as unknown[]) || [];
-          this.history = (data?.['history'] as unknown[]) || [];
         }
 
         this.myRequests = Array.isArray(mine) ? mine : [];
@@ -124,7 +121,8 @@ export class MyWorkspace implements OnInit {
 
   submitRequest() {
     if (!this.linked) {
-      this.errorMsg = 'Save your profile under Register (sidebar) first: name, Employee ID, department.';
+      this.errorMsg =
+        'Your employee profile is not linked yet. Ask an administrator to add you in Team registration, then check My profile.';
       this.cdr.detectChanges();
       return;
     }
@@ -158,7 +156,7 @@ export class MyWorkspace implements OnInit {
         this.selectedAssetTypes.clear();
         this.requestMessage = '';
         this.successMsg = asset_types.includes(MyWorkspace.OTHER)
-          ? 'Request sent. IT will review your “Other” item from your note.'
+          ? 'Request sent. List multiple accessories separated by commas or new lines — auto-assign matches each line to stock when possible.'
           : 'Request sent. Admin will assign one available unit per selection.';
         this.refreshAll();
         this.cdr.detectChanges();

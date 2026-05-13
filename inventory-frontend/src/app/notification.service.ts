@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { apiUrl } from './api-url';
 
-export type NotificationKind = 'repair' | 'assignment_request';
+export type NotificationKind = 'repair' | 'assignment_request' | 'new_signup';
 
 export interface Notification {
   kind: NotificationKind;
@@ -40,7 +40,8 @@ export class NotificationService {
       idStr = Number.isFinite(n) ? String(Math.trunc(n)) : String(rawId).trim();
     }
     if (!idStr) return null;
-    const k = kind === 'assignment_request' ? 'ar' : 'repair';
+    const k =
+      kind === 'assignment_request' ? 'ar' : kind === 'new_signup' ? 'ns' : 'repair';
     return `${k}:${idStr}`;
   }
 
@@ -77,7 +78,13 @@ export class NotificationService {
       next: (data) => {
         const visible = (data || [])
           .map((n) => {
-            const kind = (n.kind === 'assignment_request' ? 'assignment_request' : 'repair') as NotificationKind;
+            const kind = (
+              n.kind === 'assignment_request'
+                ? 'assignment_request'
+                : n.kind === 'new_signup'
+                  ? 'new_signup'
+                  : 'repair'
+            ) as NotificationKind;
             const id = typeof n.id === 'number' ? n.id : Number(n.id) || n.id;
             return {
               kind,

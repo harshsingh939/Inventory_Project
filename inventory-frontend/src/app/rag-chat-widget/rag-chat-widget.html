@@ -9,10 +9,10 @@
     class="rag-widget__panel"
     *ngIf="open"
     role="dialog"
-    aria-label="Inventory assistant"
+    aria-label="InvenTrack assistant"
     aria-modal="true">
     <header class="rag-widget__head">
-      <span class="rag-widget__title">Inventory assistant</span>
+      <span class="rag-widget__title">InvenTrack assistant</span>
       <div class="rag-widget__head-actions">
         <a routerLink="/rag-admin" class="rag-widget__link" (click)="close()" title="Indexing & status">⚙</a>
         <button type="button" class="rag-widget__iconbtn" (click)="close()" aria-label="Close chat">✕</button>
@@ -51,7 +51,50 @@
     (click)="toggle()"
     [class.rag-widget__fab--active]="open"
     [attr.aria-expanded]="open"
-    aria-label="Open inventory assistant">
-    <span class="rag-widget__fab-icon" aria-hidden="true">💬</span>
+    aria-label="Open InvenTrack assistant">
+    <span class="rag-widget__fab-bot" aria-hidden="true">
+      <svg class="rag-bot" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ragBotFace" x1="12" y1="18" x2="36" y2="34" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7dd3fc" />
+            <stop offset="1" stop-color="#38bdf8" />
+          </linearGradient>
+          <linearGradient id="ragBotMetal" x1="10" y1="12" x2="38" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#334155" />
+            <stop offset="1" stop-color="#1e293b" />
+          </linearGradient>
+        </defs>
+        <g class="rag-bot__bob">
+          <g transform="translate(24 14)">
+            <g class="rag-bot__antenna-pivot">
+              <line x1="0" y1="0" x2="0" y2="-9" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" />
+              <circle cx="0" cy="-11" r="3" fill="#38bdf8" class="rag-bot__antenna-tip" />
+            </g>
+          </g>
+          <rect x="10" y="14" width="28" height="24" rx="9" stroke="url(#ragBotMetal)" stroke-width="2" fill="#0f172a" />
+          <rect x="14" y="18" width="20" height="16" rx="5" fill="url(#ragBotFace)" class="rag-bot__screen" />
+          <circle class="rag-bot__eye rag-bot__eye--l" cx="19" cy="26" r="2.2" fill="#0f172a" />
+          <circle class="rag-bot__eye rag-bot__eye--r" cx="29" cy="26" r="2.2" fill="#0f172a" />
+          <path
+            d="M18.5 31.5Q24 35 29.5 31.5"
+            stroke="#0f172a"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            fill="none" />
+          <text
+            x="24"
+            y="38.5"
+            text-anchor="middle"
+            class="rag-bot__mark"
+            fill="#f8fafc"
+            font-size="8"
+            font-weight="800"
+            font-family="system-ui, Segoe UI, sans-serif"
+            letter-spacing="-0.02em">
+            IT
+          </text>
+        </g>
+      </svg>
+    </span>
   </button>
 </div>

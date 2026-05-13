@@ -1,0 +1,136 @@
+<div class="id-page">
+  <div class="id-grid-bg" aria-hidden="true"></div>
+  <div class="id-ambient" aria-hidden="true"></div>
+
+  <div class="id-inner">
+    <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <div class="id-loading" *ngIf="isLoading">Loading…</div>
+
+    <div class="id-dashboard" *ngIf="!isLoading && profile">
+      <aside class="id-col-left">
+        <article class="id-glass id-profile" aria-label="Employee profile">
+          <div class="id-profile__glow" aria-hidden="true"></div>
+          <div class="id-profile__avatar" aria-hidden="true">
+            <span class="id-profile__initials">{{ initials(profile.name) }}</span>
+          </div>
+          <h2 class="id-profile__name">{{ profile.name }}</h2>
+          <div class="id-profile__badges">
+            <span class="id-pill id-pill--ok">
+              <svg class="id-pill__tick" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 6l3 3 5-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Verified
+            </span>
+            <span class="id-pill id-pill--dept">{{ deptBadge() }}</span>
+          </div>
+          <dl class="id-profile__dl">
+            <div class="id-profile__row">
+              <dt>Employee ID</dt>
+              <dd class="id-profile__emp">{{ profile.employee_id || '—' }}</dd>
+            </div>
+            <div class="id-profile__row">
+              <dt>Status</dt>
+              <dd class="id-profile__status">Active</dd>
+            </div>
+            <div class="id-profile__row">
+              <dt>Role</dt>
+              <dd>{{ roleDisplay() }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <section class="id-glass id-shortcuts" aria-label="Shortcuts">
+          <h3 class="id-shortcuts__title">Shortcuts</h3>
+          <nav class="id-shortcuts__nav id-shortcuts__nav--solo">
+            <a routerLink="/my-workspace" class="id-shortcuts__link id-shortcuts__link--solo">
+              <span class="id-shortcuts__dot id-shortcuts__dot--cyan" aria-hidden="true"></span>
+              <span class="id-shortcuts__label">My workspace</span>
+              <span class="id-shortcuts__chev" aria-hidden="true">→</span>
+            </a>
+          </nav>
+        </section>
+      </aside>
+
+      <div class="id-col-right">
+        <header class="id-welcome-head">
+          <p class="id-welcome-kicker">• {{ greetingPrefix() | uppercase }}, {{ firstName() | uppercase }}</p>
+          <h1 class="id-welcome-title">
+            <span class="id-welcome-title__plain">Welcome to </span>
+            <span class="id-welcome-title__brand">InvenTrack</span>
+          </h1>
+          <p class="id-welcome-sub">
+            Dynamic tracking and assigning — your complete inventory command centre, right here.
+          </p>
+        </header>
+
+        <div class="id-stats" role="list">
+          <div class="id-stat-card" role="listitem">
+            <div class="id-stat-card__top">
+              <span class="id-stat-card__icon id-stat-card__icon--inbox" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M22 12h-6l-2 3H10L8 12H2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span class="id-stat-card__badge id-stat-card__badge--amber">{{ openRequestsBadge() }}</span>
+            </div>
+            <p class="id-stat-card__value">{{ openRequestsDisplay() }}</p>
+            <p class="id-stat-card__label">Open requests</p>
+          </div>
+          <div class="id-stat-card" role="listitem">
+            <div class="id-stat-card__top">
+              <span class="id-stat-card__icon id-stat-card__icon--people" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                </svg>
+              </span>
+              <span class="id-stat-card__badge id-stat-card__badge--cyan">{{ assignedBadge() }}</span>
+            </div>
+            <p class="id-stat-card__value">{{ assignedToYou }}</p>
+            <p class="id-stat-card__label">Assigned to you</p>
+          </div>
+          <div class="id-stat-card" role="listitem">
+            <div class="id-stat-card__top">
+              <span class="id-stat-card__icon id-stat-card__icon--history" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M3 12a9 9 0 1 0 3-6.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                  <path d="M3 4v5h5M12 7v5l4 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <span class="id-stat-card__badge id-stat-card__badge--mint">{{ completedBadge() }}</span>
+            </div>
+            <p class="id-stat-card__value">{{ completedCheckouts }}</p>
+            <p class="id-stat-card__label">Completed checkouts</p>
+          </div>
+        </div>
+
+        <footer class="id-cta">
+          <div class="id-cta__copy">
+            <p class="id-cta__eyebrow">Ready to go</p>
+            <p class="id-cta__line">Open your workspace</p>
+          </div>
+          <a routerLink="/my-workspace" class="id-cta__btn">
+            <span>Your workspace</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </footer>
+      </div>
+    </div>
+
+    <article class="id-glass id-empty-landing" *ngIf="!isLoading && !profile">
+      <p class="id-empty-landing__kicker">InvenTrack</p>
+      <h2 class="id-empty-landing__title">
+        <span class="id-empty-landing__title-accent">Signed up successfully</span>
+      </h2>
+      <p class="id-empty-landing__lead">
+        Please wait for your profile to be created. Your administrator will finish linking you in Team registration.
+      </p>
+      <button type="button" class="id-empty-landing__btn" disabled>
+        Your workspace will be active soon
+      </button>
+    </article>
+  </div>
+</div>

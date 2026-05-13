@@ -27,6 +27,7 @@ import { RepairWorkVendor } from './repair-work-vendor/repair-work-vendor';
 import { RepairReviewDetail } from './repair-review-detail/repair-review-detail';
 import { RepairAuthorityPanel } from './repair-authority-panel/repair-authority-panel';
 import { RagAdmin } from './rag-admin/rag-admin';
+import { EmployeeIdCard } from './employee-id-card/employee-id-card';
 
 export const routes: Routes = [
   { path: 'login',  component: Login  },   // ✅ no sidebar/header
@@ -54,6 +55,7 @@ export const routes: Routes = [
       { path: 'repairs',        component: Repairs,        canActivate: [AuthGuard] },
       { path: 'repair-costs',   component: RepairCostLog,  canActivate: [AdminGuard] },
       { path: 'my-workspace', component: MyWorkspace, canActivate: [AuthGuard] },
+      { path: 'my-profile', component: EmployeeIdCard, canActivate: [AuthGuard] },
       { path: 'assignment-requests', component: AssignmentRequestsAdmin, canActivate: [AdminGuard] },
       { path: 'repair-requests', component: RepairRequestsAdmin, canActivate: [RepairAuthorityGuard] },
       { path: 'repair-work', component: RepairWorkVendor, canActivate: [RepairAuthorityGuard] },

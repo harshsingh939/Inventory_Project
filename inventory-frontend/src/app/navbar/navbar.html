@@ -10,13 +10,13 @@
   <div class="links"[class.active]="isMenuOpen">
       <ng-container *ngIf="auth.getRole() === 'admin'">
     <a routerLink="/">Dashboard</a>
-    <a routerLink="/users">Register</a>
+    <a routerLink="/users">Team</a>
     <a routerLink="/assets">Assets</a>
     <a routerLink="/repairs">Repairs</a>
 </ng-container>
   <!-- 👤 NORMAL USER -->
   <ng-container *ngIf="auth.getRole() !== 'admin'">
-    <a routerLink="/users">Register</a>
+    <a routerLink="/my-workspace">My workspace</a>
     <a routerLink="/repairs">Repairs</a>
   </ng-container>
 

@@ -1,5 +1,6 @@
 const db = require('../db');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
+const { rowWithEffectiveStatus } = require('../services/assetEffectiveStatus');
 
 function isMissingTable(err) {
   return (
@@ -36,10 +37,17 @@ function attachAssetsToInventories(inventoryRows, callback) {
   }
   const placeholders = ids.map(() => '?').join(',');
   const sql = `
-    SELECT id, inventory_id, asset_type, brand, model, serial_number, status
-    FROM assets
-    WHERE inventory_id IN (${placeholders})
-    ORDER BY inventory_id ASC, id ASC
+    SELECT a.id, a.inventory_id, a.asset_type, a.brand, a.model, a.serial_number, a.status,
+           x.active_assignment_join_id
+    FROM assets a
+    LEFT JOIN (
+      SELECT asset_id, MIN(id) AS active_assignment_join_id
+      FROM assignments
+      WHERE status = 'Active'
+      GROUP BY asset_id
+    ) x ON x.asset_id = a.id
+    WHERE a.inventory_id IN (${placeholders})
+    ORDER BY a.inventory_id ASC, a.id ASC
   `;
   db.query(sql, ids, (err, assets) => {
     if (err) {
@@ -58,7 +66,8 @@ function attachAssetsToInventories(inventoryRows, callback) {
     ids.forEach((id) => {
       byInv[id] = [];
     });
-    for (const a of assets || []) {
+    for (const raw of assets || []) {
+      const a = rowWithEffectiveStatus(raw);
       const iid = a.inventory_id;
       if (iid == null || byInv[iid] === undefined) continue;
       const name = formatAssetLabel(a);

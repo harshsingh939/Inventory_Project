@@ -121,7 +121,10 @@ exports.getSummary = (req, res) => {
   let i = 0;
   function next() {
     if (i >= steps.length) {
-      return res.json(out);
+      return attachRagSummaryEnrichment(out, (e0) => {
+        if (e0) return res.status(500).json({ message: e0.message });
+        return res.json(out);
+      });
     }
     const [key, sql] = steps[i];
     i += 1;
@@ -136,3 +139,81 @@ exports.getSummary = (req, res) => {
 
   next();
 };
+
+/**
+ * Extra fields for GET /api/rag-export/summary so the RAG chat model can answer:
+ * inventory names + counts, per-inventory asset previews, repair status histogram.
+ */
+function attachRagSummaryEnrichment(out, cb) {
+  const catalogSql = `
+    SELECT i.id, i.name,
+      (SELECT COUNT(*) FROM assets a
+       WHERE a.inventory_id = i.id
+         AND LOWER(TRIM(COALESCE(a.status, ''))) <> 'disposed') AS asset_count
+    FROM inventories i
+    ORDER BY i.name ASC
+  `;
+  const previewSql = `
+    SELECT a.inventory_id AS inventory_id,
+      SUBSTRING(GROUP_CONCAT(
+        CONCAT('#', a.id, ' ', IFNULL(a.asset_type, ''), ' ', IFNULL(a.brand, ''), ' ', IFNULL(a.model, ''),
+               ' [', IFNULL(a.status, ''), ']')
+        ORDER BY a.id SEPARATOR ' | '
+      ), 1, 1600) AS assets_preview
+    FROM assets a
+    WHERE a.inventory_id IS NOT NULL
+      AND LOWER(TRIM(COALESCE(a.status, ''))) <> 'disposed'
+    GROUP BY a.inventory_id
+  `;
+  const repairSql = `
+    SELECT COALESCE(NULLIF(TRIM(status), ''), 'Unknown') AS status, COUNT(*) AS c
+    FROM repairs
+    GROUP BY status
+    ORDER BY c DESC
+  `;
+  const looseSql = `
+    SELECT COUNT(*) AS c FROM assets a
+    WHERE (a.inventory_id IS NULL OR a.inventory_id = 0)
+      AND LOWER(TRIM(COALESCE(a.status, ''))) <> 'disposed'
+  `;
+
+  run(catalogSql, (e1, invList) => {
+    if (e1) {
+      return cb(e1);
+    }
+    run(previewSql, (e2, previews) => {
+      const byInv = {};
+      if (!e2) {
+        for (const r of previews || []) {
+          if (r && r.inventory_id != null) {
+            byInv[r.inventory_id] = r.assets_preview || '';
+          }
+        }
+      }
+      out.inventory_catalog = (invList || []).map((r) => ({
+        id: r.id,
+        name: r.name,
+        asset_count: Number(r.asset_count) || 0,
+        assets_preview: byInv[r.id] || '',
+      }));
+
+      run(repairSql, (e3, repRows) => {
+        if (e3) {
+          out.repairs_by_status = [];
+        } else {
+          out.repairs_by_status = (repRows || []).map((row) => ({
+            status: row.status,
+            count: Number(row.c) || 0,
+          }));
+        }
+        run(looseSql, (e4, looseRows) => {
+          if (!e4 && looseRows && looseRows[0]) {
+            const c = Number(looseRows[0].c);
+            out.counts.assets_not_in_named_inventory = Number.isFinite(c) ? c : 0;
+          }
+          cb(null);
+        });
+      });
+    });
+  });
+}

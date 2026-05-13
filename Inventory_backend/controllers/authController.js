@@ -2,6 +2,7 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const getJwtSecret = require('../config/jwtSecret');
+const { sendNewSignupEmailToAdmins } = require('../services/mailer');
 
 // SIGNUP
 exports.signup = (req, res) => {
@@ -40,6 +41,13 @@ exports.signup = (req, res) => {
           console.log('Signup DB error:', err3.message);
           return res.status(500).json({ message: 'Signup failed', error: err3.message });
         }
+        const authUserId = result3.insertId;
+        sendNewSignupEmailToAdmins(db, {
+          username,
+          email,
+          mobile,
+          authUserId,
+        });
         res.status(201).json({ message: 'Account created successfully ✅' });
       });
     });

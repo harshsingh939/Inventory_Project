@@ -1,0 +1,507 @@
+:host {
+  display: block;
+}
+
+.page-header {
+  margin-bottom: 8px;
+}
+
+.hub-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.hub-header-text {
+  flex: 1 1 280px;
+  text-align: left;
+}
+
+.hub-header-text h2 {
+  margin-top: 0;
+}
+
+.hub-header-text p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-width: 52rem;
+}
+
+.hub-add-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.hub-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  min-height: 200px;
+  margin: 0;
+}
+
+.hub-card:hover .hub-card-cta {
+  color: #38bdf8;
+}
+
+.hub-card-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.hub-card-title {
+  color: #f1f5f9;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.hub-card-blurb {
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+.hub-card-stats {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.hub-stat-count {
+  display: block;
+  font-weight: 600;
+  color: #38bdf8;
+  margin-bottom: 4px;
+}
+
+.hub-stat-zero {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.hub-stat-names {
+  display: block;
+  color: #64748b;
+  word-break: break-word;
+}
+
+.hub-card-missing {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  color: #fbbf24;
+  line-height: 1.35;
+}
+
+.hub-loading {
+  text-align: center;
+  padding: 20px;
+  color: #94a3b8;
+}
+
+.hub-card > .hub-card-cta {
+  margin-top: 14px;
+}
+
+.hub-card-cta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.hub-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.hub-card-remove {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hub-card-remove:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.hub-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin: 8px 0 0;
+}
+
+.hub-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #94a3b8;
+}
+
+.inv-section {
+  margin-bottom: 16px;
+}
+
+.inv-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inv-help {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin: 0 auto;
+  max-width: 640px;
+  text-align: center;
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+.inv-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+  justify-content: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.inv-section .inv-card.card {
+  margin: 0;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.inv-section .inv-card.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.inv-card-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.inv-card-title {
+  color: #f1f5f9;
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.inv-card-date {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.inv-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-bottom: 10px;
+}
+
+.inv-chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #94a3b8;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inv-card-blurb {
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.inv-asset-summary {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.inv-asset-count {
+  display: block;
+  font-weight: 600;
+  color: #38bdf8;
+  margin-bottom: 4px;
+}
+
+.inv-asset-names {
+  display: block;
+  color: #64748b;
+  word-break: break-word;
+}
+
+.inv-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 4px;
+}
+
+.inv-card-actions .btn-sm {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.inv-card-actions .btn-outline {
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+}
+
+.inv-card-actions .btn-outline:hover {
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.inv-card-actions .btn-danger-ghost {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.inv-card-actions .btn-danger-ghost:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.inv-open-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-right: 12px;
+  padding: 0;
+}
+
+.btn-link.danger {
+  color: #f87171;
+}
+
+.inv-focus {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.inv-focus-label {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+  font-weight: 500;
+  width: 100%;
+  max-width: 480px;
+}
+
+.inv-select {
+  max-width: 420px;
+  width: 100%;
+}
+
+.field-hint {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.35;
+  max-width: 480px;
+}
+
+.inv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.inv-modal {
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+}
+
+.inv-modal-lead {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.inv-modal .req {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.inv-modal-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+}
+
+.inv-modal .form-field {
+  margin-bottom: 10px;
+}
+
+.inv-modal .input,
+.inv-modal .textarea {
+  width: 100%;
+  max-width: none;
+  margin: 6px 0 0;
+  box-sizing: border-box;
+}
+
+.inv-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.inv-modal-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f1f5f9;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  margin: 0;
+}
+
+.inv-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.msg-error {
+  color: #f87171;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-select {
+    max-width: none;
+  }
+
+  .inv-modal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .inv-modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .inv-modal {
+    max-width: none;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .inv-card-actions .btn-sm {
+    flex: 1 1 calc(50% - 4px);
+  }
+}
+
+@media (max-width: 480px) {
+  .inv-section-head .btn-sm {
+    width: 100%;
+  }
+}

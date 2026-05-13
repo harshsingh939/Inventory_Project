@@ -1,0 +1,72 @@
+<div class="page-header page-header-row">
+  <div>
+    <h2>📋 Repair cost history</h2>
+    <p>Completed repairs: device, cost, bill (upload when marking fixed → <strong>Yes, add details</strong>), notes, and completion time.</p>
+  </div>
+  <div class="header-actions">
+    <a routerLink="/repairs" class="link-back">← Back to repairs</a>
+    <button type="button" class="btn-refresh" (click)="load()" [disabled]="isLoading">Refresh</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="loading" *ngIf="isLoading">Loading history…</div>
+  <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <p class="table-scroll-hint" *ngIf="!isLoading && !errorMsg && rows.length">Scroll horizontally to see Bill, Notes, and Completed.</p>
+  <div class="table-wrap" *ngIf="!isLoading && !errorMsg">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Device</th>
+          <th>Original issue</th>
+          <th>Cost</th>
+          <th>Bill</th>
+          <th>Notes</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>
+            <span class="device-icon" aria-hidden="true">💻</span>
+            {{ deviceLabel(r) }}
+          </td>
+          <td class="issue-cell">{{ r.issue }}</td>
+          <td>
+            <ng-container *ngIf="hasRepairCost(r); else noCost">
+              ₹{{ repairCostAmount(r)! | number: '1.2-2' }}
+            </ng-container>
+            <ng-template #noCost><span class="muted">—</span></ng-template>
+          </td>
+          <td class="bill-cell">
+            <div *ngIf="hasBill(r)" class="bill-actions">
+              <a class="bill-link" [href]="billFileUrl(r)" target="_blank" rel="noopener noreferrer">View</a>
+              <span class="bill-sep" aria-hidden="true">·</span>
+              <a
+                class="bill-link bill-link-download"
+                [href]="billFileUrl(r)"
+                [attr.download]="billDownloadName(r)"
+                rel="noopener noreferrer"
+              >Download</a>
+            </div>
+            <span *ngIf="!hasBill(r)" class="muted">—</span>
+          </td>
+          <td class="notes-cell">{{ r.repair_notes || '—' }}</td>
+          <td class="date-cell">
+            <ng-container *ngIf="completedTimestamp(r) as ts; else noDate">
+              <span class="date-line">{{ ts | date: 'MMM d, y' }}</span>
+              <span class="time-line">{{ ts | date: 'h:mm a' }}</span>
+            </ng-container>
+            <ng-template #noDate><span class="muted">—</span></ng-template>
+          </td>
+        </tr>
+        <tr *ngIf="rows.length === 0">
+          <td colspan="7" class="empty">No completed repairs yet. When you mark a repair as fixed, it appears here.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,17 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { FormsModule } from '@angular/forms';
 
-import { Assets } from './assets';
+import { AssetsHub } from './assets-hub';
 
-describe('Assets', () => {
-  let component: Assets;
-  let fixture: ComponentFixture<Assets>;
+describe('AssetsHubComponent', () => {
+  let component: AssetsHub;
+  let fixture: ComponentFixture<AssetsHub>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Assets],
+      imports: [AssetsHub, HttpClientTestingModule, FormsModule],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Assets);
+    fixture = TestBed.createComponent(AssetsHub);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

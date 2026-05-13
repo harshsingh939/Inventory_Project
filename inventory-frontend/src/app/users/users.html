@@ -1,88 +1,121 @@
-<div class="page-header">
-  <h2>👤 Users</h2>
-  <p>Manage your employees</p>
-</div>
+<div class="users-page">
+  <div class="users-ambient" aria-hidden="true"></div>
 
-<!-- Add User Form -->
-<div class="card">
-  <div class="form-row">
-    <div class="form-field">
-      <label>Name</label>
-      <input [(ngModel)]="user.name" class="input" placeholder="Enter name" />
-    </div>
-    <div class="form-field">
-      <label>Employee ID</label>
-      <input [(ngModel)]="user.employee_id" class="input" placeholder="e.g. EMP001" />
-    </div>
-    <div class="form-field">
-      <label>Department</label>
-      <input [(ngModel)]="user.department" class="input" placeholder="e.g. IT" />
-    </div>
-    <button class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
-      {{ isAdding ? 'Adding...' : '+ Add User' }}
-    </button>
+  <div class="users-inner">
+    <header class="users-header">
+      <div class="users-header__brand">
+        <div class="users-badge" aria-hidden="true">
+          <span class="users-badge__head"></span>
+          <span class="users-badge__head users-badge__head--r"></span>
+        </div>
+        <div>
+          <h1 class="users-title">Users</h1>
+          <p class="users-lead" *ngIf="isAdmin">Directory and login links</p>
+          <p class="users-lead" *ngIf="!isAdmin">
+            Directory ·
+            <a routerLink="/my-workspace" class="users-lead__link">My workspace</a>
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <div class="msg-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+    <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+
+    <section class="users-panel" *ngIf="isLoggedIn">
+      <h2 class="users-panel__title">{{ isAdmin ? 'Add employee' : 'Add yourself to the directory' }}</h2>
+      <p class="users-panel__hint" *ngIf="!isAdmin">
+        Saves your employee row and links it to this login so My workspace works. If you already used this form, open My workspace again (or refresh).
+      </p>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Name</label>
+          <input [(ngModel)]="user.name" class="input" placeholder="Enter name" />
+        </div>
+        <div class="form-field">
+          <label>Employee ID</label>
+          <input [(ngModel)]="user.employee_id" class="input" placeholder="e.g. EMP001" />
+        </div>
+        <div class="form-field">
+          <label>Department</label>
+          <input [(ngModel)]="user.department" class="input" placeholder="e.g. IT" />
+        </div>
+        <button type="button" class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
+          {{ isAdding ? 'Adding…' : '+ Add user' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="users-panel users-panel--search">
+      <div class="search-row">
+        <div class="search-field">
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Search by name…"
+            [(ngModel)]="searchName"
+            (ngModelChange)="applyFilter()"
+          />
+        </div>
+        <div class="search-field">
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Search by department…"
+            [(ngModel)]="searchDept"
+            (ngModelChange)="applyFilter()"
+          />
+        </div>
+        <button type="button" class="btn-clear" (click)="clearFilter()">Clear</button>
+      </div>
+      <p class="result-count">
+        Showing <strong>{{ filteredUsers.length }}</strong> of <strong>{{ users.length }}</strong> users
+      </p>
+    </section>
+
+    <section class="users-panel users-panel--table">
+      <div class="table-container">
+        <div class="loading" *ngIf="isLoading">Loading users…</div>
+
+        <table *ngIf="!isLoading" class="users-table">
+          <thead>
+            <tr>
+              <th class="col-id">ID</th>
+              <th>Name</th>
+              <th>Employee ID</th>
+              <th>Department</th>
+              <th
+                *ngIf="isAdmin"
+                class="col-link"
+                title="Save updates the server. Typing in the box alone does not."
+              >
+                Login user id
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUsers" class="users-row">
+              <td class="col-id"><strong>{{ u.id }}</strong></td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.employee_id }}</td>
+              <td>{{ u.department }}</td>
+              <td *ngIf="isAdmin" class="link-cell">
+                <div class="link-row">
+                  <input type="number" class="input link-input" [(ngModel)]="linkDraft[u.id]" placeholder="auth_users.id" />
+                  <button type="button" class="btn-link-save" [disabled]="savingLinkId === u.id" (click)="saveAuthLink(u)">
+                    {{ savingLinkId === u.id ? '…' : 'Save' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUsers.length === 0">
+              <td [attr.colspan]="isAdmin ? 5 : 4" class="empty-row">
+                {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
-  <div class="msg-error"   *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
-  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
-</div>
-
-<!-- ✅ Search Filter -->
-<div class="card search-card">
-  <div class="search-row">
-    <div class="search-field">
-      <span class="search-icon">🔍</span>
-      <input
-        class="search-input"
-        type="text"
-        placeholder="Search by name..."
-        [(ngModel)]="searchName"
-        (ngModelChange)="applyFilter()"
-      />
-    </div>
-    <div class="search-field">
-      <span class="search-icon">🏢</span>
-      <input
-        class="search-input"
-        type="text"
-        placeholder="Search by department..."
-        [(ngModel)]="searchDept"
-        (ngModelChange)="applyFilter()"
-      />
-    </div>
-    <button class="btn-clear" (click)="clearFilter()">✕ Clear</button>
-  </div>
-  <p class="result-count">
-    Showing <strong>{{ filteredUsers.length }}</strong> of <strong>{{ users.length }}</strong> users
-  </p>
-</div>
-
-<!-- Users Table -->
-<div class="card">
-    <div class="table-container">
-  <div class="loading" *ngIf="isLoading">⏳ Loading users...</div>
-
-  <table *ngIf="!isLoading">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Name</th>
-        <th>Employee ID</th>
-        <th>Department</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let u of filteredUsers; let i = index">
-        <td>{{ i + 1 }}</td>
-        <td>{{ u.name }}</td>
-        <td>{{ u.employee_id }}</td>
-        <td>{{ u.department }}</td>
-      </tr>
-      <tr *ngIf="filteredUsers.length === 0">
-        <td colspan="4" class="empty-row">
-          {{ searchName || searchDept ? 'No users match your search' : 'No users found' }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
 </div>

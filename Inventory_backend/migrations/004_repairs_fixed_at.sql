@@ -1,0 +1,4 @@
+-- fixed_at is included in 003_repairs_cost_notes.sql.
+-- Use this ONLY if you ran an older migration that added repair_cost/repair_notes but not fixed_at:
+--
+-- ALTER TABLE repairs ADD COLUMN fixed_at DATETIME NULL DEFAULT NULL;

@@ -56,16 +56,17 @@ import { AuthService } from '../auth.service';
       .rw-bill-input {
         padding: 8px 0;
         font-size: 0.8125rem;
-        color: #e2e8f0;
-        background: transparent;
-        border: none;
-        border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+        color: #334155;
+        background: #ffffff;
+        border: 1px dashed #94a3b8;
+        border-radius: 8px;
         width: 100%;
+        box-sizing: border-box;
       }
       .rw-bill-hint {
         margin: 6px 0 0;
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #64748b;
       }
       .rw-bill-hint--muted {
         margin-top: 2px;

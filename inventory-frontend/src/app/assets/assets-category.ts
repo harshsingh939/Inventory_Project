@@ -20,7 +20,7 @@ import {
   definitionForSlug,
   inventoryMatchesCategorySlug,
 } from './asset-category.config';
-import type { InventoryRow } from './assets-hub';
+import { parseCustomColumns, type InventoryRow } from './assets-hub';
 import { apiUrl } from '../api-url';
 import { AuthService } from '../auth.service';
 import { AssetAssignmentsPanel } from '../asset-assignments-panel/asset-assignments-panel';
@@ -72,6 +72,13 @@ export class AssetsCategory implements OnInit, OnDestroy {
     ram: '',
     storage: '',
   };
+
+  /** PC add form: numeric part only; API gets `{n}GB` / `{n}GB SSD`. */
+  pcRamNumber = '';
+  pcStorageNumber = '';
+
+  /** Values for the filtered inventory's custom column labels (when `inCustomColumnView()`). */
+  customFieldDraft: Record<string, string> = {};
 
   allAssets: any[] = [];
   filteredAssets: any[] = [];
@@ -205,8 +212,83 @@ export class AssetsCategory implements OnInit, OnDestroy {
 
   /** Table colspan for empty row */
   tableColspan(): number {
+    if (this.inCustomColumnView()) {
+      return 3 + this.activeCustomColumns().length;
+    }
     const inv = this.inventories.length > 0 ? 1 : 0;
     return (this.isPc ? 10 : 7) + inv;
+  }
+
+  /** When a named inventory with admin-defined columns is filtered (`?inv=`). */
+  inCustomColumnView(): boolean {
+    return this.filterInvId !== '' && this.activeCustomColumns().length > 0;
+  }
+
+  activeFilterInventory(): InventoryRow | undefined {
+    if (this.filterInvId === '') return undefined;
+    return this.inventories.find((i) => Number(i.id) === Number(this.filterInvId));
+  }
+
+  activeCustomColumns(): string[] {
+    const inv = this.activeFilterInventory();
+    return inv ? parseCustomColumns(inv.custom_columns) : [];
+  }
+
+  parseAssetCustomFields(a: { custom_fields?: unknown }): Record<string, string> {
+    const raw = a?.custom_fields;
+    if (raw != null && typeof raw === 'object' && !Array.isArray(raw)) {
+      const o = raw as Record<string, unknown>;
+      const out: Record<string, string> = {};
+      for (const k of Object.keys(o)) {
+        out[k] = String(o[k] ?? '');
+      }
+      return out;
+    }
+    if (typeof raw === 'string' && raw.trim()) {
+      try {
+        const p = JSON.parse(raw) as unknown;
+        if (p != null && typeof p === 'object' && !Array.isArray(p)) {
+          return this.parseAssetCustomFields({ custom_fields: p });
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return {};
+  }
+
+  customFieldCell(a: { custom_fields?: unknown }, col: string): string {
+    const map = this.parseAssetCustomFields(a);
+    const v = map[col];
+    return v != null && String(v).trim() !== '' ? String(v) : '—';
+  }
+
+  trackColLabel(_index: number, col: string): string {
+    return col;
+  }
+
+  private resetCustomFieldDraft() {
+    this.customFieldDraft = {};
+    for (const c of this.activeCustomColumns()) {
+      this.customFieldDraft[c] = '';
+    }
+  }
+
+  /** Include the row for `?inv=` when it is not a hub mirror for this category (e.g. user-created lists on Other). */
+  private mergeInventoriesForCategoryFilter(
+    all: InventoryRow[],
+    slug: string,
+  ): InventoryRow[] {
+    const matched = all.filter((inv) => inventoryMatchesCategorySlug(inv, slug));
+    const fid = this.filterInvId !== '' ? Number(this.filterInvId) : NaN;
+    if (!Number.isFinite(fid)) {
+      return matched;
+    }
+    if (matched.some((m) => Number(m.id) === fid)) {
+      return matched;
+    }
+    const extra = all.find((inv) => Number(inv.id) === fid);
+    return extra ? [...matched, extra] : matched;
   }
 
   onFilterInvChange() {
@@ -296,6 +378,8 @@ export class AssetsCategory implements OnInit, OnDestroy {
     const typeChoices = this.cat.formTypes ?? this.cat.types;
     if (this.isPc) {
       const first = typeChoices[0] || '';
+      this.pcRamNumber = '';
+      this.pcStorageNumber = '';
       this.asset = {
         asset_type: first,
         brand: '',
@@ -307,6 +391,8 @@ export class AssetsCategory implements OnInit, OnDestroy {
       };
     } else {
       const first = typeChoices[0] || '';
+      this.pcRamNumber = '';
+      this.pcStorageNumber = '';
       this.asset = {
         asset_type: first,
         brand: '',
@@ -323,10 +409,9 @@ export class AssetsCategory implements OnInit, OnDestroy {
     this.http.get<InventoryRow[]>(this.apiInv).subscribe({
       next: (rows) => {
         const all = rows || [];
-        this.inventories = all.filter((inv) =>
-          inventoryMatchesCategorySlug(inv, this.slug),
-        );
+        this.inventories = this.mergeInventoriesForCategoryFilter(all, this.slug);
         const skipGet = this.syncInventorySelectionsAfterLoad();
+        this.resetCustomFieldDraft();
         this.cdr.detectChanges();
         if (!skipGet) {
           this.getAssets();
@@ -336,6 +421,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
         this.inventories = [];
         this.filterInvId = '';
         this.assignInvId = '';
+        this.resetCustomFieldDraft();
         this.cdr.detectChanges();
         this.getAssets();
       },
@@ -347,11 +433,10 @@ export class AssetsCategory implements OnInit, OnDestroy {
     this.http.get<InventoryRow[]>(this.apiInv).subscribe({
       next: (rows) => {
         const all = rows || [];
-        this.inventories = all.filter((inv) =>
-          inventoryMatchesCategorySlug(inv, this.slug),
-        );
+        this.inventories = this.mergeInventoriesForCategoryFilter(all, this.slug);
         const skipGet = this.syncInventorySelectionsAfterLoad();
         this.ensureAssignInventoryDefault();
+        this.resetCustomFieldDraft();
         this.cdr.detectChanges();
         if (!skipGet) {
           this.getAssets();
@@ -359,6 +444,7 @@ export class AssetsCategory implements OnInit, OnDestroy {
       },
       error: () => {
         this.ensureAssignInventoryDefault();
+        this.resetCustomFieldDraft();
         this.getAssets();
       },
     });
@@ -394,6 +480,18 @@ export class AssetsCategory implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  /** Leading integer from RAM field → stored as `12GB`. */
+  private formatPcRamForApi(): string {
+    const m = this.pcRamNumber.trim().match(/^(\d+)/);
+    return m ? `${m[1]}GB` : '';
+  }
+
+  /** Leading number (optional decimals) from storage field → stored as `512GB SSD`. */
+  private formatPcStorageForApi(): string {
+    const m = this.pcStorageNumber.trim().match(/^(\d+(?:\.\d+)?)/);
+    return m ? `${m[1]}GB SSD` : '';
+  }
+
   addAsset() {
     if (!this.cat) return;
     if (!this.asset.asset_type.trim()) {
@@ -427,7 +525,11 @@ export class AssetsCategory implements OnInit, OnDestroy {
     this.isAdding = true;
 
     const body: Record<string, unknown> = this.isPc
-      ? { ...this.asset }
+      ? {
+          ...this.asset,
+          ram: this.formatPcRamForApi(),
+          storage: this.formatPcStorageForApi(),
+        }
       : {
           ...this.asset,
           cpu: '',
@@ -462,6 +564,76 @@ export class AssetsCategory implements OnInit, OnDestroy {
       error: (err) => {
         this.isAdding = false;
         this.errorMsg = err.error?.message || 'Failed to add asset';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  addCustomInventoryAsset() {
+    if (!this.cat || !this.inCustomColumnView()) return;
+    const cols = this.activeCustomColumns();
+    if (cols.length === 0) return;
+
+    const custom_fields: Record<string, string> = {};
+    for (const c of cols) {
+      const v = (this.customFieldDraft[c] ?? '').trim();
+      if (!v) {
+        this.errorMsg = `Please fill "${c}"`;
+        return;
+      }
+      custom_fields[c] = v;
+    }
+
+    if (this.inventories.length > 0 && this.assignInvId === '') {
+      this.errorMsg = 'Select which inventory this asset belongs to';
+      return;
+    }
+
+    const invRow = this.activeFilterInventory();
+    const invNameSlice = (invRow?.name ?? 'Custom').slice(0, 50);
+
+    this.errorMsg = '';
+    this.successMsg = '';
+    this.isAdding = true;
+
+    const body: Record<string, unknown> = {
+      asset_type: invNameSlice,
+      brand: '—',
+      model: '—',
+      serial_number: '',
+      cpu: '',
+      ram: '',
+      storage: '',
+      custom_fields,
+    };
+    if (this.assignInvId !== '') {
+      body['inventory_id'] = this.assignInvId;
+    }
+
+    this.http.post<any>(this.apiAssets + '/add', body).subscribe({
+      next: (res) => {
+        const newAsset = {
+          ...body,
+          id: res.id,
+          status: 'Available',
+          inventory_id: this.assignInvId !== '' ? this.assignInvId : null,
+          serial_number: null,
+        };
+        this.allAssets.push(newAsset);
+        this.applyFilter();
+        this.isAdding = false;
+        this.successMsg = '✅ Row added successfully!';
+        this.resetCustomFieldDraft();
+        this.ensureAssignInventoryDefault();
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        this.isAdding = false;
+        this.errorMsg = err.error?.message || 'Failed to add row';
         this.cdr.detectChanges();
       },
     });

@@ -1,4 +1,15 @@
-<div class="header" [class.header--vendor-nav]="isLoggedIn && isRepairAuthority" [class.header--admin-nav]="isLoggedIn && isAdmin">
+<div class="cin7-header-wrap" [class.cin7-header-wrap--guest]="!isLoggedIn">
+  <!-- Cin7-style top strip: org-specific entry points (same login, different intent) -->
+  <div class="header-utility" *ngIf="!isLoggedIn" aria-label="Quick links">
+    <span class="header-utility__hint">InvenTrack · colleges &amp; teams</span>
+    <div class="header-utility__links">
+      <a routerLink="/login" class="header-utility__link">Team sign-in</a>
+      <span class="header-utility__sep" aria-hidden="true">|</span>
+      <a routerLink="/login" class="header-utility__link" title="Repair partners use the same sign-in">Partner sign-in</a>
+    </div>
+  </div>
+
+  <div class="header" [class.header--vendor-nav]="isLoggedIn && isRepairAuthority" [class.header--admin-nav]="isLoggedIn && isAdmin" [class.header--guest-marketing]="!isLoggedIn">
 
   <button
     *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
@@ -24,11 +35,20 @@
     </ng-container>
     <ng-template #brandStandard>
       <div class="brand-text">
-        <span class="brand-name">InvenTrack</span>
+        <span class="brand-name">INVENTRACK</span>
         <span class="brand-sub">INVENTORY SYSTEM</span>
       </div>
     </ng-template>
   </a>
+
+  <!-- Guest: center nav (Cin7-style caps) -->
+  <nav *ngIf="!isLoggedIn" class="header-marketing-nav" aria-label="Product sections">
+    <a routerLink="/" fragment="hero-main" class="header-mnav__link">Home</a>
+    <a routerLink="/" fragment="features" class="header-mnav__link">Capabilities</a>
+    <a routerLink="/" fragment="modules" class="header-mnav__link">Modules</a>
+    <a routerLink="/" fragment="trust" class="header-mnav__link">Who it’s for</a>
+    <a routerLink="/" fragment="cta" class="header-mnav__link">Get started</a>
+  </nav>
 
   <!-- Admin: primary routes in top bar (no sidebar) -->
   <nav *ngIf="isLoggedIn && isAdmin" class="header-admin-nav" aria-label="Admin navigation">
@@ -84,17 +104,16 @@
     </nav>
   </div>
 
-  <!-- Spacer omitted for admin (wide top nav) and repair vendor (middle slot handles flex); keeps burger layouts balanced -->
-  <div class="header-spacer" *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"></div>
+  <div class="header-spacer" *ngIf="isLoggedIn && !isRepairAuthority && !isAdmin"></div>
 
-  <!-- Login/Signup — not logged in -->
-  <div class="header-auth" *ngIf="!isLoggedIn">
-    <a routerLink="/login"  routerLinkActive="active-link" class="auth-btn">Login</a>
-    <a routerLink="/signup" routerLinkActive="active-link" class="auth-btn signup">Sign Up</a>
+  <!-- Guest: Cin7-style sign in + pill CTA -->
+  <div class="header-guest-actions" *ngIf="!isLoggedIn">
+    <a routerLink="/login" class="header-guest-login">Sign in</a>
+    <a routerLink="/signup" class="header-cta-pill">Get started</a>
   </div>
 
-  <!-- Right side -->
-  <div class="header-right">
+  <!-- Right side: session + notifications -->
+  <div class="header-right" *ngIf="isLoggedIn">
 
     <!-- Admin activity: pending repairs, assignment requests, new signups -->
     <div class="notif-wrapper" *ngIf="isLoggedIn && isAdmin">
@@ -121,7 +140,7 @@
             [class.notif-item--request]="n.kind === 'assignment_request'"
             [class.notif-item--signup]="n.kind === 'new_signup'"
             [routerLink]="notifLink(n)"
-            (click)="closeNotificationsForNav()"
+            (click)="onNotifSignupPrefill(n); closeNotificationsForNav()"
           >
             <div class="notif-icon" *ngIf="n.kind === 'repair'">🔧</div>
             <div class="notif-icon notif-icon--inbox" *ngIf="n.kind === 'assignment_request'">📥</div>
@@ -158,7 +177,7 @@
     </div>
 
     <!-- Avatar -->
-    <div class="avatar" (click)="toggleDropdown()">{{ initial }}</div>
+    <div class="avatar" *ngIf="isLoggedIn" (click)="toggleDropdown()">{{ initial }}</div>
 
     <!-- Profile Dropdown -->
     <div class="dropdown" *ngIf="showDropdown">
@@ -271,4 +290,5 @@
     <p>See you again soon</p>
     <div class="popup-progress"></div>
   </div>
+</div>
 </div>

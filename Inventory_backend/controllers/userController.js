@@ -1,5 +1,6 @@
 const db = require('../db');
 const { ALLOWED_DEPARTMENTS } = require('../constants/departments');
+const { getSubRoleValidationError } = require('../constants/departmentSubRoles');
 const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 
 function assertAllowedDepartment(department, res) {
@@ -38,12 +39,60 @@ exports.getUsers = (req, res) => {
 };
 
 exports.addUser = (req, res) => {
-  const { name, employee_id, department } = req.body;
+  const { name, employee_id, department, sub_role, auth_user_id } = req.body;
 
   if (!name || !employee_id || !department) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   if (!assertAllowedDepartment(department, res)) return;
+  const subRoleErr = getSubRoleValidationError(department, sub_role);
+  if (subRoleErr) {
+    return res.status(400).json({ message: subRoleErr });
+  }
+  const subRoleVal = String(sub_role).trim();
+
+  let linkVal = null;
+  if (auth_user_id !== undefined && auth_user_id !== null && auth_user_id !== '') {
+    linkVal = Number(auth_user_id);
+    if (!Number.isFinite(linkVal)) {
+      return res.status(400).json({ message: 'auth_user_id must be a number' });
+    }
+  }
+
+  const runInsert = () => {
+    const cols =
+      linkVal != null
+        ? 'name, employee_id, department, sub_role, auth_user_id'
+        : 'name, employee_id, department, sub_role';
+    const placeholders = linkVal != null ? '?, ?, ?, ?, ?' : '?, ?, ?, ?';
+    const params =
+      linkVal != null
+        ? [
+            String(name).trim(),
+            String(employee_id).trim(),
+            String(department).trim(),
+            subRoleVal,
+            linkVal,
+          ]
+        : [String(name).trim(), String(employee_id).trim(), String(department).trim(), subRoleVal];
+    db.query(
+      `INSERT INTO users (${cols}) VALUES (${placeholders})`,
+      params,
+      (err3, result3) => {
+        if (err3) {
+          if (err3.code === 'ER_BAD_FIELD_ERROR' && String(err3.message).includes('sub_role')) {
+            return res.status(503).json({ message: 'Run migration 017: users.sub_role column missing' });
+          }
+          if (err3.errno === 1062 || err3.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: 'That login is already linked to another employee' });
+          }
+          return res.status(500).json({ message: err3.message });
+        }
+        notifyRagDebouncedReindex();
+        res.json({ message: 'User Added ✅', id: result3.insertId });
+      }
+    );
+  };
 
   // ✅ duplicate employee_id check
   db.query('SELECT id FROM users WHERE employee_id = ?', [employee_id], (err, result) => {
@@ -61,15 +110,18 @@ exports.addUser = (req, res) => {
         return res.status(400).json({ message: `User "${name}" already exists!` });
       }
 
-      db.query(
-        'INSERT INTO users (name, employee_id, department) VALUES (?, ?, ?)',
-        [name, employee_id, department],
-        (err3, result3) => {
-          if (err3) return res.status(500).json({ message: err3.message });
-          notifyRagDebouncedReindex();
-          res.json({ message: 'User Added ✅', id: result3.insertId });
-        }
-      );
+      if (linkVal != null) {
+        db.query('SELECT id FROM users WHERE auth_user_id = ?', [linkVal], (e4, taken) => {
+          if (e4) return res.status(500).json({ message: e4.message });
+          if (taken?.length) {
+            return res.status(400).json({ message: 'That login is already linked to another employee' });
+          }
+          runInsert();
+        });
+        return;
+      }
+
+      runInsert();
     });
   });
 };
@@ -81,7 +133,7 @@ exports.updateUser = (req, res) => {
     return res.status(400).json({ message: 'Invalid user id' });
   }
 
-  const { auth_user_id, name, employee_id, department } = req.body || {};
+  const { auth_user_id, name, employee_id, department, sub_role } = req.body || {};
   const parts = [];
   const params = [];
 
@@ -93,9 +145,25 @@ exports.updateUser = (req, res) => {
     parts.push('employee_id = ?');
     params.push(String(employee_id).trim());
   }
-  if (department !== undefined) {
+  const hasDeptPatch = department !== undefined;
+  const hasSubPatch = sub_role !== undefined;
+  if (hasDeptPatch || hasSubPatch) {
+    if (!hasDeptPatch || !hasSubPatch) {
+      return res.status(400).json({
+        message: 'Send both department and sub_role when updating either',
+      });
+    }
+    const d = String(department).trim();
+    const sr = String(sub_role ?? '').trim();
+    if (!assertAllowedDepartment(d, res)) return;
+    const subErr = getSubRoleValidationError(d, sr);
+    if (subErr) {
+      return res.status(400).json({ message: subErr });
+    }
     parts.push('department = ?');
-    params.push(String(department).trim());
+    params.push(d);
+    parts.push('sub_role = ?');
+    params.push(sr);
   }
   if (auth_user_id !== undefined) {
     const v =
@@ -119,6 +187,9 @@ exports.updateUser = (req, res) => {
       if (err) {
         if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('auth_user_id')) {
           return res.status(503).json({ message: 'Run migration 007: users.auth_user_id column missing' });
+        }
+        if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('sub_role')) {
+          return res.status(503).json({ message: 'Run migration 017: users.sub_role column missing' });
         }
         if (err.errno === 1062 || err.code === 'ER_DUP_ENTRY') {
           return res.status(400).json({ message: 'That login is already linked to another employee' });

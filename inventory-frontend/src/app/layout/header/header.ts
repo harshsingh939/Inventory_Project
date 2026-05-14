@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../auth.service';
 import { NotificationService, type Notification } from '../../notification.service';
 import { EmployeeProfileStatusService } from '../../employee-profile-status.service';
+import { TeamSignupPrefillService } from '../../team-signup-prefill.service';
 
 @Component({
   selector: 'app-header',
@@ -36,6 +37,7 @@ export class Header implements OnInit, OnDestroy {
     public auth: AuthService,
     public notifService: NotificationService,
     public employeeProfile: EmployeeProfileStatusService,
+    private teamSignupPrefill: TeamSignupPrefillService,
     private router: Router,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
@@ -132,6 +134,13 @@ export class Header implements OnInit, OnDestroy {
 
   closeNotificationsForNav() {
     this.showNotifications = false;
+  }
+
+  /** Buffer signup name + login id before RouterLink navigates to Team registration. */
+  onNotifSignupPrefill(n: Notification) {
+    if (n.kind === 'new_signup') {
+      this.teamSignupPrefill.armFromNewSignup(n.brand, n.id);
+    }
   }
 
   logout() {

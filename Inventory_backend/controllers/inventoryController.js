@@ -23,6 +23,20 @@ function formatAssetLabel(a) {
   return `Asset #${a.id}`;
 }
 
+/** JSON string for `custom_columns` column, or null if empty / invalid. Max 32 labels × 120 chars. */
+function normalizeCustomColumnsInput(body) {
+  if (!body || body.custom_columns == null) return null;
+  const raw = body.custom_columns;
+  const arr = Array.isArray(raw) ? raw : [];
+  const labels = arr
+    .map((c) => String(c ?? '').trim())
+    .filter(Boolean)
+    .map((s) => s.slice(0, 120))
+    .slice(0, 32);
+  if (!labels.length) return null;
+  return JSON.stringify(labels);
+}
+
 /**
  * Attach live `assets` array plus `asset_count` / `asset_names` derived from `assets.inventory_id`.
  * If DB migration 011 added columns, response still uses live asset rows so API stays authoritative.
@@ -136,38 +150,98 @@ exports.addInventory = (req, res) => {
   if (!name || !String(name).trim()) {
     return res.status(400).json({ message: 'Inventory name is required' });
   }
-  const sql = `
-    INSERT INTO inventories (name, details)
-    VALUES (?, ?)
-  `;
-  db.query(sql, [String(name).trim(), details || null], (err, result) => {
-    if (err) {
-      if (isMissingTable(err)) {
-        return res.status(400).json({
-          message:
-            'Database table `inventories` is missing. Run Inventory_backend/migrations/001_inventories.sql in MySQL, then retry.',
-        });
+  const det = details != null && String(details).trim() !== '' ? String(details) : null;
+  const colsJson = normalizeCustomColumnsInput(req.body);
+
+  const insertTwoCols = () => {
+    db.query(
+      'INSERT INTO inventories (name, details) VALUES (?, ?)',
+      [String(name).trim(), det],
+      (err, result) => {
+        if (err) {
+          if (isMissingTable(err)) {
+            return res.status(400).json({
+              message:
+                'Database table `inventories` is missing. Run Inventory_backend/migrations/001_inventories.sql in MySQL, then retry.',
+            });
+          }
+          return res.status(500).json({ message: err.message });
+        }
+        notifyRagDebouncedReindex();
+        res.json({ message: 'Inventory created', id: result.insertId });
+      },
+    );
+  };
+
+  if (!colsJson) {
+    return insertTwoCols();
+  }
+
+  db.query(
+    'INSERT INTO inventories (name, details, custom_columns) VALUES (?, ?, ?)',
+    [String(name).trim(), det, colsJson],
+    (err, result) => {
+      if (err) {
+        if (
+          err.code === 'ER_BAD_FIELD_ERROR' &&
+          String(err.message || '').includes('custom_columns')
+        ) {
+          return res.status(503).json({
+            message:
+              'Run migration 018_inventories_custom_columns.sql to add the custom_columns column, then retry.',
+          });
+        }
+        if (isMissingTable(err)) {
+          return res.status(400).json({
+            message:
+              'Database table `inventories` is missing. Run Inventory_backend/migrations/001_inventories.sql in MySQL, then retry.',
+          });
+        }
+        return res.status(500).json({ message: err.message });
       }
-      return res.status(500).json({ message: err.message });
-    }
-    notifyRagDebouncedReindex();
-    res.json({ message: 'Inventory created', id: result.insertId });
-  });
+      notifyRagDebouncedReindex();
+      res.json({ message: 'Inventory created', id: result.insertId });
+    },
+  );
 };
 
 exports.updateInventory = (req, res) => {
   const id = req.params.id;
-  const { name, details } = req.body;
-  if (!name || !String(name).trim()) {
-    return res.status(400).json({ message: 'Inventory name is required' });
+  const { name, details, custom_columns } = req.body || {};
+  const parts = [];
+  const params = [];
+
+  if (name !== undefined) {
+    if (!String(name).trim()) {
+      return res.status(400).json({ message: 'Inventory name is required' });
+    }
+    parts.push('name = ?');
+    params.push(String(name).trim());
   }
-  const sql = `
-    UPDATE inventories
-    SET name = ?, details = ?
-    WHERE id = ?
-  `;
-  db.query(sql, [String(name).trim(), details ?? null, id], (err, result) => {
+  if (details !== undefined) {
+    parts.push('details = ?');
+    params.push(details ?? null);
+  }
+  if (custom_columns !== undefined) {
+    parts.push('custom_columns = ?');
+    params.push(normalizeCustomColumnsInput({ custom_columns }));
+  }
+
+  if (!parts.length) {
+    return res.status(400).json({ message: 'No fields to update' });
+  }
+  params.push(id);
+  const sql = `UPDATE inventories SET ${parts.join(', ')} WHERE id = ?`;
+  db.query(sql, params, (err, result) => {
     if (err) {
+      if (
+        err.code === 'ER_BAD_FIELD_ERROR' &&
+        String(err.message || '').includes('custom_columns')
+      ) {
+        return res.status(503).json({
+          message: 'Run migration 018_inventories_custom_columns.sql, then retry.',
+        });
+      }
       if (isMissingTable(err)) {
         return res.status(400).json({ message: 'Table `inventories` missing. Run the migration SQL first.' });
       }

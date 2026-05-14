@@ -60,7 +60,7 @@
 </div>
 
 <!-- Add form: PC -->
-<div class="card" *ngIf="cat && categoryInventoryVisible && isPc">
+<div class="card" *ngIf="cat && categoryInventoryVisible && isPc && !inCustomColumnView()">
   <h4 class="form-title">Add computer / workstation</h4>
   <div class="form-row">
     <div class="form-field">
@@ -89,11 +89,31 @@
     </div>
     <div class="form-field">
       <label>RAM</label>
-      <input [(ngModel)]="asset.ram" class="input" placeholder="e.g. 16GB" />
+      <div class="input-with-suffix">
+        <input
+          [(ngModel)]="pcRamNumber"
+          class="input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="e.g. 16"
+        />
+        <span class="input-suffix" aria-hidden="true">GB</span>
+      </div>
     </div>
     <div class="form-field">
       <label>Storage</label>
-      <input [(ngModel)]="asset.storage" class="input" placeholder="e.g. 512GB SSD" />
+      <div class="input-with-suffix">
+        <input
+          [(ngModel)]="pcStorageNumber"
+          class="input"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder="e.g. 512"
+        />
+        <span class="input-suffix input-suffix--wide" aria-hidden="true">GB SSD</span>
+      </div>
     </div>
     <div class="form-field btn-field">
       <label>&nbsp;</label>
@@ -107,7 +127,7 @@
 </div>
 
 <!-- Add form: compact (cameras, power, etc.) -->
-<div class="card add-compact" *ngIf="cat && categoryInventoryVisible && !isPc">
+<div class="card add-compact" *ngIf="cat && categoryInventoryVisible && !isPc && !inCustomColumnView()">
   <h4 class="form-title">Add asset</h4>
   <div class="compact-form-row">
     <div class="form-field" *ngIf="slug !== 'other'">
@@ -143,6 +163,38 @@
   <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
 </div>
 
+<!-- Add form: inventory-defined columns only -->
+<div class="card add-compact" *ngIf="cat && categoryInventoryVisible && inCustomColumnView()">
+  <h4 class="form-title">Add row</h4>
+  <p class="field-note">
+    Only the columns you set for <strong>{{ activeFilterInventory()?.name }}</strong> are stored here.
+  </p>
+  <div class="custom-inv-form-grid">
+    <div class="form-field" *ngFor="let col of activeCustomColumns(); trackBy: trackColLabel">
+      <label>{{ col }}</label>
+      <input
+        class="input"
+        [(ngModel)]="customFieldDraft[col]"
+        [name]="'cf-' + col"
+        [attr.placeholder]="col" />
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-field btn-field">
+      <label>&nbsp;</label>
+      <button
+        class="btn btn-success add-btn"
+        type="button"
+        (click)="addCustomInventoryAsset()"
+        [disabled]="isAdding">
+        {{ isAdding ? 'Adding…' : '+ Add row' }}
+      </button>
+    </div>
+  </div>
+  <div class="msg-error" *ngIf="errorMsg">⚠️ {{ errorMsg }}</div>
+  <div class="msg-success" *ngIf="successMsg">{{ successMsg }}</div>
+</div>
+
 <!-- Table -->
 <div class="card" *ngIf="cat && categoryInventoryVisible">
   <p class="assets-category-result-count" *ngIf="!isLoading">
@@ -152,7 +204,7 @@
   <div class="table-container" *ngIf="!isLoading">
   <table>
     <thead>
-      <tr>
+      <tr *ngIf="!inCustomColumnView()">
         <th>ID</th>
         <th>Type</th>
         <th>Brand</th>
@@ -165,31 +217,57 @@
         <th>Status</th>
         <th>QR</th>
       </tr>
+      <tr *ngIf="inCustomColumnView()">
+        <th>ID</th>
+        <th *ngFor="let col of activeCustomColumns(); trackBy: trackColLabel">{{ col }}</th>
+        <th>Status</th>
+        <th>QR</th>
+      </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let a of filteredAssets">
-        <td><span class="badge-id">{{ a.id }}</span></td>
-        <td>{{ a.asset_type }}</td>
-        <td>{{ a.brand }}</td>
-        <td>{{ a.model }}</td>
-        <td><span class="badge-id">{{ a.serial_number || '—' }}</span></td>
-        <td *ngIf="isPc">{{ a.cpu || '—' }}</td>
-        <td *ngIf="isPc">{{ a.ram || '—' }}</td>
-        <td *ngIf="isPc">{{ a.storage || '—' }}</td>
-        <td *ngIf="inventories.length">{{ invLabel(a.inventory_id) }}</td>
-        <td>
-          <span
-            class="status-badge"
-            [class.green]="a.status === 'Available'"
-            [class.yellow]="a.status === 'Assigned'"
-            [class.red]="a.status === 'Under Repair'">
-            {{ a.status }}
-          </span>
-        </td>
-        <td>
-          <button type="button" class="qr-btn" (click)="showQR(a)">📱 QR</button>
-        </td>
-      </tr>
+      <ng-container *ngIf="!inCustomColumnView()">
+        <tr *ngFor="let a of filteredAssets">
+          <td><span class="badge-id">{{ a.id }}</span></td>
+          <td>{{ a.asset_type }}</td>
+          <td>{{ a.brand }}</td>
+          <td>{{ a.model }}</td>
+          <td><span class="badge-id">{{ a.serial_number || '—' }}</span></td>
+          <td *ngIf="isPc">{{ a.cpu || '—' }}</td>
+          <td *ngIf="isPc">{{ a.ram || '—' }}</td>
+          <td *ngIf="isPc">{{ a.storage || '—' }}</td>
+          <td *ngIf="inventories.length">{{ invLabel(a.inventory_id) }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [class.green]="a.status === 'Available'"
+              [class.yellow]="a.status === 'Assigned'"
+              [class.red]="a.status === 'Under Repair'">
+              {{ a.status }}
+            </span>
+          </td>
+          <td>
+            <button type="button" class="qr-btn" (click)="showQR(a)">📱 QR</button>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="inCustomColumnView()">
+        <tr *ngFor="let a of filteredAssets">
+          <td><span class="badge-id">{{ a.id }}</span></td>
+          <td *ngFor="let col of activeCustomColumns(); trackBy: trackColLabel">{{ customFieldCell(a, col) }}</td>
+          <td>
+            <span
+              class="status-badge"
+              [class.green]="a.status === 'Available'"
+              [class.yellow]="a.status === 'Assigned'"
+              [class.red]="a.status === 'Under Repair'">
+              {{ a.status }}
+            </span>
+          </td>
+          <td>
+            <button type="button" class="qr-btn" (click)="showQR(a)">📱 QR</button>
+          </td>
+        </tr>
+      </ng-container>
       <tr *ngIf="filteredAssets.length === 0">
         <td [attr.colspan]="tableColspan()" class="empty-row">No assets in this category yet</td>
       </tr>

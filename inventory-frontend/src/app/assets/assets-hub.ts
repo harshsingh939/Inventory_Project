@@ -10,6 +10,7 @@ import {
   isHubCategoryInventory,
 } from './asset-category.config';
 import { apiUrl } from '../api-url';
+import { ToastService } from '../toast.service';
 
 export interface InventoryAssetRef {
   id: number;
@@ -25,12 +26,30 @@ export interface InventoryRow {
   id: number;
   name: string;
   details: string | null;
+  /** JSON array of admin-defined column labels (migration 018). */
+  custom_columns?: string[] | null;
   created_at: string;
   updated_at?: string | null;
   /** Filled by GET /api/inventories (live from `assets.inventory_id`). */
   asset_count?: number;
   asset_names?: string;
   assets?: InventoryAssetRef[];
+}
+
+/** Parse `custom_columns` from API (JSON array or string). */
+export function parseCustomColumns(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.map((x) => String(x ?? '').trim()).filter(Boolean);
+  }
+  if (typeof raw === 'string' && raw.trim()) {
+    try {
+      const p = JSON.parse(raw) as unknown;
+      return Array.isArray(p) ? parseCustomColumns(p) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 
 /** Structured lines at top of `details`; remainder is free-form description (backwards-compatible). */
@@ -95,7 +114,7 @@ export class AssetsHub implements OnInit {
   hubLoading = false;
 
   showInvModal = false;
-  invForm = { name: '', location: '', owner: '', description: '' };
+  invForm = { name: '', columnRows: [] as string[] };
   invErr = '';
   invSaving = false;
 
@@ -104,6 +123,7 @@ export class AssetsHub implements OnInit {
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
+    private toast: ToastService,
   ) {}
 
   ngOnInit() {
@@ -114,11 +134,11 @@ export class AssetsHub implements OnInit {
     return definitionForSlug(slug);
   }
 
-  /** User-created lists (not fixed hub category rows). */
+  /** User-created lists (not fixed hub category rows). Newest card appears at the end. */
   get customInventories(): InventoryRow[] {
     return this.inventories
       .filter((inv) => !isHubCategoryInventory(inv))
-      .sort((a, b) => Number(b.id) - Number(a.id));
+      .sort((a, b) => Number(a.id) - Number(b.id));
   }
 
   invIcon(id: number): string {
@@ -126,13 +146,11 @@ export class AssetsHub implements OnInit {
     return this.invCardIcons[idx];
   }
 
-  /** For template: only show chip row when location or owner exists. */
-  invDetailChips(inv: InventoryRow): { location: string; owner: string; description: string } | null {
-    const p = parseInventoryDetails(inv.details);
-    return p.location || p.owner ? p : null;
-  }
-
   customCardBlurb(inv: InventoryRow): string {
+    const cols = parseCustomColumns(inv.custom_columns);
+    if (cols.length) {
+      return `Fields: ${cols.join(' · ')}. Open a category tile below — same add / table / assignments flow as other inventories.`;
+    }
     const p = parseInventoryDetails(inv.details);
     if (p.description) return p.description;
     if (p.location || p.owner) {
@@ -143,6 +161,18 @@ export class AssetsHub implements OnInit {
       return bits.join(' · ');
     }
     return 'Open below to add assets by category — same flow as the cards above.';
+  }
+
+  /** Chips row for custom list cards (location/owner from legacy details + new column labels). */
+  invChipRow(inv: InventoryRow): {
+    custom: string[];
+    meta: { location: string; owner: string } | null;
+  } | null {
+    const custom = parseCustomColumns(inv.custom_columns);
+    const p = parseInventoryDetails(inv.details);
+    const meta = p.location || p.owner ? { location: p.location, owner: p.owner } : null;
+    if (!custom.length && !meta) return null;
+    return { custom, meta };
   }
 
   /** API row for this hub category (migration 012). */
@@ -172,9 +202,22 @@ export class AssetsHub implements OnInit {
   }
 
   openAddInventory() {
-    this.invForm = { name: '', location: '', owner: '', description: '' };
+    this.invForm = { name: '', columnRows: [] };
     this.invErr = '';
     this.showInvModal = true;
+  }
+
+  addInvColumnRow() {
+    this.invForm.columnRows.push('');
+  }
+
+  removeInvColumnRow(i: number) {
+    this.invForm.columnRows.splice(i, 1);
+  }
+
+  /** Keep row DOM when string value changes (default *ngFor tracks by identity and drops focus each keystroke). */
+  trackColByIndex(index: number, _item: string): number {
+    return index;
   }
 
   closeInvModal() {
@@ -186,29 +229,33 @@ export class AssetsHub implements OnInit {
   saveInventory() {
     const name = this.invForm.name.trim();
     if (!name) {
-      this.invErr = 'Name is required';
+      this.invErr = 'Inventory name is required';
       return;
     }
+    const custom_columns = this.invForm.columnRows
+      .map((s) => String(s ?? '').trim())
+      .filter(Boolean);
     this.invErr = '';
     this.invSaving = true;
-    const details = composeInventoryDetails(
-      this.invForm.location,
-      this.invForm.owner,
-      this.invForm.description,
-    );
-    this.http.post<{ id?: number; message?: string }>(this.apiUrl, { name, details }).subscribe({
-      next: (res) => {
-        this.invSaving = false;
-        this.closeInvModal();
-        this.loadInventories();
-        this.cdr.detectChanges();
-      },
-      error: (e) => {
-        this.invSaving = false;
-        this.invErr = e.error?.message || 'Create failed';
-        this.cdr.detectChanges();
-      },
-    });
+    this.http
+      .post<{ id?: number; message?: string }>(this.apiUrl, {
+        name,
+        details: null,
+        custom_columns: custom_columns.length ? custom_columns : undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          this.invSaving = false;
+          this.closeInvModal();
+          this.loadInventories();
+          this.cdr.detectChanges();
+        },
+        error: (e) => {
+          this.invSaving = false;
+          this.invErr = e.error?.message || 'Create failed';
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   deleteCustomInventory(inv: InventoryRow, ev: Event) {
@@ -217,13 +264,15 @@ export class AssetsHub implements OnInit {
     if (isHubCategoryInventory(inv)) {
       return;
     }
-    const ok = confirm(
-      `Remove inventory "${inv.name}"? Assets stay in the database but are unlinked from this list.`,
-    );
-    if (!ok) return;
+    const label = String(inv.name || '').trim() || 'Inventory';
     this.http.delete(`${this.apiUrl}/${inv.id}`).subscribe({
-      next: () => this.loadInventories(),
-      error: (e) => alert(e.error?.message || 'Delete failed'),
+      next: () => {
+        this.toast.success(`Removed ${label}`);
+        this.loadInventories();
+      },
+      error: (e) => {
+        this.toast.error(e.error?.message || 'Delete failed');
+      },
     });
   }
 }

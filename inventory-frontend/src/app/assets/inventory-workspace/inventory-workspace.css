@@ -40,6 +40,21 @@
   padding: 16px 18px;
 }
 
+.inv-ws-meta-kicker {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.inv-ws-meta--customcols .inv-chip {
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+}
+
 .inv-ws-chips {
   display: flex;
   flex-wrap: wrap;

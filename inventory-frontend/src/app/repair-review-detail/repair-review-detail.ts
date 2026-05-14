@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { apiOrigin, apiUrl } from '../api-url';
 import { AuthService } from '../auth.service';
 import { RepairCostLogRefresh } from '../repair-cost-log-refresh.service';
+import { ToastService } from '../toast.service';
 
 @Component({
   selector: 'app-repair-review-detail',
@@ -21,6 +22,7 @@ export class RepairReviewDetail implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly repairCostLogRefresh = inject(RepairCostLogRefresh);
+  private readonly toast = inject(ToastService);
 
   row: Record<string, unknown> | null = null;
   loading = false;
@@ -83,7 +85,6 @@ export class RepairReviewDetail implements OnInit {
   markFixed() {
     const id = this.repairId();
     if (!id) return;
-    if (!window.confirm('Mark this repair as Fixed? Asset will return to Available.')) return;
     this.savingFixed = true;
     this.errorMsg = '';
     this.successMsg = '';
@@ -98,16 +99,19 @@ export class RepairReviewDetail implements OnInit {
       next: () => {
         this.savingFixed = false;
         this.repairCostLogRefresh.notify();
-        this.successMsg = 'Marked as Fixed ✅';
+        this.successMsg = '';
+        this.toast.success('Repair marked as Fixed. Asset is Available again.');
         this.load(id);
         this.cdr.detectChanges();
         setTimeout(() => {
           void this.router.navigate(['/repairs']);
-        }, 1200);
+        }, 1000);
       },
       error: (err) => {
         this.savingFixed = false;
-        this.errorMsg = err.error?.message || 'Failed to update';
+        const msg = err.error?.message || 'Failed to update';
+        this.errorMsg = msg;
+        this.toast.error(msg);
         this.cdr.detectChanges();
       },
     });

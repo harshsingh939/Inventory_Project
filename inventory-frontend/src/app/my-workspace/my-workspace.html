@@ -72,7 +72,11 @@
       </section>
 
       <!-- 2 · New request -->
-      <section class="mw-panel mw-panel--request mw-dash-request" [class.mw-panel--blocked]="!loading && !linked">
+      <section
+        id="new-request"
+        class="mw-panel mw-panel--request mw-dash-request"
+        [class.mw-panel--blocked]="!loading && !linked"
+      >
         <div class="mw-panel-head mw-panel-head--row">
           <span class="mw-panel-eyebrow">02</span>
           <span class="mw-panel-icon" aria-hidden="true">✉️</span>

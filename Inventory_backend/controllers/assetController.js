@@ -3,6 +3,24 @@ const { notifyRagDebouncedReindex } = require('../services/ragIndexNotify');
 const assetHistoryLog = require('../services/assetHistoryLog');
 const { rowWithEffectiveStatus } = require('../services/assetEffectiveStatus');
 
+/** @param {unknown} raw */
+function parseInventoryCustomColumnLabels(raw) {
+  if (raw == null) return [];
+  let v = raw;
+  if (Buffer.isBuffer(v)) {
+    v = v.toString('utf8');
+  }
+  if (typeof v === 'string' && v.trim()) {
+    try {
+      v = JSON.parse(v);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => String(x ?? '').trim()).filter(Boolean);
+}
+
 function isMissingAssetHistoryTable(err) {
   if (!err) return false;
   if (err.code === 'ER_NO_SUCH_TABLE' || err.errno === 1146) return true;
@@ -68,11 +86,17 @@ exports.getAssets = (req, res) => {
 };
 
 exports.addAsset = (req, res) => {
-  const { asset_type, brand, model, serial_number, cpu, ram, storage, inventory_id } = req.body;
-
-  if (!asset_type || !brand || !model) {
-    return res.status(400).json({ message: 'Asset type, brand and model are required' });
-  }
+  const {
+    asset_type,
+    brand,
+    model,
+    serial_number,
+    cpu,
+    ram,
+    storage,
+    inventory_id,
+    custom_fields: bodyCustomFields,
+  } = req.body;
 
   let inv = null;
   if (inventory_id !== undefined && inventory_id !== null && inventory_id !== '') {
@@ -92,24 +116,112 @@ exports.addAsset = (req, res) => {
   `;
   const paramsLegacy = [asset_type, brand, model, serial_number, cpu, ram, storage];
 
-  db.query(sqlWithInv, paramsWithInv, (err, result) => {
-    if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
-      return db.query(sqlLegacy, paramsLegacy, (err2, result2) => {
-        if (err2) return res.status(500).json({ message: err2.message });
+  const runInsert = (sql, params, onDone) => {
+    db.query(sql, params, (err, result) => {
+      if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
+        return db.query(sqlLegacy, paramsLegacy, (err2, result2) => {
+          if (err2) return res.status(500).json({ message: err2.message });
+          notifyRagDebouncedReindex();
+          return onDone(result2.insertId);
+        });
+      }
+      if (err && (err.errno === 1452 || err.code === 'ER_NO_REFERENCED_ROW_2')) {
+        return res.status(400).json({
+          message:
+            'Invalid inventory: that list does not exist. Refresh the page, pick a valid inventory, or run DB migrations.',
+        });
+      }
+      if (err) return res.status(500).json({ message: err.message });
+      notifyRagDebouncedReindex();
+      onDone(result.insertId);
+    });
+  };
+
+  const insertStandard = () => {
+    if (!asset_type || !brand || !model) {
+      return res.status(400).json({ message: 'Asset type, brand and model are required' });
+    }
+    runInsert(sqlWithInv, paramsWithInv, (id) => {
+      res.json({ message: 'Asset Added ✅', id });
+    });
+  };
+
+  const wantCustomPayload =
+    bodyCustomFields != null &&
+    typeof bodyCustomFields === 'object' &&
+    !Array.isArray(bodyCustomFields);
+
+  if (!Number.isFinite(inv) || !wantCustomPayload) {
+    return insertStandard();
+  }
+
+  db.query(
+    'SELECT name, custom_columns FROM inventories WHERE id = ?',
+    [inv],
+    (selErr, invRows) => {
+      if (selErr) return res.status(500).json({ message: selErr.message });
+      if (!invRows || !invRows.length) {
+        return insertStandard();
+      }
+      const colLabels = parseInventoryCustomColumnLabels(invRows[0].custom_columns);
+      if (!colLabels.length) {
+        return insertStandard();
+      }
+
+      const normalized = {};
+      for (const label of colLabels) {
+        const v = bodyCustomFields[label];
+        if (v === undefined || v === null || String(v).trim() === '') {
+          return res.status(400).json({
+            message: `Missing or empty value for custom column "${label}"`,
+          });
+        }
+        normalized[label] = String(v).trim();
+      }
+
+      const invName = String(invRows[0].name || 'Custom').slice(0, 50);
+      const cfJson = JSON.stringify(normalized);
+      const sqlWithCf = `
+        INSERT INTO assets (asset_type, brand, model, serial_number, cpu, ram, storage, inventory_id, status, custom_fields)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?)
+      `;
+      const paramsWithCf = [
+        invName,
+        '—',
+        '—',
+        null,
+        null,
+        null,
+        null,
+        inv,
+        cfJson,
+      ];
+
+      db.query(sqlWithCf, paramsWithCf, (err, result) => {
+        if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('custom_fields')) {
+          return res.status(503).json({
+            message:
+              'Database is missing assets.custom_fields. Run migration 019_assets_custom_fields.sql, then retry.',
+          });
+        }
+        if (err && err.code === 'ER_BAD_FIELD_ERROR' && String(err.message).includes('inventory_id')) {
+          return res.status(400).json({
+            message:
+              'Cannot save to inventory: assets.inventory_id is missing. Run DB migrations, then try again.',
+          });
+        }
+        if (err && (err.errno === 1452 || err.code === 'ER_NO_REFERENCED_ROW_2')) {
+          return res.status(400).json({
+            message:
+              'Invalid inventory: that list does not exist. Refresh the page, pick a valid inventory, or run DB migrations.',
+          });
+        }
+        if (err) return res.status(500).json({ message: err.message });
         notifyRagDebouncedReindex();
-        return res.json({ message: 'Asset Added ✅', id: result2.insertId });
+        res.json({ message: 'Asset Added ✅', id: result.insertId });
       });
-    }
-    if (err && (err.errno === 1452 || err.code === 'ER_NO_REFERENCED_ROW_2')) {
-      return res.status(400).json({
-        message:
-          'Invalid inventory: that list does not exist. Refresh the page, pick a valid inventory, or run DB migrations.',
-      });
-    }
-    if (err) return res.status(500).json({ message: err.message });
-    notifyRagDebouncedReindex();
-    res.json({ message: 'Asset Added ✅', id: result.insertId });
-  });
+    },
+  );
 };
 
 exports.getAvailableAssets = (req, res) => {

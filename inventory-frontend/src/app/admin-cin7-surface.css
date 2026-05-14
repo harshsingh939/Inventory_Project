@@ -1,0 +1,1107 @@
+/**
+ * Cin7-style light admin surfaces — targets component host + inner classes
+ * (global so it overrides emulated encapsulation from component CSS).
+ */
+
+/* ── Dashboards ─────────────────────────────────────────────────── */
+app-dashboards .dashboard-container {
+  background: linear-gradient(165deg, #fafbf9 0%, #f0fdf9 38%, #ecfeff 72%, #f8fafc 100%) !important;
+}
+
+app-dashboards .dash-header {
+  border-bottom-color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+app-dashboards .dash-kicker {
+  color: #0d9488 !important;
+}
+
+app-dashboards .dash-header h2 {
+  color: #0f172a !important;
+}
+
+app-dashboards .dash-sub {
+  color: #64748b !important;
+}
+
+app-dashboards .refresh-btn {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-dashboards .refresh-btn:hover {
+  border-color: #14b8a6 !important;
+  color: #0f7669 !important;
+}
+
+app-dashboards .spinner {
+  border-color: #e2e8f0 !important;
+  border-top-color: #14b8a6 !important;
+}
+
+app-dashboards .stat-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+  backdrop-filter: none !important;
+}
+
+app-dashboards .stat-card:hover {
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+app-dashboards .stat-value {
+  color: #0f172a !important;
+}
+
+app-dashboards .stat-sub {
+  color: #64748b !important;
+}
+
+app-dashboards .chart-card,
+app-dashboards .inv-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+app-dashboards .inv-panel-head h3 {
+  color: #0f172a !important;
+}
+
+app-dashboards .inv-panel-meta {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+app-dashboards .inv-table-wrap {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+app-dashboards .inv-table thead th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-dashboards .inv-table tbody td {
+  color: #334155 !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+
+app-dashboards .inv-table tbody tr:hover td {
+  background: rgba(20, 184, 166, 0.06) !important;
+}
+
+app-dashboards .inv-td-name {
+  color: #0f172a !important;
+}
+
+app-dashboards .inv-td-num {
+  color: #0f172a !important;
+}
+
+app-dashboards .inv-td-share .inv-share-track {
+  background: #e2e8f0 !important;
+}
+
+app-dashboards .inv-share-fill {
+  background: linear-gradient(90deg, #14b8a6, #0d9488) !important;
+}
+
+app-dashboards .inv-empty-toggle {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-dashboards .inv-empty-toggle:hover {
+  color: #0f172a !important;
+  border-color: #14b8a6 !important;
+  background: #ecfdf5 !important;
+}
+
+app-dashboards .stat-label {
+  color: #64748b !important;
+}
+
+app-dashboards .chart-header h4 {
+  color: #0f172a !important;
+}
+
+app-dashboards .badge {
+  background: #ecfdf5 !important;
+  color: #0f7669 !important;
+  border: 1px solid rgba(13, 159, 115, 0.35) !important;
+}
+
+app-dashboards .inv-panel-sub,
+app-dashboards .inv-panel-sub-muted {
+  color: #64748b !important;
+}
+
+app-dashboards .inv-panel-sub-strong {
+  color: #334155 !important;
+}
+
+app-dashboards .inv-zero-summary {
+  color: #64748b !important;
+}
+
+app-dashboards .live-chart-hint {
+  color: #64748b !important;
+}
+
+app-dashboards .recent-card {
+  background: #fafbf9 !important;
+  border: 1px solid #ebe8e3 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+}
+
+app-dashboards .recent-header h4 {
+  color: #0f172a !important;
+}
+
+app-dashboards .recent-card th {
+  color: #64748b !important;
+  border-bottom-color: #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+app-dashboards .recent-card td {
+  color: #334155 !important;
+  border-bottom-color: #eef2f0 !important;
+  background: transparent !important;
+}
+
+app-dashboards .recent-card tr:hover td {
+  background: rgba(13, 159, 115, 0.07) !important;
+  color: #0f172a !important;
+}
+
+app-dashboards .recent-card .view-all {
+  color: #0d9488 !important;
+}
+
+app-dashboards .recent-card .view-all:hover {
+  color: #0f7669 !important;
+}
+
+app-dashboards .mini-avatar {
+  background: rgba(13, 159, 115, 0.2) !important;
+  color: #0f172a !important;
+}
+
+app-dashboards .badge-id {
+  background: rgba(13, 159, 115, 0.12) !important;
+  color: #0f7669 !important;
+  border: 1px solid rgba(13, 159, 115, 0.25) !important;
+}
+
+app-dashboards .badge-dept {
+  background: rgba(124, 58, 237, 0.1) !important;
+  color: #6d28d9 !important;
+  border: 1px solid rgba(124, 58, 237, 0.22) !important;
+}
+
+app-dashboards .loading-state {
+  color: #64748b !important;
+}
+
+/* ── Users / Team ──────────────────────────────────────────────── */
+app-users .users-ambient {
+  background: linear-gradient(165deg, #fafbf9 0%, #f0fdf9 38%, #ecfeff 100%) !important;
+}
+
+app-users .users-ambient::before {
+  opacity: 0.06 !important;
+}
+
+app-users .users-header {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-users .users-title {
+  color: #0f172a !important;
+}
+
+app-users .users-lead__link {
+  color: #0d9488 !important;
+}
+
+app-users .users-panel {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+app-users .users-panel::before {
+  background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.35), transparent) !important;
+}
+
+app-users .users-panel__title {
+  color: #0f172a !important;
+}
+
+app-users .form-field label {
+  color: #64748b !important;
+}
+
+app-users .form-field .input {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-users .form-field .input:focus {
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
+}
+
+app-users .form-field .input.input--signup-locked {
+  background: #f8fafc !important;
+  color: #64748b !important;
+}
+
+app-users .search-input {
+  color: #0f172a !important;
+}
+
+app-users .users-table th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-users .users-table td {
+  color: #334155 !important;
+  border-bottom-color: #f1f5f9 !important;
+  background: #ffffff !important;
+}
+
+app-users .users-row:hover td {
+  background: rgba(20, 184, 166, 0.05) !important;
+}
+
+app-users .table-container .users-table thead th {
+  background: #f1f5f9 !important;
+  box-shadow: 0 1px 0 #e2e8f0 !important;
+}
+
+app-users .result-count strong {
+  color: #0d9488 !important;
+}
+
+app-users .users-panel__hint {
+  color: #64748b !important;
+}
+
+app-users .search-field {
+  background: var(--ai-surface-warm, #fafbf9) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+app-users .search-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+app-users .table-select,
+app-users .link-input {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-users .table-select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+app-users .link-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+app-users .btn-link-save {
+  background: rgba(13, 159, 115, 0.14) !important;
+  border: 1px solid rgba(13, 159, 115, 0.45) !important;
+  color: #0f7669 !important;
+  font-weight: 600 !important;
+}
+
+app-users .btn-link-save:hover:not(:disabled) {
+  background: rgba(13, 159, 115, 0.22) !important;
+  color: #064e3b !important;
+}
+
+app-users .btn-link-save:disabled {
+  opacity: 0.45 !important;
+}
+
+app-users .btn-clear {
+  background: #fff1f2 !important;
+  border: 1px solid #fecdd3 !important;
+  color: #be123c !important;
+}
+
+app-users .btn-clear:hover {
+  background: #ffe4e6 !important;
+}
+
+/* ── Repairs (bluish-white / sky accent) ───────────────────────── */
+app-repairs .repair-ambient {
+  background:
+    radial-gradient(ellipse 72% 50% at 12% -6%, rgba(186, 230, 253, 0.55), transparent 54%),
+    radial-gradient(ellipse 52% 42% at 96% 96%, rgba(224, 242, 254, 0.7), transparent 52%),
+    linear-gradient(165deg, #f8fafc 0%, #f0f9ff 42%, #eff6ff 100%) !important;
+}
+
+app-repairs .repair-ambient::before {
+  opacity: 0.05 !important;
+}
+
+app-repairs .repair-header {
+  border-bottom-color: #bae6fd !important;
+}
+
+app-repairs .repair-title {
+  color: #0c4a6e !important;
+}
+
+app-repairs .repair-lead {
+  color: #64748b !important;
+}
+
+app-repairs .repair-lead__link {
+  color: #0284c7 !important;
+}
+
+app-repairs .repair-lead__link:hover {
+  color: #0369a1 !important;
+}
+
+app-repairs .repair-wrench {
+  background: linear-gradient(145deg, #38bdf8 0%, #0ea5e9 48%, #0284c7 100%) !important;
+  border-color: rgba(14, 165, 233, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+    0 6px 18px rgba(14, 165, 233, 0.28) !important;
+}
+
+app-repairs .repair-panel {
+  background: #f8fcff !important;
+  border: 1px solid #bae6fd !important;
+  box-shadow: 0 2px 14px rgba(14, 165, 233, 0.09) !important;
+}
+
+app-repairs .repair-panel__title,
+app-repairs .form-title {
+  color: #0369a1 !important;
+}
+
+app-repairs .form-hint,
+app-repairs .repair-hint {
+  color: #64748b !important;
+}
+
+app-repairs .form-hint a,
+app-repairs .repair-hint a {
+  color: #0284c7 !important;
+}
+
+app-repairs .form-hint a:hover,
+app-repairs .repair-hint a:hover {
+  color: #0369a1 !important;
+}
+
+app-repairs input.input,
+app-repairs textarea.ta,
+app-repairs .select-input,
+app-repairs select.select-input {
+  background: #ffffff !important;
+  border: 1px solid #bae6fd !important;
+  color: #0f172a !important;
+}
+
+app-repairs input.input:focus,
+app-repairs textarea.ta:focus,
+app-repairs .select-input:focus,
+app-repairs select.select-input:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18) !important;
+}
+
+app-repairs .select-input option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+app-repairs .search-field {
+  background: #f0f9ff !important;
+  border: 1px solid #bae6fd !important;
+}
+
+app-repairs .search-field:focus-within {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16) !important;
+}
+
+app-repairs .search-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+app-repairs .btn-clear {
+  background: #eff6ff !important;
+  border: 1px solid #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+app-repairs .btn-clear:hover {
+  background: #dbeafe !important;
+  border-color: #7dd3fc !important;
+}
+
+app-repairs .result-count strong {
+  color: #0284c7 !important;
+}
+
+app-repairs .btn.btn-primary,
+app-repairs .btn-primary {
+  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 45%, #0ea5e9 100%) !important;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.32) !important;
+  color: #ffffff !important;
+}
+
+app-repairs .repair-table thead th {
+  background: #eff6ff !important;
+  color: #64748b !important;
+  border-bottom-color: #bae6fd !important;
+}
+
+app-repairs .repair-table tbody td {
+  color: #334155 !important;
+  border-bottom-color: #f0f9ff !important;
+  background: #ffffff !important;
+}
+
+app-repairs .repair-row:hover td {
+  background: rgba(186, 230, 253, 0.42) !important;
+}
+
+app-repairs .table-container .repair-table thead th {
+  background: #e0f2fe !important;
+  box-shadow: 0 1px 0 #bae6fd !important;
+}
+
+app-repairs .loading {
+  color: #64748b !important;
+}
+
+/* ── Repair cost log ───────────────────────────────────────────── */
+app-repair-cost-log .page-header h2 {
+  color: #0f172a !important;
+}
+
+app-repair-cost-log .link-back {
+  color: #0d9488 !important;
+  border-color: rgba(20, 184, 166, 0.35) !important;
+}
+
+app-repair-cost-log .btn-refresh {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-repair-cost-log .filter-input {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-repair-cost-log th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-repair-cost-log td {
+  color: #334155 !important;
+  border-bottom-color: #f1f5f9 !important;
+  background: #ffffff !important;
+}
+
+app-repair-cost-log tr:hover td {
+  background: rgba(20, 184, 166, 0.04) !important;
+}
+
+app-repair-cost-log .date-line {
+  color: #0f172a !important;
+}
+
+/* ── Disposed items (reddish-white / rose accent) ─────────────── */
+app-disposed-items .dispose-ambient {
+  background:
+    radial-gradient(ellipse 78% 52% at 12% -8%, rgba(254, 202, 202, 0.55), transparent 54%),
+    radial-gradient(ellipse 50% 42% at 100% 100%, rgba(251, 207, 232, 0.4), transparent 50%),
+    linear-gradient(165deg, #fffbfb 0%, #fef7f7 38%, #fff5f5 100%) !important;
+}
+
+app-disposed-items .dispose-header {
+  border-bottom-color: #fecdd3 !important;
+}
+
+app-disposed-items .dispose-title {
+  color: #9f1239 !important;
+}
+
+app-disposed-items .dispose-lead {
+  color: #78716c !important;
+}
+
+app-disposed-items .dispose-lead__link {
+  color: #e11d48 !important;
+}
+
+app-disposed-items .dispose-lead__link:hover {
+  color: #be123c !important;
+}
+
+app-disposed-items .dispose-bin__lid {
+  background: linear-gradient(180deg, #fecdd3 0%, #fb7185 100%) !important;
+  box-shadow: 0 2px 8px rgba(190, 18, 60, 0.2) !important;
+}
+
+app-disposed-items .dispose-bin__body {
+  background: linear-gradient(180deg, #fda4af 0%, #e11d48 100%) !important;
+  border-color: rgba(136, 19, 55, 0.5) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 14px rgba(190, 18, 60, 0.22) !important;
+}
+
+app-disposed-items .dispose-panel,
+app-disposed-items .dispose-table-wrap {
+  background: #ffffff !important;
+  border: 1px solid #fecdd3 !important;
+  box-shadow: 0 4px 22px rgba(190, 18, 60, 0.07) !important;
+}
+
+app-disposed-items .dispose-row td {
+  color: #334155 !important;
+  border-bottom-color: #fef2f2 !important;
+}
+
+app-disposed-items .dispose-row:hover td {
+  background: rgba(254, 202, 202, 0.38) !important;
+}
+
+app-disposed-items .device-pill__text {
+  color: #0f172a !important;
+}
+
+app-disposed-items .cond-tag {
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+app-disposed-items .dispose-table thead th {
+  color: #a18a91 !important;
+  border-bottom-color: #fecdd3 !important;
+  background: #fff5f5 !important;
+}
+
+app-disposed-items .col-num {
+  color: #b48a95 !important;
+}
+
+app-disposed-items .notes-cell,
+app-disposed-items .muted {
+  color: #78716c !important;
+}
+
+app-disposed-items .btn-ghost {
+  background: #ffffff !important;
+  border: 1px solid #fecdd3 !important;
+  color: #9f1239 !important;
+}
+
+app-disposed-items .btn-ghost:hover:not(:disabled) {
+  background: #fff1f2 !important;
+  color: #881337 !important;
+  border-color: #fda4af !important;
+}
+
+app-disposed-items .btn-solid {
+  background: linear-gradient(180deg, #fb7185 0%, #f43f5e 52%, #e11d48 100%) !important;
+  border-color: #e11d48 !important;
+  color: #ffffff !important;
+}
+
+app-disposed-items .btn-solid:hover:not(:disabled) {
+  filter: brightness(1.05) !important;
+}
+
+app-disposed-items .dispose-loading {
+  color: #a18a91 !important;
+}
+
+app-disposed-items .col-date {
+  color: #78716c !important;
+}
+
+/* ── Assignment requests admin ─────────────────────────────────── */
+app-assignment-requests-admin .assign-ambient {
+  background: linear-gradient(165deg, #fafbf9 0%, #f0fdf9 45%, #ecfeff 100%) !important;
+}
+
+app-assignment-requests-admin .assign-board-header {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-assignment-requests-admin .assign-title {
+  color: #0f172a !important;
+}
+
+app-assignment-requests-admin .assign-lead {
+  color: #64748b !important;
+}
+
+app-assignment-requests-admin .assign-board {
+  background: transparent !important;
+}
+
+app-assignment-requests-admin .req-ticket,
+app-repair-requests-admin .req-ticket,
+app-repair-work-vendor .req-ticket {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07) !important;
+}
+
+app-assignment-requests-admin .req-ticket__perforate,
+app-repair-requests-admin .req-ticket__perforate,
+app-repair-work-vendor .req-ticket__perforate {
+  background-image: radial-gradient(circle at 50% 0, transparent 4px, #e2e8f0 4px) !important;
+  border-bottom-color: #e2e8f0 !important;
+  opacity: 0.9 !important;
+}
+
+app-assignment-requests-admin .req-ticket__code,
+app-repair-requests-admin .req-ticket__code,
+app-repair-work-vendor .req-ticket__code {
+  color: #0f172a !important;
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+app-assignment-requests-admin .req-field__label,
+app-repair-requests-admin .req-field__label,
+app-repair-work-vendor .req-field__label {
+  color: #64748b !important;
+}
+
+app-assignment-requests-admin .req-field__value,
+app-repair-requests-admin .req-field__value,
+app-repair-work-vendor .req-field__value {
+  color: #334155 !important;
+}
+
+app-assignment-requests-admin .status-pill--pending,
+app-repair-requests-admin .status-pill--pending,
+app-repair-work-vendor .status-pill--pending {
+  background: #fef08a !important;
+  border: 1px solid #eab308 !important;
+  color: #713f12 !important;
+  font-weight: 600 !important;
+}
+
+app-assignment-requests-admin .status-pill--fulfilled,
+app-repair-requests-admin .status-pill--fulfilled,
+app-repair-work-vendor .status-pill--fulfilled {
+  background: #bbf7d0 !important;
+  border: 1px solid #22c55e !important;
+  color: #14532d !important;
+  font-weight: 600 !important;
+}
+
+app-assignment-requests-admin .status-pill--rejected,
+app-repair-requests-admin .status-pill--rejected,
+app-repair-work-vendor .status-pill--rejected {
+  background: #fecaca !important;
+  border: 1px solid #ef4444 !important;
+  color: #991b1b !important;
+  font-weight: 600 !important;
+}
+
+/* Reject note / admin row inputs: base component uses dark slate — force light on Cin7 shell */
+app-assignment-requests-admin .req-input {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+app-assignment-requests-admin .req-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+app-assignment-requests-admin .req-input:focus {
+  outline: none !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+app-assignment-requests-admin .req-field,
+app-repair-requests-admin .req-field,
+app-repair-work-vendor .req-field {
+  background: #fafbf9 !important;
+  border: 1px solid #ebe8e3 !important;
+}
+
+app-assignment-requests-admin .req-tags li,
+app-repair-requests-admin .req-tags li,
+app-repair-work-vendor .req-tags li {
+  background: rgba(13, 159, 115, 0.1) !important;
+  border: 1px solid rgba(13, 159, 115, 0.28) !important;
+  color: #0f7669 !important;
+}
+
+app-assignment-requests-admin .req-field__mono,
+app-repair-requests-admin .req-field__mono,
+app-repair-work-vendor .req-field__mono {
+  color: #b45309 !important;
+}
+
+app-assignment-requests-admin .req-lines,
+app-repair-requests-admin .req-lines,
+app-repair-work-vendor .req-lines {
+  color: #475569 !important;
+}
+
+app-assignment-requests-admin .req-ticket__actions,
+app-repair-requests-admin .req-ticket__actions,
+app-repair-work-vendor .req-ticket__actions {
+  background: #f8fafc !important;
+  border: 1px dashed #e2e8f0 !important;
+}
+
+app-assignment-requests-admin .req-ticket__actions-title,
+app-repair-requests-admin .req-ticket__actions-title,
+app-repair-work-vendor .req-ticket__actions-title {
+  color: #64748b !important;
+}
+
+app-assignment-requests-admin .btn-solid {
+  background: linear-gradient(180deg, #0db87d 0%, #0d9f73 100%) !important;
+  border: 1px solid #0d9f73 !important;
+  color: #ffffff !important;
+}
+
+app-assignment-requests-admin .btn-solid:hover:not(:disabled) {
+  filter: brightness(1.04) !important;
+}
+
+app-repair-requests-admin .btn-solid,
+app-repair-work-vendor .btn-solid {
+  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 48%, #0ea5e9 100%) !important;
+  border: 1px solid #0284c7 !important;
+  color: #0f172a !important;
+}
+
+app-repair-requests-admin .btn-solid:hover:not(:disabled),
+app-repair-work-vendor .btn-solid:hover:not(:disabled) {
+  filter: brightness(1.05) !important;
+}
+
+app-assignment-requests-admin .btn-ghost,
+app-repair-requests-admin .btn-ghost,
+app-repair-work-vendor .btn-ghost {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-assignment-requests-admin .btn-ghost:hover:not(:disabled),
+app-repair-requests-admin .btn-ghost:hover:not(:disabled),
+app-repair-work-vendor .btn-ghost:hover:not(:disabled) {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+app-assignment-requests-admin .btn-primary {
+  background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 45%, #0ea5e9 100%) !important;
+  border: 1px solid #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(14, 165, 233, 0.28) !important;
+}
+
+app-assignment-requests-admin .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05) !important;
+}
+
+app-assignment-requests-admin .btn-danger {
+  background: #fecaca !important;
+  border: 1px solid #ef4444 !important;
+  color: #991b1b !important;
+  font-weight: 600 !important;
+}
+
+app-assignment-requests-admin .btn-danger:hover:not(:disabled) {
+  background: #fca5a5 !important;
+  border-color: #dc2626 !important;
+  color: #7f1d1d !important;
+}
+
+app-repair-requests-admin .assign-ambient,
+app-repair-work-vendor .assign-ambient {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -15%, rgba(56, 189, 248, 0.14), transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 72%, rgba(14, 165, 233, 0.09), transparent 50%),
+    linear-gradient(165deg, #f8fafc 0%, #f0f9ff 42%, #e0f2fe 100%) !important;
+}
+
+app-repair-requests-admin .assign-ambient::before,
+app-repair-work-vendor .assign-ambient::before {
+  opacity: 0.35 !important;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px) !important;
+}
+
+app-repair-requests-admin .assign-board-header,
+app-repair-work-vendor .assign-board-header {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-repair-requests-admin .assign-title,
+app-repair-work-vendor .assign-title {
+  color: #0f172a !important;
+}
+
+app-repair-requests-admin .assign-lead,
+app-repair-work-vendor .assign-lead {
+  color: #64748b !important;
+}
+
+app-repair-requests-admin .assign-lead a,
+app-repair-work-vendor .assign-lead a {
+  color: #0284c7 !important;
+}
+
+app-repair-requests-admin .assign-loading,
+app-repair-requests-admin .assign-empty,
+app-repair-work-vendor .assign-loading,
+app-repair-work-vendor .assign-empty {
+  color: #475569 !important;
+  background: #f8fafc !important;
+  border: 1px dashed #bae6fd !important;
+}
+
+app-repair-requests-admin .req-field,
+app-repair-work-vendor .req-field {
+  background: #f0f9ff !important;
+  border: 1px solid #dbeafe !important;
+}
+
+app-repair-requests-admin .msg-error,
+app-repair-work-vendor .msg-error {
+  color: #b91c1c !important;
+}
+
+app-repair-requests-admin .msg-success,
+app-repair-work-vendor .msg-success {
+  color: #15803d !important;
+}
+
+/* ── Assets hub ──────────────────────────────────────────────── */
+app-assets-hub .hub-card-title {
+  color: #0f172a !important;
+}
+
+app-assets-hub .hub-card-blurb,
+app-assets-hub .hub-card-stats,
+app-assets-hub .hub-card-cta {
+  color: #64748b !important;
+}
+
+app-assets-hub .hub-stat-count {
+  color: #0d9488 !important;
+}
+
+app-assets-hub .hub-card:hover .hub-card-cta {
+  color: #0f7669 !important;
+}
+
+/* ── Assets category & inventory workspace ─────────────────────── */
+app-assets-category .cat-hero-title,
+app-assets-category h1,
+app-assets-category h2 {
+  color: #0f172a !important;
+}
+
+app-inventory-workspace .inv-ws-assets-title,
+app-inventory-workspace .page-header.inv-ws-header h2,
+app-inventory-workspace .inv-ws-meta-kicker {
+  color: #0f172a !important;
+}
+
+app-inventory-workspace .inv-ws-notes,
+app-inventory-workspace .inv-ws-assets-list,
+app-inventory-workspace .crumb-current {
+  color: #64748b !important;
+}
+
+app-inventory-workspace .inv-chip {
+  background: rgba(20, 184, 166, 0.1) !important;
+  border-color: rgba(20, 184, 166, 0.25) !important;
+  color: #0f7669 !important;
+}
+
+app-inventory-workspace .inv-ws-crumb a,
+app-inventory-workspace .inv-ws-hint a {
+  color: #0d9488 !important;
+}
+
+app-inventory-workspace input.input,
+app-inventory-workspace select.select-input,
+app-inventory-workspace textarea {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-assets-category .asset-crumb a {
+  color: #0d9488 !important;
+}
+
+app-assets-category .crumb-current,
+app-assets-category .category-hint {
+  color: #64748b !important;
+}
+
+app-assets-category .form-title,
+app-assets-category .field-note {
+  color: #334155 !important;
+}
+
+app-assets-category .page-header p {
+  color: #64748b !important;
+}
+
+app-inventory-workspace .hub-card {
+  background: #ffffff !important;
+  border: 1px solid #ebe8e3 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+}
+
+app-inventory-workspace .hub-card-title {
+  color: #0f172a !important;
+}
+
+app-inventory-workspace .hub-card-blurb {
+  color: #64748b !important;
+}
+
+app-inventory-workspace .hub-card-cta {
+  color: #0d9488 !important;
+}
+
+app-inventory-workspace .inv-ws-meta--customcols .inv-chip {
+  background: rgba(13, 159, 115, 0.1) !important;
+  border-color: rgba(13, 159, 115, 0.25) !important;
+  color: #0f7669 !important;
+}
+
+/* ── Asset assignments (embedded in category) ─────────────────── */
+app-asset-assignments-panel .assignments-embed .page-header h3 {
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-kind-btn {
+  background: #fafbf9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-asset-assignments-panel .history-kind-btn:hover {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-kind-btn.active {
+  background: #ecfdf5 !important;
+  border-color: rgba(13, 159, 115, 0.45) !important;
+  color: #0f7669 !important;
+}
+
+app-asset-assignments-panel .history-pick-row {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-pick-row:hover {
+  background: rgba(13, 159, 115, 0.06) !important;
+  border-color: rgba(13, 159, 115, 0.35) !important;
+}
+
+app-asset-assignments-panel .history-pick-meta {
+  color: #64748b !important;
+}
+
+app-asset-assignments-panel .history-selected-bar {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+app-asset-assignments-panel .history-selected-bar strong {
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-cart {
+  background: #fafbf9 !important;
+  border: 1px solid #ebe8e3 !important;
+}
+
+app-asset-assignments-panel .history-cart-line {
+  border-bottom-color: #e2e8f0 !important;
+}
+
+app-asset-assignments-panel .history-cart-line-title {
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-cart-line-model,
+app-asset-assignments-panel .history-cart-duration {
+  color: #64748b !important;
+}
+
+app-asset-assignments-panel .history-cart-line-thumb {
+  background: #f1f5f9 !important;
+}
+
+app-asset-assignments-panel .history-cart-pill {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+app-asset-assignments-panel input.input,
+app-asset-assignments-panel select.select-input,
+app-asset-assignments-panel select.input,
+app-asset-assignments-panel textarea {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+app-asset-assignments-panel .history-search-label {
+  color: #64748b !important;
+}

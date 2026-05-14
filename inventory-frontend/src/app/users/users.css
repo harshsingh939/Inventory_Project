@@ -214,6 +214,13 @@
   box-shadow: 0 0 8px rgba(167, 139, 250, 0.22);
 }
 
+.form-field .input.input--signup-locked {
+  opacity: 0.85;
+  cursor: not-allowed;
+  background: rgba(15, 23, 42, 0.75);
+  color: #cbd5e1;
+}
+
 .add-btn {
   height: 40px;
   padding: 0 20px;
@@ -389,6 +396,22 @@
   align-items: center;
 }
 
+.cell-tight {
+  vertical-align: middle;
+}
+
+.table-select {
+  min-width: 6.5rem;
+  max-width: 11rem;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.78rem;
+}
+
 .link-input {
   width: 100px;
   padding: 6px 8px;
@@ -450,6 +473,6 @@
   }
 
   .users-table {
-    min-width: 520px;
+    min-width: 720px;
   }
 }

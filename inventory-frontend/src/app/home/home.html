@@ -59,10 +59,10 @@
       <article class="vendor-home__handle">
         <div class="vendor-home__handle-visual">
           <img
-            src="/vendor-repair/desktop.svg"
-            alt="Desktop and workstation setup"
-            width="640"
-            height="400"
+            src="/app-image/DK1.jpg"
+            alt="Desktop and workstation"
+            width="800"
+            height="600"
             loading="lazy"
           />
         </div>
@@ -72,10 +72,10 @@
       <article class="vendor-home__handle">
         <div class="vendor-home__handle-visual">
           <img
-            src="/vendor-repair/laptop.svg"
-            alt="Laptop on a desk"
-            width="640"
-            height="400"
+            src="/app-image/mac.avif"
+            alt="Laptop"
+            width="800"
+            height="600"
             loading="lazy"
           />
         </div>
@@ -85,10 +85,10 @@
       <article class="vendor-home__handle">
         <div class="vendor-home__handle-visual">
           <img
-            src="/vendor-repair/accessories.svg"
-            alt="Headphones and tech accessories"
-            width="640"
-            height="400"
+            src="/app-image/accessories.png"
+            alt="Monitors, docks, and peripherals"
+            width="800"
+            height="600"
             loading="lazy"
           />
         </div>
@@ -100,7 +100,7 @@
 </div>
 } @else {
 <div class="home-public">
-<div class="hero">
+<div class="hero" id="hero-main">
   <div class="hero-bg-motion" aria-hidden="true">
     <div class="hero-bg-motion__img"></div>
     <div class="hero-bg-motion__vehicle"></div>
@@ -154,41 +154,34 @@
       </svg>
     </div>
   </div>
-  <div class="hero-layout">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span class="badge-dot"></span>
-        INVENTORY MANAGEMENT SYSTEM
-      </div>
-      <h1>Welcome to <span class="accent">InvenTrack</span></h1>
-      <p class="hero-sub">Track, manage and optimize your entire inventory ecosystem with real-time insights and powerful automation.</p>
-      <div class="hero-actions hero-actions--user-mgmt">
-        <a routerLink="/signup" class="hero-btn primary hero-btn--um-primary">
-          <span class="hero-btn-um-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </span>
+  <div class="hero-layout hero-layout--cin7">
+    <div class="hero-content hero-content--cin7">
+      <p class="hero-badge hero-badge--cin7">
+        <span class="badge-dot badge-dot--cin7" aria-hidden="true"></span>
+        Connected inventory intelligence
+      </p>
+      <h1 class="cin7-hero-headline">
+        <span class="cin7-hero-headline__line">
+          <span class="cin7-hero-headline__pad">Inventory that stays</span>
+        </span>
+        <span class="cin7-hero-headline__line">
+          <span class="cin7-hero-headline__pad">accurate in real time</span>
+        </span>
+      </h1>
+      <p class="hero-sub hero-sub--cin7">
+        Welcome to <strong>InvenTrack</strong> — track assets, repairs, and assignments across your organization with the same live data your teams already rely on.
+      </p>
+      <div class="hero-actions hero-actions--cin7 hero-actions--user-mgmt">
+        <a routerLink="/signup" class="hero-btn primary hero-btn--cin7 hero-btn--um-primary">
           <span class="hero-btn-um-label">Create account</span>
-          <span class="btn-arrow">→</span>
         </a>
-        <a routerLink="/my-workspace" class="hero-btn secondary hero-btn--um-secondary">
-          <span class="hero-btn-um-icon hero-btn-um-icon--soft" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="9" rx="1" />
-              <rect x="14" y="3" width="7" height="5" rx="1" />
-              <rect x="14" y="11" width="7" height="10" rx="1" />
-              <rect x="3" y="15" width="7" height="6" rx="1" />
-            </svg>
-          </span>
-          <span class="hero-btn-um-label">My workspace</span>
+        <a routerLink="/login" class="hero-btn secondary hero-btn--cin7-outline hero-btn--um-secondary">
+          <span class="hero-btn-um-label">Sign in</span>
         </a>
       </div>
     </div>
 
-    <aside class="hero-rail" aria-label="Live status">
+    <aside class="hero-rail hero-rail--cin7" aria-label="Live status">
       <div class="hero-widget hero-widget--clock">
         <div class="hero-widget__inner">
           <span class="hero-widget__label">Local time</span>
@@ -220,7 +213,52 @@
   </div>
 </div>
 
-<div class="features-section">
+<section class="home-trust-strip" id="trust" aria-labelledby="trust-kicker">
+  <p id="trust-kicker" class="home-trust-strip__kicker">Built for teams that move hardware every day</p>
+  <div class="home-trust-strip__cards" role="list">
+    <figure class="home-trust-card" role="listitem">
+      <div class="home-trust-card__visual">
+        <img
+          src="/app-image/DK1.jpg"
+          alt="Desktop and workstation hardware"
+          width="640"
+          height="384"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      <figcaption class="home-trust-card__cap">Desktops &amp; shared equipment</figcaption>
+    </figure>
+    <figure class="home-trust-card" role="listitem">
+      <div class="home-trust-card__visual">
+        <img
+          src="/app-image/mac.avif"
+          alt="Laptop computer"
+          width="640"
+          height="384"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      <figcaption class="home-trust-card__cap">Laptops &amp; end-user devices</figcaption>
+    </figure>
+    <figure class="home-trust-card" role="listitem">
+      <div class="home-trust-card__visual">
+        <img
+          src="/app-image/accessories.png"
+          alt="Monitors, docks, and peripherals"
+          width="640"
+          height="384"
+          loading="lazy"
+          decoding="async"
+        />
+      </div>
+      <figcaption class="home-trust-card__cap">Accessories &amp; peripherals</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="features-section" id="features">
   <div class="section-header">
     <h2 class="home-animate-heading">Everything you need to manage inventory</h2>
     <p>Powerful tools built for modern warehouse management</p>
@@ -300,7 +338,7 @@
 
 
 <!-- Modules Section -->
-<div class="modules-section">
+<div class="modules-section" id="modules">
   <div class="section-header">
     <h2 class="section-title">Explore Our Modules</h2>
     <p>Everything your team needs, all in one platform</p>
@@ -478,7 +516,7 @@
 </div>
 
 <!-- CTA Section -->
-<div class="cta-section">
+<div class="cta-section" id="cta">
   <div class="cta-content">
     <h2>Ready to take control of your inventory?</h2>
     <p>Join thousands of businesses already using InvenTrack to streamline their operations.</p>

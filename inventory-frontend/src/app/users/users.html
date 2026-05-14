@@ -22,12 +22,29 @@
     <section class="users-panel" *ngIf="isLoggedIn && isAdmin">
       <h2 class="users-panel__title">Add employee</h2>
       <p class="users-panel__hint">
-        After signup, the new user’s <strong>auth id</strong> is in the admin email. Add their row here, then set <strong>Login user id</strong> in the table below to that number.
+        After signup, open the <strong>New account</strong> notification to pre-fill name and login id, or enter them manually. You can still set <strong>Login user id</strong> in the table below for existing rows.
       </p>
       <div class="form-row">
         <div class="form-field">
           <label>Name</label>
-          <input [(ngModel)]="user.name" class="input" placeholder="Enter name" />
+          <input
+            [(ngModel)]="user.name"
+            class="input"
+            [class.input--signup-locked]="nameFieldLockedFromSignup"
+            placeholder="Enter name"
+            [readOnly]="nameFieldLockedFromSignup"
+          />
+        </div>
+        <div class="form-field">
+          <label>Login user id</label>
+          <input
+            [(ngModel)]="user.auth_user_id"
+            class="input"
+            [class.input--signup-locked]="nameFieldLockedFromSignup"
+            type="number"
+            placeholder="e.g. 32"
+            [readOnly]="nameFieldLockedFromSignup"
+          />
         </div>
         <div class="form-field">
           <label>Employee ID</label>
@@ -35,9 +52,16 @@
         </div>
         <div class="form-field">
           <label>Department</label>
-          <select [(ngModel)]="user.department" class="input">
+          <select [(ngModel)]="user.department" class="input" (ngModelChange)="onAddFormDepartmentChange()">
             <option value="">Choose department…</option>
             <option *ngFor="let d of departmentOptions" [value]="d">{{ d }}</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Sub-role</label>
+          <select [(ngModel)]="user.sub_role" class="input" [disabled]="!user.department">
+            <option value="">{{ user.department ? 'Choose sub-role…' : 'Pick department first' }}</option>
+            <option *ngFor="let sr of addFormSubRoleOptions()" [value]="sr">{{ sr }}</option>
           </select>
         </div>
         <button type="button" class="btn btn-success add-btn" (click)="addUser()" [disabled]="isAdding">
@@ -61,7 +85,7 @@
           <input
             class="search-input"
             type="text"
-            placeholder="Search by department…"
+            placeholder="Search by department or sub-role…"
             [(ngModel)]="searchDept"
             (ngModelChange)="applyFilter()"
           />
@@ -84,10 +108,11 @@
               <th>Name</th>
               <th>Employee ID</th>
               <th>Department</th>
+              <th>Sub-role</th>
               <th
                 *ngIf="isAdmin"
                 class="col-link"
-                title="Save updates the server. Typing in the box alone does not."
+                title="Save writes department, sub-role, and login user id to the server."
               >
                 Login user id
               </th>
@@ -98,7 +123,25 @@
               <td class="col-id"><strong>{{ u.id }}</strong></td>
               <td>{{ u.name }}</td>
               <td>{{ u.employee_id }}</td>
-              <td>{{ u.department }}</td>
+              <td *ngIf="!isAdmin">{{ u.department }}</td>
+              <td *ngIf="isAdmin" class="cell-tight">
+                <select
+                  class="input table-select"
+                  [(ngModel)]="rowDraft[u.id].department"
+                  (ngModelChange)="onRowDepartmentChange(u.id)"
+                >
+                  <option *ngFor="let d of departmentOptions" [value]="d">{{ d }}</option>
+                </select>
+              </td>
+              <td *ngIf="!isAdmin">{{ u.sub_role || '—' }}</td>
+              <td *ngIf="isAdmin" class="cell-tight">
+                <select class="input table-select" [(ngModel)]="rowDraft[u.id].sub_role">
+                  <option value="">Sub-role…</option>
+                  <option *ngFor="let sr of subRoleOptionsForDept(rowDraft[u.id].department)" [value]="sr">
+                    {{ sr }}
+                  </option>
+                </select>
+              </td>
               <td *ngIf="isAdmin" class="link-cell">
                 <div class="link-row">
                   <input
@@ -106,17 +149,17 @@
                     class="input link-input"
                     [name]="'authLink' + u.id"
                     [ngModelOptions]="{ standalone: true }"
-                    [(ngModel)]="linkDraft[u.id]"
-                    placeholder="auth_users.id"
+                    [(ngModel)]="rowDraft[u.id].auth_user_id"
+                    placeholder="e.g. 32"
                   />
-                  <button type="button" class="btn-link-save" [disabled]="savingLinkId === u.id" (click)="saveAuthLink(u)">
+                  <button type="button" class="btn-link-save" [disabled]="savingLinkId === u.id" (click)="saveUserRow(u)">
                     {{ savingLinkId === u.id ? '…' : 'Save' }}
                   </button>
                 </div>
               </td>
             </tr>
             <tr *ngIf="filteredUsers.length === 0">
-              <td [attr.colspan]="isAdmin ? 5 : 4" class="empty-row">
+              <td [attr.colspan]="isAdmin ? 6 : 5" class="empty-row">
                 {{
                   isAdmin
                     ? searchName || searchDept

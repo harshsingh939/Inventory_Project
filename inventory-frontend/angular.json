@@ -26,10 +26,16 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/app/image",
+                "output": "/app-image"
               }
             ],
             "styles": [
               "src/styles.css",
+              "src/app/admin-cin7-surface.css",
               "src/mobile-shell.css"
             ],
             "server": "src/main.server.ts",
@@ -51,7 +57,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "20kB",
+                  "maximumWarning": "24kB",
                   "maximumError": "32kB"
                 }
               ],

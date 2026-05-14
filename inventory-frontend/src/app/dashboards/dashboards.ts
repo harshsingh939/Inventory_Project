@@ -118,14 +118,14 @@ export class Dashboards implements OnInit {
     },
     scales: {
       x: {
-        ticks: { color: '#64748b' },
-        grid:  { color: 'rgba(255,255,255,0.05)' }
+        ticks: { color: '#475569' },
+        grid: { color: 'rgba(15, 23, 42, 0.07)' },
       },
       y: {
-        ticks: { color: '#64748b', stepSize: 1 },
-        grid:  { color: 'rgba(255,255,255,0.05)' }
-      }
-    }
+        ticks: { color: '#475569', stepSize: 1 },
+        grid: { color: 'rgba(15, 23, 42, 0.07)' },
+      },
+    },
   };
 
   // ✅ Doughnut Chart
@@ -139,7 +139,7 @@ export class Dashboards implements OnInit {
         'rgba(239,68,68,0.8)',
         'rgba(56,189,248,0.8)',
       ],
-      borderColor: '#0f172a',
+      borderColor: '#e2e8f0',
       borderWidth: 3,
     }]
   };
@@ -163,10 +163,10 @@ export class Dashboards implements OnInit {
       legend: {
         position: 'bottom',
         labels: {
-          color: '#94a3b8',
+          color: '#475569',
           padding: 16,
-          font: { size: 12 }
-        }
+          font: { size: 12 },
+        },
       }
     }
   };
@@ -212,7 +212,7 @@ export class Dashboards implements OnInit {
       legend: {
         position: 'top',
         align: 'end',
-        labels: { color: '#94a3b8', boxWidth: 10, usePointStyle: true, padding: 14 },
+        labels: { color: '#475569', boxWidth: 10, usePointStyle: true, padding: 14 },
       },
       tooltip: {
         backgroundColor: 'rgba(15,23,42,0.95)',
@@ -224,13 +224,13 @@ export class Dashboards implements OnInit {
     },
     scales: {
       x: {
-        ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
-        grid: { color: 'rgba(255,255,255,0.04)' },
+        ticks: { color: '#475569', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+        grid: { color: 'rgba(15, 23, 42, 0.07)' },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: '#64748b', precision: 0 },
-        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { color: '#475569', precision: 0 },
+        grid: { color: 'rgba(15, 23, 42, 0.08)' },
       },
     },
   };
@@ -344,7 +344,7 @@ export class Dashboards implements OnInit {
             'rgba(239,68,68,0.8)',
             'rgba(56,189,248,0.8)',
           ],
-          borderColor: '#0f172a',
+          borderColor: '#e2e8f0',
           borderWidth: 3,
         }]
       };

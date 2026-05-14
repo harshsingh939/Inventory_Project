@@ -31,13 +31,15 @@
   <a
     *ngFor="let inv of customInventories"
     class="hub-card card hub-card--custom"
-    [routerLink]="['/assets/inv', inv.id]">
+    [routerLink]="['/assets', 'other']"
+    [queryParams]="{ inv: inv.id }">
     <div class="hub-card-icon" aria-hidden="true">{{ invIcon(inv.id) }}</div>
     <h3 class="hub-card-title">{{ inv.name }}</h3>
     <p class="hub-card-blurb">{{ customCardBlurb(inv) }}</p>
-    <div class="hub-card-chips" *ngIf="invDetailChips(inv) as meta">
-      <span class="hub-chip" *ngIf="meta.location">📍 {{ meta.location }}</span>
-      <span class="hub-chip" *ngIf="meta.owner">👤 {{ meta.owner }}</span>
+    <div class="hub-card-chips" *ngIf="invChipRow(inv) as cr">
+      <span class="hub-chip hub-chip--col" *ngFor="let c of cr.custom">📋 {{ c }}</span>
+      <span class="hub-chip" *ngIf="cr.meta?.location">📍 {{ cr.meta?.location }}</span>
+      <span class="hub-chip" *ngIf="cr.meta?.owner">👤 {{ cr.meta?.owner }}</span>
     </div>
     <p class="hub-card-stats">
       <span class="hub-stat-count" *ngIf="(inv.asset_count ?? 0) > 0">
@@ -60,36 +62,30 @@
 
 <!-- Add inventory -->
 <div class="inv-modal-overlay" *ngIf="showInvModal" (click)="closeInvModal()">
-  <div class="inv-modal card" (click)="$event.stopPropagation()">
+  <div class="inv-modal inv-modal--light card" (click)="$event.stopPropagation()">
     <div class="inv-modal-head">
       <h3>Add inventory</h3>
       <button type="button" class="close-btn" (click)="closeInvModal()">✕</button>
     </div>
     <p class="inv-modal-lead">
-      Set a name and optional details. After save, the new card appears here; <strong>Open</strong> uses the same workspace
-      as before (category tiles with this list pre-selected).
+      Enter the <strong>inventory name</strong>, then add any <strong>custom column</strong> labels you want to track for assets in this list (e.g. Shelf, Vendor). After save, the new card appears at the end with the same look as other lists; <strong>Open</strong> uses the same category workspace and <strong>Assignments</strong> flow as before.
     </p>
     <div class="form-field">
-      <label>List name <span class="req">*</span></label>
-      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. LAN cable, Building B stock" />
+      <label>Inventory name <span class="req">*</span></label>
+      <input class="input" [(ngModel)]="invForm.name" placeholder="e.g. LAN cable stock, Building B kit" />
     </div>
-    <div class="inv-modal-row">
-      <div class="form-field">
-        <label>Location / site</label>
-        <input class="input" [(ngModel)]="invForm.location" placeholder="e.g. Shelf 12" />
+    <div class="form-field inv-modal-columns">
+      <label>Custom columns <span class="inv-muted">(optional)</span></label>
+      <p class="inv-modal-hint">Add one row per field name. You can leave this empty and only use the standard asset form inside each category.</p>
+      <div class="inv-col-row" *ngFor="let col of invForm.columnRows; let i = index; trackBy: trackColByIndex">
+        <input
+          class="input inv-col-input"
+          [(ngModel)]="invForm.columnRows[i]"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Column name (e.g. Shelf, Color)" />
+        <button type="button" class="btn-inv-remove" (click)="removeInvColumnRow(i)" title="Remove column">✕</button>
       </div>
-      <div class="form-field">
-        <label>Owner / team</label>
-        <input class="input" [(ngModel)]="invForm.owner" placeholder="e.g. IT" />
-      </div>
-    </div>
-    <div class="form-field">
-      <label>Description &amp; notes</label>
-      <textarea
-        class="input textarea"
-        rows="3"
-        [(ngModel)]="invForm.description"
-        placeholder="What belongs in this list…"></textarea>
+      <button type="button" class="inv-add-col-btn" (click)="addInvColumnRow()">+ Add column</button>
     </div>
     <div class="msg-error" *ngIf="invErr">{{ invErr }}</div>
     <div class="inv-modal-actions">

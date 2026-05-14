@@ -10,7 +10,7 @@ import { EmployeeProfileStatusService } from '../employee-profile-status.service
   standalone: true,
   imports: [RouterLink],
   templateUrl: './home.html',
-  styleUrls: ['./home.css', './home-floating.scss', './home-hero-premium.css', './vendor-home.css'],
+  styleUrls: ['./home.css', './home-floating.scss', './home-hero-premium.css', './home-cin7-public.css', './vendor-home.css'],
 })
 export class Home implements OnInit, OnDestroy {
   /** Public home — typewriter (right panel of hero) */

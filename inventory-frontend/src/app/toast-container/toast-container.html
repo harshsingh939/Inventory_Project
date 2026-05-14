@@ -1,0 +1,13 @@
+<div class="toast-host" aria-live="polite" aria-relevant="additions text">
+  @for (t of toast.items(); track t.id) {
+    <div
+      class="toast"
+      [class.toast--success]="t.type === 'success'"
+      [class.toast--error]="t.type === 'error'"
+      [class.toast--info]="t.type === 'info'"
+      role="status"
+    >
+      {{ t.message }}
+    </div>
+  }
+</div>

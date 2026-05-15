@@ -1,6 +1,6 @@
 /**
  * Load inventory-frontend/.env into process.env (KEY=value, # comments).
- * Used before ng build / patch-api-origin on Rocky Linux — no dotenv package required.
+ * Used before ng build / apply-backend-origin on Rocky Linux — no dotenv package required.
  */
 const fs = require('fs');
 const path = require('path');

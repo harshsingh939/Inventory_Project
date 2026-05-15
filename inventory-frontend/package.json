@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && node scripts/patch-api-origin.cjs",
-    "build:deploy": "node scripts/load-dotenv.cjs && ng build --configuration=production && node scripts/patch-api-origin.cjs",
+    "build": "node scripts/apply-backend-origin.cjs && ng build",
+    "build:deploy": "node scripts/apply-backend-origin.cjs && ng build --configuration=production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:inventory-frontend": "node dist/inventory-frontend/server/server.mjs",

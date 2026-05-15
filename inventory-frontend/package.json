@@ -5,9 +5,13 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build && node scripts/patch-api-origin.cjs",
+    "build:deploy": "node scripts/load-dotenv.cjs && ng build --configuration=production && node scripts/patch-api-origin.cjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:inventory-frontend": "node dist/inventory-frontend/server/server.mjs"
+    "serve:ssr:inventory-frontend": "node dist/inventory-frontend/server/server.mjs",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart inventrack-frontend",
+    "pm2:logs": "pm2 logs inventrack-frontend"
   },
   "private": true,
   "packageManager": "npm@11.7.0",

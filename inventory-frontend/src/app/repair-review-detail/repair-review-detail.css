@@ -2,8 +2,10 @@
   min-height: calc(100vh - 52px);
   padding: 24px 16px 48px;
   box-sizing: border-box;
-  background: radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.12), transparent),
-    #0b1020;
+  background:
+    radial-gradient(ellipse 85% 55% at 12% 8%, rgba(224, 242, 254, 0.95), transparent 52%),
+    radial-gradient(ellipse 70% 50% at 88% 92%, rgba(209, 250, 229, 0.55), transparent 50%),
+    linear-gradient(168deg, #f8fafc 0%, #eff6ff 42%, #f0fdf4 100%);
 }
 
 .review-inner {
@@ -25,19 +27,24 @@
   font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .review-title {
   margin: 0;
   font-size: 1.5rem;
-  color: #f1f5f9;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .review-status {
   margin: 8px 0 0;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.9rem;
+}
+
+.review-status strong {
+  color: #0f766e;
 }
 
 .review-toolbar {
@@ -60,21 +67,36 @@
 }
 
 .btn-ghost {
-  background: transparent;
-  border-color: rgba(148, 163, 184, 0.35);
-  color: #e2e8f0;
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.btn-ghost:hover {
+  border-color: #0d9f73;
+  color: #0f766e;
+  background: #f0fdf4;
 }
 
 .btn-solid {
-  background: #334155;
-  color: #f8fafc;
-  border-color: #475569;
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.btn-solid:hover:not(:disabled) {
+  background: #e2e8f0;
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #6366f1, #4f46e5);
+  background: linear-gradient(180deg, #0db87d 0%, #0d9f73 100%);
   color: #fff;
-  border-color: rgba(99, 102, 241, 0.5);
+  border-color: #0d9f73;
+  box-shadow: 0 2px 12px rgba(13, 159, 115, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.04);
 }
 
 .btn:disabled {
@@ -90,28 +112,31 @@
 }
 
 .msg-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
 }
 
 .msg-success {
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
 }
 
 .review-loading {
-  color: #94a3b8;
+  color: #64748b;
   padding: 24px;
   text-align: center;
 }
 
 .review-card {
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 14px;
-  padding: 20px 22px;
+  background: linear-gradient(165deg, #ecfdf5 0%, #d1fae5 38%, #a7f3d0 100%);
+  border: 3px solid rgba(13, 159, 115, 0.45);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 32px rgba(13, 159, 115, 0.12);
 }
 
 .review-section {
@@ -127,37 +152,43 @@
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94a3b8;
-  font-weight: 600;
+  color: #047857;
+  font-weight: 700;
 }
 
 .review-line {
   margin: 0;
-  color: #e2e8f0;
+  color: #0f172a;
   font-size: 0.95rem;
 }
 
 .review-block {
   margin: 0;
   white-space: pre-wrap;
-  color: #e2e8f0;
+  color: #1e293b;
   line-height: 1.5;
   font-size: 0.92rem;
 }
 
 .muted {
-  color: #64748b;
+  color: #475569;
 }
 
 .review-link {
-  color: #38bdf8;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.review-link:hover {
+  text-decoration: underline;
 }
 
 .review-label {
   display: block;
   margin-bottom: 6px;
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: #166534;
+  font-weight: 600;
 }
 
 .review-input {
@@ -165,12 +196,30 @@
   box-sizing: border-box;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(2, 6, 23, 0.5);
-  color: #f1f5f9;
+  border: 1px solid rgba(13, 159, 115, 0.35);
+  background: #ffffff;
+  color: #0f172a;
   font-size: 0.88rem;
+}
+
+.review-input::placeholder {
+  color: #94a3b8;
+}
+
+.review-input:focus {
+  outline: 2px solid #0d9f73;
+  outline-offset: 2px;
 }
 
 .review-actions {
   margin-top: 12px;
+}
+
+.review-section.muted {
+  color: #475569;
+}
+
+.review-section.muted a {
+  color: #0369a1;
+  font-weight: 600;
 }

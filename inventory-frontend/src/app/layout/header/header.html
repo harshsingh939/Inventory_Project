@@ -9,10 +9,11 @@
     </div>
   </div>
 
-  <div class="header" [class.header--vendor-nav]="isLoggedIn && isRepairAuthority" [class.header--admin-nav]="isLoggedIn && isAdmin" [class.header--guest-marketing]="!isLoggedIn">
+  <div class="header" [class.header--vendor-nav]="isLoggedIn && isRepairAuthority" [class.header--admin-nav]="isLoggedIn && isAdmin" [class.header--guest-marketing]="!isLoggedIn"
+    [class.header--guest-landing-no-drawer]="!isLoggedIn && isPublicMarketingHome()">
 
   <button
-    *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
+    *ngIf="showSlideInNav()"
     type="button"
     class="nav-menu-trigger"
     [class.open]="sidebarOpen"
@@ -140,7 +141,7 @@
             [class.notif-item--request]="n.kind === 'assignment_request'"
             [class.notif-item--signup]="n.kind === 'new_signup'"
             [routerLink]="notifLink(n)"
-            (click)="onNotifSignupPrefill(n); closeNotificationsForNav()"
+            (click)="onNotifClick(n)"
           >
             <div class="notif-icon" *ngIf="n.kind === 'repair'">🔧</div>
             <div class="notif-icon notif-icon--inbox" *ngIf="n.kind === 'assignment_request'">📥</div>
@@ -208,9 +209,9 @@
   </div>
 </div>
 
-<!-- Sidebar backdrop — guests & employees only (vendor + admin use top nav) -->
+<!-- Sidebar backdrop — guests & employees only (vendor + admin use top nav); omitted on public `/` for guests -->
 <div
-  *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
+  *ngIf="showSlideInNav()"
   class="sidebar-backdrop"
   [class.sidebar-backdrop--visible]="sidebarOpen"
   (click)="closeSidebar()"
@@ -218,7 +219,7 @@
 
 <!-- Slide-in navigation — guests & employees -->
 <aside
-  *ngIf="!isLoggedIn || (!isRepairAuthority && !isAdmin)"
+  *ngIf="showSlideInNav()"
   id="app-nav-sidebar"
   class="nav-sidebar"
   [class.nav-sidebar--open]="sidebarOpen"

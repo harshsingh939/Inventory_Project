@@ -79,13 +79,34 @@
   grid-column: 4;
 }
 
+/* Guest on `/`: no hamburger — three-column row (brand · nav · CTAs) */
+.header.header--guest-marketing.header--guest-landing-no-drawer {
+  grid-template-columns: auto 1fr auto;
+}
+
+.header.header--guest-marketing.header--guest-landing-no-drawer .header-brand {
+  grid-column: 1;
+}
+
+.header.header--guest-marketing.header--guest-landing-no-drawer .header-marketing-nav {
+  grid-column: 2;
+}
+
+.header.header--guest-marketing.header--guest-landing-no-drawer .header-guest-actions {
+  grid-column: 3;
+}
+
 @media (max-width: 900px) {
   .header.header--guest-marketing .header-marketing-nav {
     display: none;
   }
 
-  .header.header--guest-marketing {
+  .header.header--guest-marketing:not(.header--guest-landing-no-drawer) {
     grid-template-columns: auto auto 1fr auto;
+  }
+
+  .header.header--guest-marketing.header--guest-landing-no-drawer {
+    grid-template-columns: auto 1fr auto;
   }
 }
 

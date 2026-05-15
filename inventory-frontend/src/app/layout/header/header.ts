@@ -55,6 +55,9 @@ export class Header implements OnInit, OnDestroy {
       .subscribe(() => {
         this.syncAdminNotifications();
         this.syncEmployeeProfileNav();
+        if (!this.showSlideInNav()) {
+          this.closeSidebar();
+        }
       });
   }
 
@@ -83,13 +86,36 @@ export class Header implements OnInit, OnDestroy {
     this.notifService.stopPolling();
   }
 
+  /** Public marketing home (`/`) — used to drop drawer chrome for guests (top bar already links sections). */
+  isPublicMarketingHome(): boolean {
+    const raw = this.router.url || '';
+    const path = raw.split('?')[0].split('#')[0].trim();
+    return path === '' || path === '/';
+  }
+
+  /**
+   * Hamburger + slide-in panel — hidden on guest landing where center nav + CTAs suffice
+   * (drawer only showed a sign-in hint for guests).
+   */
+  showSlideInNav(): boolean {
+    const eligible =
+      !this.isLoggedIn || (!this.isRepairAuthority && !this.isAdmin);
+    if (!eligible) {
+      return false;
+    }
+    if (!this.isLoggedIn && this.isPublicMarketingHome()) {
+      return false;
+    }
+    return true;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (!this.isBrowser) return;
     const target = event.target as HTMLElement;
     if (!target.closest('.header-right')) {
       this.showDropdown = false;
-      this.showNotifications = false;
+      this.closeNotificationPanel();
     }
     if (this.sidebarOpen) {
       if (
@@ -128,19 +154,33 @@ export class Header implements OnInit, OnDestroy {
   }
 
   toggleNotifications() {
-    this.showNotifications = !this.showNotifications;
-    this.showDropdown = false;
+    if (this.showNotifications) {
+      this.closeNotificationPanel();
+    } else {
+      this.showNotifications = true;
+      this.showDropdown = false;
+    }
   }
 
-  closeNotificationsForNav() {
+  /** Mark current items seen and hide the panel (new items can appear on next poll). */
+  closeNotificationPanel() {
+    if (this.showNotifications) {
+      this.notifService.markPanelViewed();
+    }
     this.showNotifications = false;
   }
 
-  /** Buffer signup name + login id before RouterLink navigates to Team registration. */
-  onNotifSignupPrefill(n: Notification) {
+  closeNotificationsForNav() {
+    this.closeNotificationPanel();
+  }
+
+  /** Buffer signup prefill, dismiss this row, then navigate. */
+  onNotifClick(n: Notification) {
     if (n.kind === 'new_signup') {
       this.teamSignupPrefill.armFromNewSignup(n.brand, n.id);
     }
+    this.notifService.dismissOne(n);
+    this.showNotifications = false;
   }
 
   logout() {

@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, signal, computed } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { apiUrl } from './api-url';
@@ -25,11 +26,44 @@ export class NotificationService {
   private dismissedKeys = new Set<string>();
   private lastUserId: number | null = null;
   private interval: ReturnType<typeof setInterval> | undefined;
+  private readonly isBrowser: boolean;
 
   constructor(
     private http: HttpClient,
     private auth: AuthService,
-  ) {}
+    @Inject(PLATFORM_ID) platformId: Object,
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
+
+  private storageKey(userId: number): string {
+    return `inventrack:notif-dismissed:${userId}`;
+  }
+
+  private loadDismissedFromStorage(userId: number) {
+    if (!this.isBrowser) return;
+    try {
+      const raw = sessionStorage.getItem(this.storageKey(userId));
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) return;
+      for (const k of parsed) {
+        if (typeof k === 'string' && k) this.dismissedKeys.add(k);
+      }
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }
+
+  private persistDismissedToStorage() {
+    if (!this.isBrowser || this.lastUserId == null) return;
+    try {
+      const keys = [...this.dismissedKeys].slice(-500);
+      sessionStorage.setItem(this.storageKey(this.lastUserId), JSON.stringify(keys));
+    } catch {
+      /* quota / private mode */
+    }
+  }
 
   private rowKey(rawId: unknown, kind?: string): string | null {
     if (rawId == null || rawId === '') return null;
@@ -43,6 +77,13 @@ export class NotificationService {
     const k =
       kind === 'assignment_request' ? 'ar' : kind === 'new_signup' ? 'ns' : 'repair';
     return `${k}:${idStr}`;
+  }
+
+  private applyDismissedFilter(rows: Notification[]): Notification[] {
+    return rows.filter((n) => {
+      const key = this.rowKey(n.id, n.kind);
+      return key != null && !this.dismissedKeys.has(key);
+    });
   }
 
   startPolling() {
@@ -72,11 +113,14 @@ export class NotificationService {
     if (uid !== this.lastUserId) {
       this.dismissedKeys.clear();
       this.lastUserId = uid;
+      if (uid != null) {
+        this.loadDismissedFromStorage(uid);
+      }
     }
 
     this.http.get<any[]>(this.notificationsUrl, this.auth.getAuthHeaders()).subscribe({
       next: (data) => {
-        const visible = (data || [])
+        const mapped = (data || [])
           .map((n) => {
             const kind = (
               n.kind === 'assignment_request'
@@ -96,12 +140,8 @@ export class NotificationService {
               repair_status: n.repair_status ?? null,
               read: false,
             } as Notification;
-          })
-          .filter((n) => {
-            const key = this.rowKey(n.id, n.kind);
-            return key != null && !this.dismissedKeys.has(key);
           });
-        this.notifications.set(visible);
+        this.notifications.set(this.applyDismissedFilter(mapped));
       },
       error: () => {
         this.notifications.set([]);
@@ -109,15 +149,40 @@ export class NotificationService {
     });
   }
 
-  markAllRead() {
+  /** Dismiss everything currently shown (admin closed the panel or clicked away). */
+  markPanelViewed() {
     for (const n of this.notifications()) {
       const k = this.rowKey(n.id, n.kind);
       if (k) this.dismissedKeys.add(k);
     }
     this.notifications.set([]);
+    this.persistDismissedToStorage();
+  }
+
+  /** Dismiss a single row when admin opens it from the list. */
+  dismissOne(n: Notification) {
+    const k = this.rowKey(n.id, n.kind);
+    if (!k) return;
+    this.dismissedKeys.add(k);
+    this.notifications.update((list) =>
+      list.filter((row) => this.rowKey(row.id, row.kind) !== k),
+    );
+    this.persistDismissedToStorage();
+  }
+
+  /** @deprecated Use {@link markPanelViewed} */
+  markAllRead() {
+    this.markPanelViewed();
   }
 
   resetDismissed() {
+    if (this.isBrowser && this.lastUserId != null) {
+      try {
+        sessionStorage.removeItem(this.storageKey(this.lastUserId));
+      } catch {
+        /* ignore */
+      }
+    }
     this.dismissedKeys.clear();
     this.lastUserId = null;
     this.notifications.set([]);

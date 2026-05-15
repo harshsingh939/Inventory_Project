@@ -5,6 +5,9 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { loadDotenv } = require('./load-dotenv.cjs');
+
+loadDotenv();
 
 const indexPath = path.join(
   __dirname,

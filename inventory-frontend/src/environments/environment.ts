@@ -2,5 +2,5 @@
 export const environment = {
   production: false,
   apiOrigin: '',
-  ssrApiOrigin: 'http://127.0.0.1:3000',
+  ssrApiOrigin: 'http://192.168.29.28:3000',
 };
